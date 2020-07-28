@@ -54,10 +54,6 @@ function onTransportCrashed(e)
   end
 end
 
-function onTransportHit(e)
-  MESSAGE:New("Transport hit!", 100):ToAll()
-end
-
 events = EVENTHANDLER:New()
 events:HandleEvent(EVENTS.Birth)
 
@@ -66,7 +62,6 @@ function events:OnEventBirth(e)
   hTrace(1, "Birth: " .. unit:GetName())
   
   unit:HandleEvent(EVENTS.Crash, onTransportCrashed)
-  unit:HandleEvent(EVENTS.Hit, onTransportHit)
 end
 
 Messager = SCHEDULER:New(nil,
