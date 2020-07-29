@@ -113,7 +113,7 @@ function Global:GroupIsParked(zone, group)
   
   local units = group:GetUnits()
   if (units == nil) then
-    Global:Trace(1, "no units in group: " .. group:GetName())
+    Global:Trace(3, "no units in group: " .. group:GetName())
     return nil
   end
   
@@ -211,6 +211,10 @@ end
 function Global:GroupHasPlayer(group)
   
   local units = group:GetUnits()
+  if not units then
+    return false
+  end
+  
   for i = 1, #units do
     local unit = units[i]
     
