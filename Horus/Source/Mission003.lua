@@ -150,6 +150,10 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   Global:CheckType(nalchikParkZone, ZONE)
   Global:CheckType(transportSpawn, SPAWN)
   
+  if (_winLoseDone) then
+    return
+  end
+  
   local playerGroup = GROUP:FindByName("Dodge Squadron")
 
   -- if no players, then say all players are parked (not sure if this makes sense).
@@ -161,7 +165,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   Global:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   Global:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
-  if (everyoneParked and not _winLoseDone) then
+  if (everyoneParked) then
     Mission:AnnounceWin()
   end
   
