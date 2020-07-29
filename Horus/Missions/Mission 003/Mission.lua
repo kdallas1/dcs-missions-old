@@ -10,7 +10,7 @@ local _transportSeparation = 200
 local _transportVariation = .5
 local _nalchikParkZone = nil
 local _transportSpawn = nil
-local _events = EVENTHANDLER:New()
+local _events = nil
 
 function Mission:Setup()
   Global:Trace(1, "Setup begin")
@@ -23,6 +23,7 @@ function Mission:Setup()
   Global:SetTraceLevel(1)
   Global:SetAssert(true)
   
+  _events = EVENTHANDLER:New()
   _nalchikParkZone = ZONE:FindByName("Nalchik Park")
   _transportSpawn = SPAWN:New("Transport")
     :InitLimit(_maxUnitsAlive, _transportCount)
