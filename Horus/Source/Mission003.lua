@@ -12,9 +12,10 @@ local _transportCount = 5
 local _maxUnitsAlive = 100
 local _transportSeparation = 200
 local _transportVariation = .5
-local _migsPerAirbase = 3;
+local _migsPerAirbase = 4;
 local _migsSpawnSeparation = 300
 local _migsSpawnVariation = .5
+local _transportMinLife = 30
 
 ---
 -- @param #Mission self
@@ -139,7 +140,68 @@ function Mission:KillTransport(transportSpawn)
   if group then
     unit = group:GetUnit(1)
     unit:Explode(100, 0)
+    unit.selfDestructDone = true
   end
+end
+
+---
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN transportSpawn
+function Mission:CheckTransportDamage(transportSpawn)
+  Global:Trace(3, "Checking transport spawn groups for damage")
+  for i = 1, _transportCount do
+    local group = transportSpawn:GetGroupFromIndex(i)
+    if group then
+      Global:Trace(3, "Checking transport group for damage: " .. group:GetName())
+      
+      local units = group:GetUnits()
+      if units then
+        for j = 1, #units do
+          local unit = group:GetUnit(j)
+          Global:Trace(3, "Checking transport unit for damage: " .. unit:GetName())
+          
+          -- only kill the unit if it's alive, otherwise it'll never crash
+          -- TODO: consider checking transport alive count as crash event isn't that reliable
+          if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < _transportMinLife)) then
+            -- explode transports below a certain live level, otherwise
+            -- transports can land in a damaged and prevent other transports
+            -- from landing
+            Global:Trace(1, "Auto-killing " .. unit:GetName() .. ", health is " .. tostring(unit:GetLife()))
+            unit:Explode(100, 1)
+            unit.selfDestructDone = true
+          end
+        end
+      end
+    end
+  end
+end
+
+---
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN transportSpawn
+function Mission:GetAliveTransportCount(transportSpawn)
+  Global:Trace(3, "Checking transport spawn groups for alive count")
+  
+  local count = 0
+  for i = 1, _transportCount do
+    local group = transportSpawn:GetGroupFromIndex(i)
+    if group then
+      Global:Trace(3, "Checking transport group for alive count: " .. group:GetName())
+      
+      local units = group:GetUnits()
+      if units then
+        for j = 1, #units do
+          local unit = group:GetUnit(j)
+          Global:Trace(3, "Checking if transport unit is alive: " .. unit:GetName())
+          
+          if unit:IsAlive() then
+            count = _inc(count)
+          end
+        end
+      end
+    end
+  end
+  return count
 end
 
 ---
@@ -161,6 +223,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
+  Global:Trace(1, "Transports alive: " .. Mission:GetAliveTransportCount(transportSpawn))
   Global:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
   Global:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   Global:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
@@ -190,6 +253,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   end
   
   Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportCount)
+  Mission:CheckTransportDamage(transportSpawn)
   
 end
 
