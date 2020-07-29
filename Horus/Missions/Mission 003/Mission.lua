@@ -32,11 +32,24 @@ function Mission:Setup()
   Mission:SetupMenu()
   Mission:SetupEvents()
   
+  SPAWN:New("MiG 1")
+    :InitLimit(2, 2)
+    :SpawnScheduled(2, 0)
+  
+  SPAWN:New("MiG 2")
+    :InitLimit(2, 2)
+    :SpawnScheduled(2, 0)
+  
+  SPAWN:New("MiG 3")
+    :InitLimit(2, 2)
+    :SpawnScheduled(2, 0)
+  
   SCHEDULER:New(nil,
     function() Mission:GameLoop() end, 
     {}, 0, _gameLoopInterval)
   
   Global:Trace(1, "Setup done")
+  
 end
 
 function Mission:SetupMenu()
@@ -58,13 +71,14 @@ function Mission:OnEventBirth(h, e)
   
   local unit = e.IniUnit
   Global:Trace(2, "Unit birth: " .. unit:GetName())
+  
   unit:HandleEvent(EVENTS.Crash,
-    function(_unit) Mission:OnTransportCrashed(_unit) end)
+    function(_unit) Mission:OnUnitCrashed(_unit) end)
 end
 
-function Mission:OnTransportCrashed(unit)
+function Mission:OnUnitCrashed(unit)
   Global:CheckType(unit, UNIT)
-  Global:Trace(1, "Transport crashed: " .. unit:GetName())
+  Global:Trace(1, "Unit crashed: " .. unit:GetName())
   
   MESSAGE:New("Transport crashed!", 100):ToAll()
   if (not _winLoseDone) then
