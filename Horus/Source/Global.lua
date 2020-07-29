@@ -11,7 +11,7 @@ local _assert = false
 --- Short hand to increment a number (no ++ in Lua)
 -- @param #number i Start increment from this number.
 -- @return #number Returns i + 1   
-local function _inc(i)
+function _inc(i)
   return i + 1
 end
 
