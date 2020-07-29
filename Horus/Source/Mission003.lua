@@ -26,6 +26,8 @@ function Mission:Setup()
   BASE:TraceAll(true)
   BASE:TraceLevel(3)
   
+  --GROUP:FindByName("Dodge Squadron"):Destroy()
+  
   Global:SetTraceOn(true)
   Global:SetTraceLevel(1)
   Global:SetAssert(true)
@@ -37,7 +39,6 @@ function Mission:Setup()
     :SpawnScheduled(_transportSeparation, _transportVariation)
   
   Mission:SetupMenu(transportSpawn)
-  Mission:SetupEvents(events)
   
   for i = 1, 3 do
     SPAWN:New("MiG " .. i)
@@ -65,40 +66,13 @@ end
 
 ---
 -- @param #Mission self
--- @param Core.Event#EVENTHANDLER events
-function Mission:SetupEvents(events)
-  events:HandleEvent(EVENTS.Birth,
-    function(h, e) Mission:OnEventBirth(h, e) end)
-end
-
----
--- @param #Mission self
--- @param Core.Event#EVENTHANDLER h
--- @param Core.Event#EVENTDATA e
-function Mission:OnEventBirth(h, e)
-  Global:CheckType(h, EVENTHANDLER)
-  Global:CheckType(e, "table")
-  Global:CheckType(e.IniUnit, UNIT)
-  
-  local unit = e.IniUnit
-  Global:Trace(2, "Unit birth: " .. unit:GetName())
-  
-  unit:HandleEvent(EVENTS.Crash,
-    function(_unit) Mission:OnUnitCrashed(_unit) end)
-end
-
----
--- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnUnitCrashed(unit)
+function Mission:OnTransportDead(unit)
   Global:CheckType(unit, UNIT)
-  Global:Trace(1, "Unit crashed: " .. unit:GetName())
-  
-  if (string.match(unit:GetName(), "Transport")) then
-    MESSAGE:New("Transport crashed!", 100):ToAll()
-    if (not _winLoseDone) then
-      Mission:AnnounceLose()
-    end
+  Global:Trace(1, "Transport destroyed: " .. unit:GetName())
+  MESSAGE:New("Transport destroyed!", 100):ToAll()
+  if (not _winLoseDone) then
+    Mission:AnnounceLose()
   end
 end
 
@@ -148,27 +122,42 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:CheckTransportDamage(transportSpawn)
-  Global:Trace(3, "Checking transport spawn groups for damage")
+  Global:Trace(3, "Checking spawn groups for damage")
   for i = 1, _transportCount do
     local group = transportSpawn:GetGroupFromIndex(i)
     if group then
-      Global:Trace(3, "Checking transport group for damage: " .. group:GetName())
+      Global:Trace(3, "Checking group for damage: " .. group:GetName())
       
       local units = group:GetUnits()
       if units then
         for j = 1, #units do
           local unit = group:GetUnit(j)
-          Global:Trace(3, "Checking transport unit for damage: " .. unit:GetName())
+          local life = unit:GetLife()
+          local fireDieEvent = false
           
-          -- only kill the unit if it's alive, otherwise it'll never crash
-          -- TODO: consider checking transport alive count as crash event isn't that reliable
+          Global:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
+          
+          -- we can't use IsAlive here, because the unit may not have spawned yet 
+          if (life <= 1) then
+            fireDieEvent = true
+          end
+          
+          -- only kill the unit if it's alive, otherwise it'll never crash.
+          -- explode transports below a certain live level, otherwise
+          -- transports can land in a damaged and prevent other transports
+          -- from landing
           if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < _transportMinLife)) then
-            -- explode transports below a certain live level, otherwise
-            -- transports can land in a damaged and prevent other transports
-            -- from landing
-            Global:Trace(1, "Auto-killing " .. unit:GetName() .. ", health is " .. tostring(unit:GetLife()))
+            Global:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. _transportMinLife)
             unit:Explode(100, 1)
             unit.selfDestructDone = true
+            fireDieEvent = true
+          end
+          
+          -- previously using the EVENTS.Crash event, but it was a bit unreliable
+          if (fireDieEvent and (not unit.eventDeadFired)) then
+            Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
+            Mission:OnTransportDead(unit)
+            unit.eventDeadFired = true
           end
         end
       end
@@ -176,23 +165,24 @@ function Mission:CheckTransportDamage(transportSpawn)
   end
 end
 
+-- TODO: consider merging this with CheckTransportDamage
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:GetAliveTransportCount(transportSpawn)
-  Global:Trace(3, "Checking transport spawn groups for alive count")
+  Global:Trace(3, "Checking spawn groups for alive count")
   
   local count = 0
   for i = 1, _transportCount do
     local group = transportSpawn:GetGroupFromIndex(i)
     if group then
-      Global:Trace(3, "Checking transport group for alive count: " .. group:GetName())
+      Global:Trace(3, "Checking group for alive count: " .. group:GetName())
       
       local units = group:GetUnits()
       if units then
         for j = 1, #units do
           local unit = group:GetUnit(j)
-          Global:Trace(3, "Checking if transport unit is alive: " .. unit:GetName())
+          Global:Trace(3, "Checking if unit is alive: " .. unit:GetName())
           
           if unit:IsAlive() then
             count = _inc(count)
@@ -223,7 +213,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
-  Global:Trace(1, "Transports alive: " .. Mission:GetAliveTransportCount(transportSpawn))
+  Global:Trace(2, "Transports alive: " .. Mission:GetAliveTransportCount(transportSpawn))
   Global:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
   Global:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   Global:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
