@@ -12,19 +12,20 @@ local function _inc(i)
 end
 
 --- Turn on trace (logging)
+-- @param #Global self
 -- @param #boolean traceOn True to enable trace.
 function Global:SetTraceOn(traceOn)
   _traceOn = traceOn
 end
 
 --- Trace level (logging).
--- @param #number 1 = low, 2 = med, 3 = high
+-- @param #number traceLevel 1 = low, 2 = med, 3 = high
 function Global:SetTraceLevel(traceLevel)
   _traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
--- @param #boolean True to enable assert. 
+-- @param #boolean assert True to enable assert. 
 function Global:SetAssert(assert)
   _assert = assert
 end
