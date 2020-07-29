@@ -111,9 +111,9 @@ function Mission:GameLoop()
   local transportsAreParked = Global:SpawnGroupsAreParked(_nalchikParkZone, _transportSpawn, _transportCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
-  Global:Trace(2, (playersAreParked and "✔ Players: All parked" or "❌ Players: Not all parked"), 1)
-  Global:Trace(2, (transportsAreParked and "✔ Transports: All parked" or "❌ Transports: Not all parked"), 1)
-  Global:Trace(2, (everyoneParked and "✔ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
+  Global:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
+  Global:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
+  Global:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
   if (everyoneParked and not _winLoseDone) then
     Mission:AnnounceWin()
