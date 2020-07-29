@@ -100,7 +100,7 @@ end
 
 --- Checks if entire group is parked in a zone.
 -- @param #Global self
--- @param Core.Zone#ZONE_BASE zone Parking zone to check.
+-- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If all units are parked in the zone.
 function Global:GroupIsParked(zone, group)
@@ -139,7 +139,7 @@ end
 
 --- Checks if all groups from a spawner are parked in a zone.
 -- @param #Global self
--- @param Core.Zone#ZONE_BASE zone Parking zone to check.
+-- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
 -- @return true If all units within all groups are parked in the zone. 
@@ -166,7 +166,7 @@ end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
 -- @param #Global self
--- @param Core.Zone#ZONE_BASE zone Parking zone to check.
+-- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
 function Global:KeepAliveGroupIfParked(zone, group)
   
@@ -187,7 +187,7 @@ end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
 -- @param #Global self
--- @param Core.Zone#ZONE_BASE zone Parking zone to check.
+-- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
 function Global:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
