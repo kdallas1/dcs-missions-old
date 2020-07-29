@@ -1,3 +1,7 @@
+---
+-- @module Mission
+
+--- @type Mission
 Mission = {}
 
 local _gameLoopInterval = 1
@@ -12,6 +16,8 @@ local _nalchikParkZone = nil
 local _transportSpawn = nil
 local _events = nil
 
+---
+-- @param self Mission
 function Mission:Setup()
   Global:Trace(1, "Setup begin")
   
@@ -52,6 +58,8 @@ function Mission:Setup()
   
 end
 
+---
+-- @param self Mission
 function Mission:SetupMenu()
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
   MENU_COALITION_COMMAND:New(
@@ -59,11 +67,15 @@ function Mission:SetupMenu()
     function() Mission:KillTransport() end)
 end
 
+---
+-- @param self Mission
 function Mission:SetupEvents()
   _events:HandleEvent(EVENTS.Birth,
     function(h, e) Mission:OnEventBirth(h, e) end)
 end
 
+---
+-- @param self Mission
 function Mission:OnEventBirth(h, e)
   Global:CheckType(h, EVENTHANDLER)
   Global:CheckType(e, "table")
@@ -76,6 +88,9 @@ function Mission:OnEventBirth(h, e)
     function(_unit) Mission:OnUnitCrashed(_unit) end)
 end
 
+---
+-- @param self Mission
+-- @param Wrapper.Unit#UNIT unit
 function Mission:OnUnitCrashed(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Unit crashed: " .. unit:GetName())
@@ -86,6 +101,8 @@ function Mission:OnUnitCrashed(unit)
   end
 end
 
+---
+-- @param self Mission
 function Mission:AnnounceWin()
   Global:Trace(1, "Mission accomplished")
   MESSAGE:New("Mission accomplished!", 100):ToAll()
@@ -93,6 +110,8 @@ function Mission:AnnounceWin()
   _winLoseDone = true
 end
 
+---
+-- @param self Mission
 function Mission:AnnounceLose()
   Global:Trace(1, "Mission failed")
   MESSAGE:New("Mission failed!", 100):ToAll()
@@ -100,6 +119,8 @@ function Mission:AnnounceLose()
   _winLoseDone = true
 end
 
+---
+-- @param self Mission
 function Mission:LandTestPlayers(playerGroup)
   Global:Trace(1, "Landing test players")
   local airbase = AIRBASE:FindByName(AIRBASE.Caucasus.Nalchik)
@@ -108,6 +129,8 @@ function Mission:LandTestPlayers(playerGroup)
   playerGroup:Route(route)
 end
 
+---
+-- @param self Mission
 function Mission:KillTransport()
   Global:Trace(1, "Killing transport")
   local group = _transportSpawn:GetGroupFromIndex(1)
@@ -117,6 +140,8 @@ function Mission:KillTransport()
   end
 end
 
+---
+-- @param self Mission
 function Mission:GameLoop()
     
   local playerGroup = GROUP:FindByName("Dodge Squadron")
