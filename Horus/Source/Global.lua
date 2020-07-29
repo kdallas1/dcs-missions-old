@@ -1,3 +1,7 @@
+---
+-- @module Global
+
+--- @type Global
 Global = {}
 
 local _traceOn = false
@@ -19,18 +23,21 @@ function Global:SetTraceOn(traceOn)
 end
 
 --- Trace level (logging).
+-- @param #Global self
 -- @param #number traceLevel 1 = low, 2 = med, 3 = high
 function Global:SetTraceLevel(traceLevel)
   _traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
+-- @param #Global self
 -- @param #boolean assert True to enable assert. 
 function Global:SetAssert(assert)
   _assert = assert
 end
 
 --- Horus log function. Short hand for: env.info("Horus: " .. line)
+-- @param #Global self
 -- @param #number level Level to trace at.
 -- @param #string line Log line to output to env.info 
 function Global:Trace(level, line)
@@ -50,6 +57,7 @@ function Global:Trace(level, line)
 end
 
 --- Asserts the correct type (Lua is loosely typed, so this is helpful)
+-- @param #Global self
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
 function Global:CheckType(object, _type)
@@ -91,6 +99,7 @@ function Global:CheckType(object, _type)
 end
 
 --- Checks if entire group is parked in a zone.
+-- @param #Global self
 -- @param Core.Zone#ZONE_BASE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If all units are parked in the zone.
@@ -129,6 +138,7 @@ function Global:GroupIsParked(zone, group)
 end
 
 --- Checks if all groups from a spawner are parked in a zone.
+-- @param #Global self
 -- @param Core.Zone#ZONE_BASE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
@@ -155,6 +165,7 @@ function Global:SpawnGroupsAreParked(zone, spawn, spawnCount)
 end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
+-- @param #Global self
 -- @param Core.Zone#ZONE_BASE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
 function Global:KeepAliveGroupIfParked(zone, group)
@@ -175,6 +186,7 @@ function Global:KeepAliveGroupIfParked(zone, group)
 end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
+-- @param #Global self
 -- @param Core.Zone#ZONE_BASE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
@@ -193,6 +205,7 @@ function Global:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
 end
 
 --- Check if the group has a player.
+-- @param #Global self
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If player is in the group. 
 function Global:GroupHasPlayer(group)
