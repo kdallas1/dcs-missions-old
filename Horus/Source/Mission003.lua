@@ -17,7 +17,7 @@ local _migsSpawnSeparation = 300
 local _migsSpawnVariation = .5
 
 ---
--- @param Mission self
+-- @param #Mission self
 function Mission:Setup()
   Global:Trace(1, "Setup begin")
   
@@ -53,7 +53,7 @@ function Mission:Setup()
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:SetupMenu(transportSpawn)
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
@@ -63,7 +63,7 @@ function Mission:SetupMenu(transportSpawn)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Core.Event#EVENTHANDLER events
 function Mission:SetupEvents(events)
   events:HandleEvent(EVENTS.Birth,
@@ -71,7 +71,7 @@ function Mission:SetupEvents(events)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Core.Event#EVENTHANDLER h
 -- @param Core.Event#EVENTDATA e
 function Mission:OnEventBirth(h, e)
@@ -87,7 +87,7 @@ function Mission:OnEventBirth(h, e)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
 function Mission:OnUnitCrashed(unit)
   Global:CheckType(unit, UNIT)
@@ -102,7 +102,7 @@ function Mission:OnUnitCrashed(unit)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 function Mission:AnnounceWin()
   Global:Trace(1, "Mission accomplished")
   MESSAGE:New("Mission accomplished!", 100):ToAll()
@@ -111,7 +111,7 @@ function Mission:AnnounceWin()
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 function Mission:AnnounceLose()
   Global:Trace(1, "Mission failed")
   MESSAGE:New("Mission failed!", 100):ToAll()
@@ -120,7 +120,7 @@ function Mission:AnnounceLose()
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Wrapper.Group#GROUP playerGroup
 function Mission:LandTestPlayers(playerGroup)
   Global:Trace(1, "Landing test players")
@@ -131,7 +131,7 @@ function Mission:LandTestPlayers(playerGroup)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:KillTransport(transportSpawn)
   Global:Trace(1, "Killing transport")
@@ -143,7 +143,7 @@ function Mission:KillTransport(transportSpawn)
 end
 
 ---
--- @param Mission self
+-- @param #Mission self
 -- @param Core.Zone#ZONE nalchikParkZone
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:GameLoop(nalchikParkZone, transportSpawn)
