@@ -1,115 +1,138 @@
---BASE:TraceOnOff(true)
-BASE:TraceAll(true)
-BASE:TraceLevel(3)
+Mission = {}
 
-hTraceOn = true
-hTraceLevel = 2
-hAssert = true
+local _gameLoopInterval = 1
+local _landTestPlayersDone = false
+local _playerOnline = false
+local _winLoseDone = false
+local _transportCount = 5
+local _maxUnitsAlive = 100
+local _transportSeparation = 200
+local _transportVariation = .5
+local _nalchikParkZone = nil
+local _transportSpawn = nil
+local _events = EVENTHANDLER:New()
 
-transportCount = 5
-winCheckInterval = 5
-landTestPlayersDone = false
-playerOnline = false
-winLoseDone = false
-
-nalchikParkZone = ZONE:FindByName("Nalchik Park")
-transportSpawn = SPAWN:New("Transport"):InitLimit(100, transportCount):SpawnScheduled(200, 0)
-events = EVENTHANDLER:New()
-
-function setupMission()
-  hTrace(1, "Setup begin")
-  setupMenu()
-  setupEvents()
-  SCHEDULER:New(nil, checkWin, {}, 0, winCheckInterval)
-  hTrace(1, "Setup done")
+function Mission:Setup()
+  Global:Trace(1, "Setup begin")
+  
+  --BASE:TraceOnOff(true)
+  BASE:TraceAll(true)
+  BASE:TraceLevel(3)
+  
+  Global:SetTraceOn(true)
+  Global:SetTraceLevel(1)
+  Global:SetAssert(true)
+  
+  _nalchikParkZone = ZONE:FindByName("Nalchik Park")
+  _transportSpawn = SPAWN:New("Transport")
+    :InitLimit(_maxUnitsAlive, _transportCount)
+    :SpawnScheduled(_transportSeparation, _transportVariation)
+  
+  Mission:SetupMenu()
+  Mission:SetupEvents()
+  
+  SCHEDULER:New(nil,
+    function() Mission:GameLoop() end, 
+    {}, 0, _gameLoopInterval)
+  
+  Global:Trace(1, "Setup done")
 end
 
-function setupMenu()
+function Mission:SetupMenu()
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
-  MENU_COALITION_COMMAND:New(coalition.side.BLUE, "Kill transport", menu, killTransport)
+  MENU_COALITION_COMMAND:New(
+    coalition.side.BLUE, "Kill transport", menu,
+    function() Mission:KillTransport() end)
 end
 
-function killTransport()
-  group = transportSpawn:GetGroupFromIndex(1)
-  if group then
-    unit = group:GetUnit(1)
-    unit:Explode(100, 0)
-  end
+function Mission:SetupEvents()
+  _events:HandleEvent(EVENTS.Birth)
 end
 
-function setupEvents()
-  events:HandleEvent(EVENTS.Birth)
+function _events:OnEventBirth(e)
+  local unit = e.IniUnit
+  Global:Trace(1, "Unit birth: " .. unit:GetName())
+  unit:HandleEvent(EVENTS.Crash,
+    function() Mission:OnTransportCrashed() end)
 end
 
-function events:OnEventBirth(e)
-  unit = e.IniUnit
-  hTrace(1, "Birth: " .. unit:GetName())
-  unit:HandleEvent(EVENTS.Crash, onTransportCrashed)
-end
-
-function onTransportCrashed(e)
+function Mission:OnTransportCrashed(e)
   MESSAGE:New("Transport crashed!", 100):ToAll()
-  if (not winLoseDone) then
-    announceLose()
+  if (not _winLoseDone) then
+    Mission:AnnounceLose()
   end
 end
 
-function announceWin()
+function Mission:AnnounceWin()
+  Global:Trace(1, "Mission accomplished")
   MESSAGE:New("Mission accomplished!", 100):ToAll()
   USERSOUND:New("MissionAccomplished.ogg"):ToAll()
-  winLoseDone = true
+  _winLoseDone = true
 end
 
-function announceLose()
+function Mission:AnnounceLose()
+  Global:Trace(1, "Mission failed")
   MESSAGE:New("Mission failed!", 100):ToAll()
   USERSOUND:New("MissionFailed.ogg"):ToAll()
-  winLoseDone = true
+  _winLoseDone = true
 end
 
-function landTestPlayers(playerGroup)
-  hTrace(2, "landing test players")
+function Mission:LandTestPlayers(playerGroup)
+  Global:Trace(1, "Landing test players")
   local airbase = AIRBASE:FindByName(AIRBASE.Caucasus.Nalchik)
   local land = airbase:GetCoordinate():WaypointAirLanding(300, airbase)
   local route = { land }
   playerGroup:Route(route)
 end
 
-function checkWin()
+function Mission:KillTransport()
+  Global:Trace(1, "Killing transport")
+  local group = _transportSpawn:GetGroupFromIndex(1)
+  if group then
+    unit = group:GetUnit(1)
+    unit:Explode(100, 0)
+  end
+end
+
+function Mission:GameLoop()
     
   local playerGroup = GROUP:FindByName("Dodge Squadron")
-  if (not playerGroup) then
-    return
-  end
-  
-  if (groupHasPlayer(playerGroup) and not playerOnline) then
-    hTrace(2, "player is now online (in player group)")
-    playerOnline = true
-  end
 
-  local playersAreParked = groupIsParked(nalchikParkZone, playerGroup)
-  local transportsAreParked =  spawnGroupsAreParked(nalchikParkZone, transportSpawn, transportCount)
-  local everyoneParked = playersAreParked and transportsAreParked
+  -- if no players, then say all players are parked (not sure if this makes sense).
+  local playersAreParked = ((not playerGroup) or Global:GroupIsParked(_nalchikParkZone, playerGroup))
+  local transportsAreParked = Global:SpawnGroupsAreParked(_nalchikParkZone, _transportSpawn, _transportCount)
+  local everyoneParked = (playersAreParked and transportsAreParked)
   
-  hTrace(1, (playersAreParked and "✔ Players: All parked" or "❌ Players: Not all parked"), 1)
-  hTrace(1, (transportsAreParked and "✔ Transports: All parked" or "❌ Transports: Not all parked"), 1)
-  hTrace(1, (everyoneParked and "✔ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
+  Global:Trace(2, (playersAreParked and "✔ Players: All parked" or "❌ Players: Not all parked"), 1)
+  Global:Trace(2, (transportsAreParked and "✔ Transports: All parked" or "❌ Transports: Not all parked"), 1)
+  Global:Trace(2, (everyoneParked and "✔ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
-  if (everyoneParked and not winLoseDone) then
-    announceWin()
+  if (everyoneParked and not _winLoseDone) then
+    Mission:AnnounceWin()
   end
   
-  if (transportsAreParked and not landTestPlayersDone) then
-    landTestPlayers(playerGroup)
-    landTestPlayersDone = true
+  -- no player group happens when no players are online yet
+  if (playerGroup) then
+  
+    if (Global:GroupHasPlayer(playerGroup) and not _playerOnline) then
+      Global:Trace(1, "Player is now online (in player group)")
+      _playerOnline = true
+    end
+  
+    if (transportsAreParked and (not _landTestPlayersDone)) then
+      Mission:LandTestPlayers(playerGroup)
+      _landTestPlayersDone = true
+    end
+    
+    -- keep alive only needed for AI player group (which is useful for testing).
+    if (transportsAreParked and (not _playerOnline)) then
+      Global:KeepAliveGroupIfParked(_nalchikParkZone, playerGroup)
+    end
+    
   end
   
-  keepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, transportCount)
-  
-  -- Only needed for AI (useful for testing).
-  if (transportsAreParked and not playerOnline) then
-    keepAliveGroupIfParked(nalchikParkZone, playerGroup)
-  end
+  Global:KeepAliveSpawnGroupsIfParked(_nalchikParkZone, _transportSpawn, _transportCount)
   
 end
 
-setupMission()
+Mission:Setup()
