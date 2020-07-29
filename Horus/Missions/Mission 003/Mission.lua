@@ -46,17 +46,25 @@ function Mission:SetupMenu()
 end
 
 function Mission:SetupEvents()
-  _events:HandleEvent(EVENTS.Birth)
+  _events:HandleEvent(EVENTS.Birth,
+    function(h, e) Mission:OnEventBirth(h, e) end)
 end
 
-function _events:OnEventBirth(e)
+function Mission:OnEventBirth(h, e)
+  Global:CheckType(h, EVENTHANDLER)
+  Global:CheckType(e, "table")
+  Global:CheckType(e.IniUnit, UNIT)
+  
   local unit = e.IniUnit
-  Global:Trace(1, "Unit birth: " .. unit:GetName())
+  Global:Trace(2, "Unit birth: " .. unit:GetName())
   unit:HandleEvent(EVENTS.Crash,
-    function() Mission:OnTransportCrashed() end)
+    function(_unit) Mission:OnTransportCrashed(_unit) end)
 end
 
-function Mission:OnTransportCrashed(e)
+function Mission:OnTransportCrashed(unit)
+  Global:CheckType(unit, UNIT)
+  Global:Trace(1, "Transport crashed: " .. unit:GetName())
+  
   MESSAGE:New("Transport crashed!", 100):ToAll()
   if (not _winLoseDone) then
     Mission:AnnounceLose()

@@ -33,6 +33,12 @@ end
 -- @param #number level Level to trace at.
 -- @param #string line Log line to output to env.info 
 function Global:Trace(level, line)
+
+  if (_assert) then
+    assert(type(level) == type(0), "level arg must be a number")
+    assert(type(line) == type(""), "line arg must be a string")
+  end
+  
   if (_traceOn and (level <= _traceLevel)) then
     local funcName = debug.getinfo(2, "n").name
     local lineNum = debug.getinfo(2, "S").linedefined
@@ -42,13 +48,44 @@ function Global:Trace(level, line)
   end
 end
 
---- Asserts the correct type (Lua is loosely typed)
+--- Asserts the correct type (Lua is loosely typed, so this is helpful)
 -- @param Core.Base#BASE object Object to check
--- @param #table t Moose class to assert
-function Global:CheckType(object, t)
-  if (_assert) then
-    assert(object:GetClassName() == t.ClassName, 
-      "Invalid type, expected '" .. t.ClassName .. "' but was '" .. object:GetClassName() .. "'")
+-- @param #table _type Either Moose class or type string name to assert
+function Global:CheckType(object, _type)
+  if (not _assert) then
+    return
+  end
+  
+  assert(object, "Cannot check type, object is nil")
+  assert(_type, "Cannot check type, _type is nil")
+  
+  if (type(_type) == "string") then
+    assert(type(object) == _type,
+      "Invalid type, expected '" .. _type .. "' but was '" .. type(object) .. "'")
+    return
+  end
+  
+  -- in Lua, classes are tables
+  if (type(object) == "table") then
+    
+    Global:Trace(4, "Listing type properties")
+    for field, v in pairs(object) do
+      Global:Trace(4, "Property: " .. field)
+    end
+  
+    -- check for MOOSE class name
+    if (object.ClassName or _type.ClassName) then
+      assert(object.ClassName, "Missing ClassName property on object")
+      assert(_type.ClassName, "Missing ClassName property on _type")
+      
+      assert(object.ClassName == _type.ClassName, 
+        "Invalid type, expected '" .. _type.ClassName .. "' but was '" .. object.ClassName .. "'")
+    else
+      error("Type check failed, object and _type missing ClassName")
+    end
+  
+  else
+    error("Type check failed, invalid args")
   end
 end
 
