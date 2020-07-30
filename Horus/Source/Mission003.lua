@@ -12,8 +12,8 @@ local _transportCount = 5
 local _maxUnitsAlive = 100
 local _transportSeparation = 200
 local _transportVariation = .5
-local _migsPerAirbase = 4
-local _migsSpawnSeparation = 400
+local _migsPerAirbase = 3
+local _migsSpawnSeparation = 500
 local _migsSpawnVariation = .5
 local _transportMinLife = 30
 
