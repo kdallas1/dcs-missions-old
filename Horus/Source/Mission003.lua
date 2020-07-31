@@ -2,14 +2,15 @@
 -- @module Mission
 
 --- @type Mission
-Mission = {}
+Mission = {
+  m_playerGroup = nil
+}
 
 local _gameLoopInterval = 1
-local _landTestPlayersDone = false
 local _playerOnline = false
 local _winLoseDone = false
 local _soundCounter = 1
-local _playerGroup = "Dodge Squadron"
+local _playerGroup = "Dodge"
 
 local _transportCount = 5
 local _transportSeparation = 180
@@ -47,6 +48,7 @@ function Mission:Setup()
     :SpawnScheduled(_transportSeparation, _transportVariation)
   
   local playerGroup = GROUP:FindByName(_playerGroup)
+  self.m_playerGroup = playerGroup
   
   Global:AddSpawner(transportSpawn, _transportCount)
   Global:AddGroup(playerGroup)
@@ -124,7 +126,12 @@ function Mission:OnUnitSpawn(unit)
   if (string.match(unit:GetName(), "Transport")) then
     _transportSpawnCount = _inc(_transportSpawnCount)
     Global:Trace(1, "New transport spawned, alive: " .. tostring(_transportSpawnCount))
-    MESSAGE:New("Transport #".. tostring(_transportSpawnCount) .." arrived, inbound to Nalchik", 100):ToAll()
+    
+    MESSAGE:New(
+      "Transport #".. tostring(_transportSpawnCount) .." of " .. 
+      tostring(_transportCount) .. " arrived, inbound to Nalchik", 100
+    ):ToAll()
+    
     Global:PlaySound(Sound.ReinforcementsHaveArrived, 2)
   end
   
@@ -207,7 +214,8 @@ function Mission:OnEnemyDead(unit)
   else
     Global:PlaySound(Sound.FirstObjectiveMet, 2)
     MESSAGE:New("All enemy MiGs are dead!", 100):ToAll()
-    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", 100):ToAll()
+    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", 100):ToAll()    
+    Mission:LandTestPlayers(self.m_playerGroup)
   end
 end
 
@@ -361,11 +369,6 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
     if (Global:GroupHasPlayer(playerGroup) and not _playerOnline) then
       Global:Trace(1, "Player is now online (in player group)")
       _playerOnline = true
-    end
-  
-    if (transportsAreParked and (not _landTestPlayersDone)) then
-      Mission:LandTestPlayers(playerGroup)
-      _landTestPlayersDone = true
     end
     
     -- keep alive only needed for AI player group (which is useful for testing).
