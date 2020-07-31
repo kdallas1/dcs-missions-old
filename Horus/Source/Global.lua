@@ -8,6 +8,23 @@ local _traceOn = false
 local _traceLevel = 1
 local _assert = false
 
+---
+-- @type Sound
+Sound = {
+  MissionLoaded                 = 0,
+  MissionAccomplished           = 1,
+  MissionFailed                 = 2,
+  EnemyApproching               = 3,
+  TargetDestoyed                = 4,
+  KissItByeBye                  = 5,
+  ShakeItBaby                   = 6,
+  ForKingAndCountry             = 7,
+  FirstObjectiveMet             = 8,
+  UnitLost                      = 9,
+  BattleControlTerminated       = 10,
+  ReinforcementsHaveArrived     = 11
+}
+
 --- Short hand to increment a number (no ++ in Lua)
 -- @param #number i Start increment from this number.
 -- @return #number Returns i + 1   
@@ -227,4 +244,31 @@ function Global:GroupHasPlayer(group)
   
   Global:Trace(3, "no players in group: " .. group:GetName())
   return false
+end
+
+---
+-- @param #Global self
+-- @param #Sound soundType
+-- @param #number delay (optional)
+-- @return #boolean True if sound was found
+function Global:PlaySound(soundType, delay)
+  if not delay then
+    delay = 0
+  end
+  
+  local found = false
+  for soundName, v in pairs(Sound) do
+    if v == soundType then
+      Global:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
+      local sound = USERSOUND:New(soundName .. ".ogg")
+      SCHEDULER:New(nil, function() sound:ToAll() end, {}, delay)
+      found = true
+    end
+  end
+  
+  if not found then
+    error("Sound not found by type: " .. tostring(soundType))
+  end
+  
+  return found
 end

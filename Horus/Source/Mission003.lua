@@ -2,12 +2,17 @@
 -- @module Mission
 
 --- @type Mission
-Mission = {}
+Mission = {
+
+  ---@field [parent=#Mission] #list<Core.Spawn#SPAWN> m_migSpawners
+  m_migSpawners = {}
+}
 
 local _gameLoopInterval = 1
 local _landTestPlayersDone = false
 local _playerOnline = false
 local _winLoseDone = false
+local _soundCounter = 1
 
 local _transportCount = 5
 local _transportSeparation = 200
@@ -15,12 +20,13 @@ local _transportVariation = .5
 local _transportMinLife = 30
 local _transportSpawnCount = 0
 
+local _migsSpawnAt = 30
 local _migsPerAirbase = 3
 local _migsSpawnSeparation = 700
 local _migsSpawnVariation = .5
 local _migsSpawnCount = 0
 local _migsGroupMax = 3
-local _migsffDestroyed = 0
+local _migsDestroyed = 0
 
 ---
 -- @param #Mission self
@@ -44,19 +50,55 @@ function Mission:Setup()
   Mission:SetupMenu(transportSpawn)
   Mission:SetupEvents(events)
   
-  for i = 1, _migsGroupMax do
-    SPAWN:New("MiG " .. i)
-      :InitLimit(_migsPerAirbase, _migsPerAirbase)
-      :SpawnScheduled(_migsSpawnSeparation, _migsSpawnVariation)
-  end
+  SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
   
   SCHEDULER:New(nil,
     function() Mission:GameLoop(nalchikParkZone, transportSpawn) end, 
     {}, 0, _gameLoopInterval)
   
+  Global:PlaySound(Sound.MissionLoaded)
+  
+  MESSAGE:New("Welcome to Mission 3", 100):ToAll()
+  MESSAGE:New("Please read the brief", 100):ToAll()
   Global:Trace(1, "Setup done")
   
 end
+
+---
+-- @param #Mission self
+function Mission:PlayEnemyDeadSound(delay)
+  if not delay then
+    delay = 0
+  end
+  
+  local sounds = {
+    Sound.ForKingAndCountry,
+    Sound.KissItByeBye,
+    Sound.ShakeItBaby
+  }
+  
+  Global:PlaySound(Sound.TargetDestoyed, delay)
+  Global:PlaySound(sounds[_soundCounter], delay + 2)
+  
+  _soundCounter = _inc(_soundCounter)
+  if _soundCounter > #sounds then
+    _soundCounter = 1
+  end
+end
+
+---
+-- @param #Mission self
+function Mission:SpawnEnemies()
+  Global:Trace(2, "Spawning enemy MiGs")
+  for i = 1, _migsGroupMax do
+    self.m_migSpawners[i] = SPAWN:New("MiG " .. i)
+      :InitLimit(_migsPerAirbase, _migsPerAirbase)
+      :SpawnScheduled(_migsSpawnSeparation, _migsSpawnVariation)
+      
+    Global:Trace(2, "MiG spawner added at " .. tostring(i))
+  end
+end
+
 ---
 -- @param #Mission self
 -- @param Core.Event#EVENTHANDLER events
@@ -65,6 +107,7 @@ function Mission:SetupEvents(events)
     function(h, e) Mission:OnEventBirth(h, e) end)
 end
 
+-- TODO: implement own birth event, pretty sure this is unreliable
 ---
 -- @param #Mission self
 -- @param Core.Event#EVENTHANDLER h
@@ -79,14 +122,16 @@ function Mission:OnEventBirth(h, e)
   
   if (string.match(unit:GetName(), "Transport")) then
     _transportSpawnCount = _inc(_transportSpawnCount)
-    Global:Trace(1, "Transports alive: " .. tostring(_transportSpawnCount))
+    Global:Trace(1, "New transport spawned, alive: " .. tostring(_transportSpawnCount))
     MESSAGE:New("Transport #".. tostring(_transportSpawnCount) .." arrived, inbound to Nalchik", 100):ToAll()
+    Global:PlaySound(Sound.ReinforcementsHaveArrived, 2)
   end
   
   if (string.match(unit:GetName(), "MiG")) then
     _migsSpawnCount = _inc(_migsSpawnCount)
-    Global:Trace(1, "Enemies alive: " .. tostring(_migsSpawnCount))
+    Global:Trace(1, "New enemy spawned, alive: " .. tostring(_migsSpawnCount))
     MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnCount) .. " incoming, inbound to Nalchik", 100):ToAll()
+    Global:PlaySound(Sound.EnemyApproching)
   end
 end
 
@@ -108,8 +153,10 @@ function Mission:OnTransportDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Transport destroyed: " .. unit:GetName())
   MESSAGE:New("Transport destroyed!", 100):ToAll()
+  Global:PlaySound(Sound.UnitLost)
+  
   if (not _winLoseDone) then
-    Mission:AnnounceLose()
+    Mission:AnnounceLose(2)
   end
 end
 
@@ -120,8 +167,10 @@ function Mission:OnPlayerDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Player is dead: " .. unit:GetName())
   MESSAGE:New("Player is dead!", 100):ToAll()
+  Global:PlaySound(Sound.UnitLost)
+  
   if (not _winLoseDone) then
-    Mission:AnnounceLose()
+    Mission:AnnounceLose(2)
   end
 end
 
@@ -132,12 +181,15 @@ function Mission:OnEnemyDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Enemy MiG is dead: " .. unit:GetName())
   
+  Mission:PlayEnemyDeadSound()
+  
   _migsDestroyed = _inc(_migsDestroyed)
   local remain = (_migsGroupMax * _migsPerAirbase) - _migsDestroyed
   
   if (remain > 0) then
     MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, 100):ToAll()
   else
+    Global:PlaySound(Sound.FirstObjectiveMet, 2)
     MESSAGE:New("All enemy MiGs are dead!", 100):ToAll()
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", 100):ToAll()
   end
@@ -145,19 +197,21 @@ end
 
 ---
 -- @param #Mission self
-function Mission:AnnounceWin()
+function Mission:AnnounceWin(soundDelay)
   Global:Trace(1, "Mission accomplished")
   MESSAGE:New("Mission accomplished!", 100):ToAll()
-  USERSOUND:New("MissionAccomplished.ogg"):ToAll()
+  Global:PlaySound(Sound.MissionAccomplished, soundDelay)
+  Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
 end
 
 ---
 -- @param #Mission self
-function Mission:AnnounceLose()
+function Mission:AnnounceLose(soundDelay)
   Global:Trace(1, "Mission failed")
   MESSAGE:New("Mission failed!", 100):ToAll()
-  USERSOUND:New("MissionFailed.ogg"):ToAll()
+  Global:PlaySound(Sound.MissionFailed, soundDelay)
+  Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
 end
 
@@ -190,7 +244,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:CheckTransportDamage(transportSpawn)
-  Global:Trace(3, "Checking spawn groups for damage")
+  Global:Trace(3, "Checking transport spawn groups for damage")
   for i = 1, _transportCount do
     local group = transportSpawn:GetGroupFromIndex(i)
     if group then
@@ -233,6 +287,7 @@ function Mission:CheckTransportDamage(transportSpawn)
   end
 end
 
+-- TODO: if unit is immediately destroyed and removed from the group, then it's death isn't detected
 -- TODO: refactor into global class
 ---
 -- @param #Mission self
@@ -274,30 +329,40 @@ end
 -- @param #Mission self
 function Mission:CheckEnemyDamage()
 
-  for i = 1, _migsGroupMax do
+  Global:Trace(3, "Checking MiG spawn groups for damage")
+        
+  for k = 1, #self.m_migSpawners do
+    local spawner = self.m_migSpawners[k]
+    Global:Trace(3, "Checking MiG spawner for damage: " .. tostring(k))
   
-    local group = GROUP:FindByName("MiG " .. i)
-    Global:Trace(3, "Checking group for damage: " .. group:GetName())
+    for i = 1, _migsGroupMax do
+    
+      local group = spawner:GetGroupFromIndex(i)
+      if group then
+      
+        Global:Trace(3, "Checking group for damage: " .. group:GetName())
         
-    local units = group:GetUnits()
-    if units then
-      for j = 1, #units do
-        local unit = group:GetUnit(j)
-        local life = unit:GetLife()
-        local fireDieEvent = false
-        
-        Global:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
-        
-        -- we can't use IsAlive here, because the unit may not have spawned yet 
-        if (life <= 1) then
-          fireDieEvent = true
-        end
-        
-        -- previously using the EVENTS.Crash event, but it was a bit unreliable
-        if (fireDieEvent and (not unit.eventDeadFired)) then
-          Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
-          Mission:OnEnemyDead(unit)
-          unit.eventDeadFired = true
+        local units = group:GetUnits()
+        if units then
+          for j = 1, #units do
+            local unit = group:GetUnit(j)
+            local life = unit:GetLife()
+            local fireDieEvent = false
+            
+            Global:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
+            
+            -- we can't use IsAlive here, because the unit may not have spawned yet 
+            if (life <= 1) then
+              fireDieEvent = true
+            end
+            
+            -- previously using the EVENTS.Crash event, but it was a bit unreliable
+            if (fireDieEvent and (not unit.eventDeadFired)) then
+              Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
+              Mission:OnEnemyDead(unit)
+              unit.eventDeadFired = true
+            end
+          end
         end
       end
     end
