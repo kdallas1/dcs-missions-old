@@ -12,7 +12,7 @@ local _soundCounter = 1
 local _playerGroup = "Dodge Squadron"
 
 local _transportCount = 5
-local _transportSeparation = 150
+local _transportSeparation = 180
 local _transportVariation = 0
 local _transportMinLife = 30
 local _transportSpawnCount = 0
@@ -39,6 +39,9 @@ function Mission:Setup()
   Global:SetAssert(true)
   
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
+  
+  -- It seems Moose will randomly not spawn enough units if the time between 
+  -- spawns is too long. So maybe this would be better as a manual scheduler.
   local transportSpawn = SPAWN:New("Transport")
     :InitLimit(_transportCount, _transportCount)
     :SpawnScheduled(_transportSeparation, _transportVariation)
