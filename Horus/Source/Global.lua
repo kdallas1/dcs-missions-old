@@ -311,6 +311,7 @@ function Global:CheckGroup(group)
       
       if not self.m_units[id] then
         self.m_units[id] = unit
+        Global:Trace(3, "Firing unit spawn event: " .. unit:GetName())
         Global:FireEvent(Event.Spawn, unit)
       end
     end

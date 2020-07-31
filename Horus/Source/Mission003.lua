@@ -9,8 +9,9 @@ local _landTestPlayersDone = false
 local _playerOnline = false
 local _winLoseDone = false
 local _soundCounter = 1
+local _playerGroup = "Dodge Squadron"
 
-local _transportCount = 5
+local _transportCount = 4
 local _transportSeparation = 200
 local _transportVariation = .5
 local _transportMinLife = 30
@@ -41,7 +42,7 @@ function Mission:Setup()
   local transportSpawn = SPAWN:New("Transport")
     :InitLimit(_transportCount, _transportCount)
     :SpawnScheduled(_transportSeparation, _transportVariation)
-  local playerGroup = GROUP:FindByName("Dodge Squadron")
+  local playerGroup = GROUP:FindByName(_playerGroup)
   
   Global:AddSpawner(transportSpawn, _transportCount)
   Global:AddGroup(playerGroup)
@@ -49,7 +50,7 @@ function Mission:Setup()
   Mission:SetupMenu(transportSpawn)
   Mission:SetupEvents()
   
-  SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
+  --SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
   
   SCHEDULER:New(nil,
     function() Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup) end, 
@@ -146,7 +147,7 @@ end
 -- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
 function Mission:OnUnitDead(unit)
-  if (string.match(unit:GetName(), "Dodge")) then
+  if (string.match(unit:GetName(), _playerGroup)) then
     Mission:OnPlayerDead(unit)
   end
   if (string.match(unit:GetName(), "Transport")) then
@@ -209,6 +210,10 @@ end
 ---
 -- @param #Mission self
 function Mission:AnnounceWin(soundDelay)
+  if not soundDelay then
+    soundDelay = 0
+  end
+  
   Global:Trace(1, "Mission accomplished")
   MESSAGE:New("Mission accomplished!", 100):ToAll()
   Global:PlaySound(Sound.MissionAccomplished, soundDelay)
@@ -219,6 +224,10 @@ end
 ---
 -- @param #Mission self
 function Mission:AnnounceLose(soundDelay)
+  if not soundDelay then
+    soundDelay = 0
+  end
+  
   Global:Trace(1, "Mission failed")
   MESSAGE:New("Mission failed!", 100):ToAll()
   Global:PlaySound(Sound.MissionFailed, soundDelay)
