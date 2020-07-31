@@ -238,6 +238,10 @@ end
 -- @param #Mission self
 function Mission:CheckPlayerDamage()
   local group = GROUP:FindByName("Dodge Squadron")
+  if (not group) then
+    Global:Trace(3, "Player group not alive yet")
+    return
+  end
   
   Global:Trace(3, "Checking group for damage: " .. group:GetName())
       
