@@ -8,14 +8,19 @@ local _gameLoopInterval = 1
 local _landTestPlayersDone = false
 local _playerOnline = false
 local _winLoseDone = false
+
 local _transportCount = 5
-local _maxUnitsAlive = 100
 local _transportSeparation = 200
 local _transportVariation = .5
-local _migsPerAirbase = 3
-local _migsSpawnSeparation = 500
-local _migsSpawnVariation = .5
 local _transportMinLife = 30
+local _transportSpawnCount = 0
+
+local _migsPerAirbase = 3
+local _migsSpawnSeparation = 700
+local _migsSpawnVariation = .5
+local _migsSpawnCount = 0
+local _migsGroupMax = 3
+local _migsffDestroyed = 0
 
 ---
 -- @param #Mission self
@@ -27,18 +32,19 @@ function Mission:Setup()
   BASE:TraceLevel(3)
   
   Global:SetTraceOn(true)
-  Global:SetTraceLevel(1)
+  Global:SetTraceLevel(3)
   Global:SetAssert(true)
   
   local events = EVENTHANDLER:New()
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
   local transportSpawn = SPAWN:New("Transport")
-    :InitLimit(_maxUnitsAlive, _transportCount)
+    :InitLimit(_transportCount, _transportCount)
     :SpawnScheduled(_transportSeparation, _transportVariation)
   
   Mission:SetupMenu(transportSpawn)
+  Mission:SetupEvents(events)
   
-  for i = 1, 3 do
+  for i = 1, _migsGroupMax do
     SPAWN:New("MiG " .. i)
       :InitLimit(_migsPerAirbase, _migsPerAirbase)
       :SpawnScheduled(_migsSpawnSeparation, _migsSpawnVariation)
@@ -51,6 +57,39 @@ function Mission:Setup()
   Global:Trace(1, "Setup done")
   
 end
+---
+-- @param #Mission self
+-- @param Core.Event#EVENTHANDLER events
+function Mission:SetupEvents(events)
+  events:HandleEvent(EVENTS.Birth,
+    function(h, e) Mission:OnEventBirth(h, e) end)
+end
+
+---
+-- @param #Mission self
+-- @param Core.Event#EVENTHANDLER h
+-- @param Core.Event#EVENTDATA e
+function Mission:OnEventBirth(h, e)
+  Global:CheckType(h, EVENTHANDLER)
+  Global:CheckType(e, "table")
+  Global:CheckType(e.IniUnit, UNIT)
+  
+  local unit = e.IniUnit
+  Global:Trace(2, "Unit birth: " .. unit:GetName())
+  
+  if (string.match(unit:GetName(), "Transport")) then
+    _transportSpawnCount = _inc(_transportSpawnCount)
+    Global:Trace(1, "Transports alive: " .. tostring(_transportSpawnCount))
+    MESSAGE:New("Transport #".. tostring(_transportSpawnCount) .." arrived, inbound to Nalchik", 100):ToAll()
+  end
+  
+  if (string.match(unit:GetName(), "MiG")) then
+    _migsSpawnCount = _inc(_migsSpawnCount)
+    Global:Trace(1, "Enemies alive: " .. tostring(_migsSpawnCount))
+    MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnCount) .. " incoming, inbound to Nalchik", 100):ToAll()
+  end
+end
+
 
 ---
 -- @param #Mission self
@@ -83,6 +122,24 @@ function Mission:OnPlayerDead(unit)
   MESSAGE:New("Player is dead!", 100):ToAll()
   if (not _winLoseDone) then
     Mission:AnnounceLose()
+  end
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:OnEnemyDead(unit)
+  Global:CheckType(unit, UNIT)
+  Global:Trace(1, "Enemy MiG is dead: " .. unit:GetName())
+  
+  _migsDestroyed = _inc(_migsDestroyed)
+  local remain = (_migsGroupMax * _migsPerAirbase) - _migsDestroyed
+  
+  if (remain > 0) then
+    MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, 100):ToAll()
+  else
+    MESSAGE:New("All enemy MiGs are dead!", 100):ToAll()
+    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", 100):ToAll()
   end
 end
 
@@ -128,6 +185,7 @@ function Mission:KillTransport(transportSpawn)
   end
 end
 
+-- TODO: refactor into global class
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
@@ -175,10 +233,12 @@ function Mission:CheckTransportDamage(transportSpawn)
   end
 end
 
+-- TODO: refactor into global class
 ---
 -- @param #Mission self
 function Mission:CheckPlayerDamage()
   local group = GROUP:FindByName("Dodge Squadron")
+  
   Global:Trace(3, "Checking group for damage: " .. group:GetName())
       
   local units = group:GetUnits()
@@ -200,6 +260,41 @@ function Mission:CheckPlayerDamage()
         Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
         Mission:OnPlayerDead(unit)
         unit.eventDeadFired = true
+      end
+    end
+  end
+end
+
+-- TODO: refactor into global class
+---
+-- @param #Mission self
+function Mission:CheckEnemyDamage()
+
+  for i = 1, _migsGroupMax do
+  
+    local group = GROUP:FindByName("MiG " .. i)
+    Global:Trace(3, "Checking group for damage: " .. group:GetName())
+        
+    local units = group:GetUnits()
+    if units then
+      for j = 1, #units do
+        local unit = group:GetUnit(j)
+        local life = unit:GetLife()
+        local fireDieEvent = false
+        
+        Global:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
+        
+        -- we can't use IsAlive here, because the unit may not have spawned yet 
+        if (life <= 1) then
+          fireDieEvent = true
+        end
+        
+        -- previously using the EVENTS.Crash event, but it was a bit unreliable
+        if (fireDieEvent and (not unit.eventDeadFired)) then
+          Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
+          Mission:OnEnemyDead(unit)
+          unit.eventDeadFired = true
+        end
       end
     end
   end
@@ -285,6 +380,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn)
   Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportCount)
   Mission:CheckTransportDamage(transportSpawn)
   Mission:CheckPlayerDamage()
+  Mission:CheckEnemyDamage()
   
 end
 
