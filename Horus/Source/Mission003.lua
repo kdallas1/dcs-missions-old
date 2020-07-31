@@ -11,9 +11,9 @@ local _winLoseDone = false
 local _soundCounter = 1
 local _playerGroup = "Dodge Squadron"
 
-local _transportCount = 4
-local _transportSeparation = 200
-local _transportVariation = .5
+local _transportCount = 5
+local _transportSeparation = 150
+local _transportVariation = 0
 local _transportMinLife = 30
 local _transportSpawnCount = 0
 
@@ -42,6 +42,7 @@ function Mission:Setup()
   local transportSpawn = SPAWN:New("Transport")
     :InitLimit(_transportCount, _transportCount)
     :SpawnScheduled(_transportSeparation, _transportVariation)
+  
   local playerGroup = GROUP:FindByName(_playerGroup)
   
   Global:AddSpawner(transportSpawn, _transportCount)
@@ -50,7 +51,7 @@ function Mission:Setup()
   Mission:SetupMenu(transportSpawn)
   Mission:SetupEvents()
   
-  --SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
+  SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
   
   SCHEDULER:New(nil,
     function() Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup) end, 
