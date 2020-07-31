@@ -2,7 +2,20 @@
 -- @module Global
 
 --- @type Global
-Global = {}
+Global = {
+
+  ---@field #list<Core.Spawn#SPAWN> m_spawners
+  m_spawners = {},
+  
+  ---@field #list<Wrapper.Group#GROUP> m_groups
+  m_groups = {},
+  
+  ---@field #list<Wrapper.Unit#UNIT> m_units
+  m_units = {},
+  
+  ---@field #list<#function> m_eventHandlers
+  m_eventHandlers = {}
+}
 
 local _traceOn = false
 local _traceLevel = 1
@@ -23,6 +36,14 @@ Sound = {
   UnitLost                      = 9,
   BattleControlTerminated       = 10,
   ReinforcementsHaveArrived     = 11
+}
+
+---
+-- @type Event
+Event = {
+  Spawn     = 0,
+  Damaged   = 1,
+  Dead      = 2,
 }
 
 --- Short hand to increment a number (no ++ in Lua)
@@ -271,4 +292,159 @@ function Global:PlaySound(soundType, delay)
   end
   
   return found
+end
+
+---
+-- @param #Global self
+-- @param Wrapper.Group#GROUP group
+function Global:CheckGroup(group)
+
+  Global:Trace(3, "Checking group: " .. group:GetName())
+  
+  local units = group:GetUnits()
+  if units then
+    for i = 1, #units do
+      
+      -- add all units to our own list so we can watch units come and go
+      local unit = group:GetUnit(i)
+      local id = unit:GetID()
+      
+      if not self.m_units[id] then
+        self.m_units[id] = unit
+        Global:FireEvent(Event.Spawn, unit)
+      end
+    end
+  end
+end
+
+---
+-- @param #Global self
+-- @param #list<Wrapper.Group#GROUP> groups
+function Global:CheckGroupList(groups)
+
+  Global:Trace(3, "Checking group list")
+  
+  -- check internal groups list by default
+  if not groups then
+    groups = self.m_groups
+  end
+  
+  for i = 1, #groups do
+    local group = groups[i]
+    if group then
+      Global:CheckGroup(group)
+    end
+  end
+end
+
+---
+-- @param #Global self
+function Global:CheckUnitList()
+
+  Global:Trace(3, "Checking unit list")
+  
+  for id, unit in pairs(self.m_units) do
+    self:CheckUnit(unit)
+  end
+end
+
+---
+-- @param #Global self
+-- @param Wrapper.Unit#UNIT unit
+function Global:CheckUnit(unit)
+  
+  local life = unit:GetLife()
+  local fireDieEvent = false
+  Global:Trace(3, "Checking unit: " .. unit:GetName() .. ", health " .. tostring(life))
+  
+  -- we can't use IsAlive here, because the unit may not have spawned yet 
+  if (life <= 1) then
+    fireDieEvent = true
+  end
+  
+  -- previously using the EVENTS.Crash event, but it was a bit unreliable
+  if (fireDieEvent and (not unit.eventDeadFired)) then
+    Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
+    self:FireEvent(Event.Dead, unit)
+    unit.eventDeadFired = true
+  end
+end
+
+---
+-- @param #Global self
+function Global:CheckSpawnerList()
+
+  Global:Trace(3, "Checking spawner list")
+  
+  for i = 1, #self.m_spawners do
+    local spawner = self.m_spawners[i]
+    Global:Trace(3, "Checking spawner: " .. tostring(i))
+    
+    groups = {}
+    for i = 1, spawner.m_maxGroups do
+    
+      local group = spawner:GetGroupFromIndex(i)
+      if group then
+        groups[#groups + 1] = group
+      end
+    end
+    
+    Global:CheckGroupList(groups)
+  end
+end
+
+
+---
+-- @param #Global self
+function Global:GameLoop()
+  Global:Trace(3, "*** Game loop start ***")
+  self:CheckSpawnerList()
+  self:CheckGroupList()
+  self:CheckUnitList()
+end
+
+---
+-- @param #Global self
+-- @param Core.Spawn#SPAWN spawner
+-- @param #number maxGroups
+function Global:AddSpawner(spawner, maxGroups)
+  spawner.m_maxGroups = maxGroups
+  self.m_spawners[#self.m_spawners + 1] = spawner
+  Global:Trace(3, "Spawner added, total=" .. #self.m_spawners)
+end
+
+---
+-- @param #Global self
+-- @param Wrapper.Group#GROUP group
+function Global:AddGroup(group)
+  self.m_groups[#self.m_groups + 1] = group
+  Global:Trace(3, "Group added, total=" .. #self.m_groups)
+end
+
+---
+-- @param #Global self
+-- @param #Event event
+-- @param #function handler
+function Global:HandleEvent(event, handler)
+  self.m_eventHandlers[event] = handler
+  Global:Trace(3, "Event handler added, total=" .. #self.m_eventHandlers)
+end
+
+---
+-- @param #Global self
+-- @param #Event event
+function Global:FireEvent(event, arg)
+  local f = self.m_eventHandlers[event]
+  if f then
+    f(arg)
+  end
+end
+
+---
+-- @param #Global self
+function Global:TestEvents()
+  local test = "Hello world"
+  self:FireEvent(Event.Spawn, test)
+  self:FireEvent(Event.Damaged, test)
+  self:FireEvent(Event.Dead, test)
 end
