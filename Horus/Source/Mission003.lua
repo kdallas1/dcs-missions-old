@@ -13,7 +13,7 @@ local _playerGroup = "Dodge Squadron"
 
 local _transportCount = 5
 local _transportSeparation = 180
-local _transportVariation = 0
+local _transportVariation = .5
 local _transportMinLife = 30
 local _transportSpawnCount = 0
 
