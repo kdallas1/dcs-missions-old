@@ -11,6 +11,8 @@ local _playerOnline = false
 local _winLoseDone = false
 local _soundCounter = 1
 local _playerGroup = "Dodge"
+local _messageTimeShort = 10
+local _messageTimeLong = 100
 
 local _transportMaxCount = 5
 local _transportSeparation = 300
@@ -60,8 +62,8 @@ function Mission:Setup()
   
   Global:PlaySound(Sound.MissionLoaded)
   
-  MESSAGE:New("Welcome to Mission 3", 100):ToAll()
-  MESSAGE:New("Please read the brief", 100):ToAll()
+  MESSAGE:New("Welcome to Mission 3", _messageTimeShort):ToAll()
+  MESSAGE:New("Please read the brief", _messageTimeShort):ToAll()
   Global:Trace(1, "Setup done")
   
 end
@@ -147,7 +149,7 @@ function Mission:OnUnitSpawn(unit)
     
     MESSAGE:New(
       "Transport #".. tostring(_transportSpawnCount) .." of " .. 
-      tostring(_transportMaxCount) .. " arrived, inbound to Nalchik", 100
+      tostring(_transportMaxCount) .. " arrived, inbound to Nalchik", _messageTimeShort
     ):ToAll()
     
     Global:PlaySound(Sound.ReinforcementsHaveArrived, 2)
@@ -156,7 +158,7 @@ function Mission:OnUnitSpawn(unit)
   if (string.match(unit:GetName(), "MiG")) then
     _migsSpawnCount = _inc(_migsSpawnCount)
     Global:Trace(1, "New enemy spawned, alive: " .. tostring(_migsSpawnCount))
-    MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnCount) .. " incoming, inbound to Nalchik", 100):ToAll()
+    MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnCount) .. " incoming, inbound to Nalchik", _messageTimeShort):ToAll()
     Global:PlaySound(Sound.EnemyApproching)
   end
 end
@@ -193,7 +195,7 @@ end
 function Mission:OnTransportDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Transport destroyed: " .. unit:GetName())
-  MESSAGE:New("Transport destroyed!", 100):ToAll()
+  MESSAGE:New("Transport destroyed!", _messageTimeShort):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
@@ -207,7 +209,7 @@ end
 function Mission:OnPlayerDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Player is dead: " .. unit:GetName())
-  MESSAGE:New("Player is dead!", 100):ToAll()
+  MESSAGE:New("Player is dead!", _messageTimeShort):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
@@ -228,11 +230,11 @@ function Mission:OnEnemyDead(unit)
   local remain = (_migsGroupMax * _migsPerAirbase) - _migsDestroyed
   
   if (remain > 0) then
-    MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, 100):ToAll()
+    MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, _messageTimeShort):ToAll()
   else
     Global:PlaySound(Sound.FirstObjectiveMet, 2)
-    MESSAGE:New("All enemy MiGs are dead!", 100):ToAll()
-    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", 100):ToAll()    
+    MESSAGE:New("All enemy MiGs are dead!", _messageTimeShort):ToAll()
+    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", _messageTimeLong):ToAll()    
     Mission:LandTestPlayers(self.m_playerGroup)
   end
 end
@@ -245,7 +247,7 @@ function Mission:AnnounceWin(soundDelay)
   end
   
   Global:Trace(1, "Mission accomplished")
-  MESSAGE:New("Mission accomplished!", 100):ToAll()
+  MESSAGE:New("Mission accomplished!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.MissionAccomplished, soundDelay)
   Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
@@ -259,7 +261,7 @@ function Mission:AnnounceLose(soundDelay)
   end
   
   Global:Trace(1, "Mission failed")
-  MESSAGE:New("Mission failed!", 100):ToAll()
+  MESSAGE:New("Mission failed!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.MissionFailed, soundDelay)
   Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
