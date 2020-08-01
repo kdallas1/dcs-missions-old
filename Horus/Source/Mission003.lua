@@ -12,13 +12,14 @@ local _winLoseDone = false
 local _soundCounter = 1
 local _playerGroup = "Dodge"
 
-local _transportCount = 5
-local _transportSeparation = 180
+local _transportMaxCount = 5
+local _transportSeparation = 300
 local _transportVariation = .5
 local _transportMinLife = 30
 local _transportSpawnCount = 0
+local _transportSpawnStart = 10
 
-local _migsSpawnAt = 30
+local _migsSpawnStart = 60
 local _migsPerAirbase = 3
 local _migsSpawnSeparation = 700
 local _migsSpawnVariation = .5
@@ -41,22 +42,17 @@ function Mission:Setup()
   
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
   
-  -- It seems Moose will randomly not spawn enough units if the time between 
-  -- spawns is too long. So maybe this would be better as a manual scheduler.
   local transportSpawn = SPAWN:New("Transport")
-    :InitLimit(_transportCount, _transportCount)
-    :SpawnScheduled(_transportSeparation, _transportVariation)
+  Global:AddSpawner(transportSpawn, _transportMaxCount)
+  Mission:SpawnTransport(transportSpawn)
   
   local playerGroup = GROUP:FindByName(_playerGroup)
   self.m_playerGroup = playerGroup
-  
-  Global:AddSpawner(transportSpawn, _transportCount)
   Global:AddGroup(playerGroup)
   
   Mission:SetupMenu(transportSpawn)
   Mission:SetupEvents()
-  
-  SCHEDULER:New(nil, function() Mission:SpawnEnemies() end, {}, _migsSpawnAt)
+  Mission:SpawnEnemies()
   
   SCHEDULER:New(nil,
     function() Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup) end, 
@@ -96,14 +92,36 @@ end
 -- @param #Mission self
 function Mission:SpawnEnemies()
   Global:Trace(2, "Spawning enemy MiGs")
+  
   for i = 1, _migsGroupMax do
   
     local spawn = SPAWN:New("MiG " .. i)
-      :InitLimit(_migsPerAirbase, _migsPerAirbase)
-      :SpawnScheduled(_migsSpawnSeparation, _migsSpawnVariation)
-    
     Global:AddSpawner(spawn, _migsPerAirbase)
+    
+    -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
+    -- as it often spawns 1 less than you ask for.
+    SCHEDULER:New(nil, function()
+      local migsMaxCount = _migsGroupMax * _migsPerAirbase
+      if (_migsSpawnCount < migsMaxCount) then
+        spawn:Spawn()
+      end
+    end, {}, _migsSpawnStart, _migsSpawnSeparation, _migsSpawnVariation)
+    
   end
+end
+
+---
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN transportSpawn
+function Mission:SpawnTransport(transportSpawn)
+
+  -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
+  -- as it often spawns 1 less than you ask for. 
+  SCHEDULER:New(nil, function()
+    if (_transportSpawnCount < _transportMaxCount) then
+      transportSpawn:Spawn()
+    end
+  end, {}, _transportSpawnStart, _transportSeparation)
 end
 
 ---
@@ -129,7 +147,7 @@ function Mission:OnUnitSpawn(unit)
     
     MESSAGE:New(
       "Transport #".. tostring(_transportSpawnCount) .." of " .. 
-      tostring(_transportCount) .. " arrived, inbound to Nalchik", 100
+      tostring(_transportMaxCount) .. " arrived, inbound to Nalchik", 100
     ):ToAll()
     
     Global:PlaySound(Sound.ReinforcementsHaveArrived, 2)
@@ -277,7 +295,7 @@ end
 -- @param Core.Spawn#SPAWN transportSpawn
 function Mission:CheckTransportDamage(transportSpawn)
   Global:Trace(3, "Checking transport spawn groups for damage")
-  for i = 1, _transportCount do
+  for i = 1, _transportMaxCount do
     local group = transportSpawn:GetGroupFromIndex(i)
     if group then
       Global:Trace(3, "Checking group for damage: " .. group:GetName())
@@ -313,7 +331,7 @@ function Mission:GetAliveTransportCount(transportSpawn)
   Global:Trace(3, "Checking spawn groups for alive count")
   
   local count = 0
-  for i = 1, _transportCount do
+  for i = 1, _transportMaxCount do
     local group = transportSpawn:GetGroupFromIndex(i)
     if group then
       Global:Trace(3, "Checking group for alive count: " .. group:GetName())
@@ -351,7 +369,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
 
   -- if no players, then say all players are parked (not sure if this makes sense).
   local playersAreParked = ((not playerGroup) or Global:GroupIsParked(nalchikParkZone, playerGroup))
-  local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportCount)
+  local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportMaxCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
   Global:Trace(2, "Transports alive: " .. Mission:GetAliveTransportCount(transportSpawn))
@@ -378,7 +396,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
     
   end
   
-  Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportCount)
+  Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportMaxCount)
   Mission:CheckTransportDamage(transportSpawn)
   
 end
