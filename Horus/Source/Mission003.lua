@@ -3,7 +3,12 @@
 
 --- @type Mission
 Mission = {
-  m_playerGroup = nil
+  
+  ---@field #Wrapper.Group#GROUP playerGroup
+  playerGroup = nil,
+  
+  ---@field #list<Wrapper.Unit#UNIT> playerList
+  playerList = {}
 }
 
 local _gameLoopInterval = 1
@@ -11,6 +16,8 @@ local _playerOnline = false
 local _winLoseDone = false
 local _soundCounter = 1
 local _playerGroup = "Dodge"
+local _playerPrefix = "Dodge"
+local _playerMax = 4
 local _messageTimeShort = 10
 local _messageTimeLong = 100
 
@@ -33,7 +40,7 @@ local _migsDestroyed = 0
 -- @param #Mission self
 function Mission:Setup()
   Global:Trace(1, "Setup begin")
-  
+    
   --BASE:TraceOnOff(true)
   BASE:TraceAll(true)
   BASE:TraceLevel(3)
@@ -49,7 +56,7 @@ function Mission:Setup()
   Mission:SpawnTransport(transportSpawn)
   
   local playerGroup = GROUP:FindByName(_playerGroup)
-  self.m_playerGroup = playerGroup
+  self.playerGroup = playerGroup
   Global:AddGroup(playerGroup)
   
   Mission:SetupMenu(transportSpawn)
@@ -105,6 +112,8 @@ function Mission:SpawnEnemies()
     SCHEDULER:New(nil, function()
       local migsMaxCount = _migsSpawnerMax * _migsPerSpawner
       if (_migsSpawnCount < migsMaxCount) then
+      
+        -- migs fly in pairs
         spawn:Spawn()
       end
     end, {}, _migsSpawnStart, _migsSpawnSeparation, _migsSpawnVariation)
@@ -195,7 +204,7 @@ end
 function Mission:OnTransportDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Transport destroyed: " .. unit:GetName())
-  MESSAGE:New("Transport destroyed!", _messageTimeShort):ToAll()
+  MESSAGE:New("Transport destroyed!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
@@ -209,7 +218,7 @@ end
 function Mission:OnPlayerDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Player is dead: " .. unit:GetName())
-  MESSAGE:New("Player is dead!", _messageTimeShort):ToAll()
+  MESSAGE:New("Player is dead!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
@@ -233,9 +242,9 @@ function Mission:OnEnemyDead(unit)
     MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, _messageTimeShort):ToAll()
   else
     Global:PlaySound(Sound.FirstObjectiveMet, 2)
-    MESSAGE:New("All enemy MiGs are dead!", _messageTimeShort):ToAll()
+    MESSAGE:New("All enemy MiGs are dead!", _messageTimeLong):ToAll()
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", _messageTimeLong):ToAll()    
-    Mission:LandTestPlayers(self.m_playerGroup)
+    Mission:LandTestPlayers(self.playerGroup)
   end
 end
 
@@ -363,6 +372,13 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   Global:CheckType(nalchikParkZone, ZONE)
   Global:CheckType(transportSpawn, SPAWN)
   
+  self.playerList = Global:FindUnitsByPrefix(_playerPrefix, _playerMax)
+  Global:AddUnitList(self.playerList)
+  
+  local playersExist = (#self.playerList > 0)
+  Global:Trace(2, "Players list size: " .. #self.playerList)
+  Global:Trace(2, "Players exist: " .. (playersExist and "true" or "false")) 
+  
   Global:GameLoop()
   
   if (_winLoseDone) then
@@ -370,7 +386,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   end
 
   -- if no players, then say all players are parked (not sure if this makes sense).
-  local playersAreParked = ((not playerGroup) or Global:GroupIsParked(nalchikParkZone, playerGroup))
+  local playersAreParked = ((not playersExist) or Global:UnitsAreParked(nalchikParkZone, self.playerList))
   local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportMaxCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
@@ -383,10 +399,10 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
     Mission:AnnounceWin()
   end
   
-  -- no player group happens when no players are online yet
-  if (playerGroup) then
+  -- no players can happen when no AI/human players are online yet
+  if (playersExist) then
   
-    if (Global:GroupHasPlayer(playerGroup) and not _playerOnline) then
+    if (Global:ListHasPlayer(self.playerList) and not _playerOnline) then
       Global:Trace(1, "Player is now online (in player group)")
       _playerOnline = true
     end

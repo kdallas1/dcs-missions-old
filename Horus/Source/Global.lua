@@ -4,17 +4,17 @@
 --- @type Global
 Global = {
 
-  ---@field #list<Core.Spawn#SPAWN> m_spawners
-  m_spawners = {},
+  ---@field #list<Core.Spawn#SPAWN> spawners
+  spawners = {},
   
-  ---@field #list<Wrapper.Group#GROUP> m_groups
-  m_groups = {},
+  ---@field #list<Wrapper.Group#GROUP> groups
+  groups = {},
   
-  ---@field #list<Wrapper.Unit#UNIT> m_units
-  m_units = {},
+  ---@field #list<Wrapper.Unit#UNIT> units
+  units = {},
   
-  ---@field #list<#function> m_eventHandlers
-  m_eventHandlers = {}
+  ---@field #list<#function> eventHandlers
+  eventHandlers = {}
 }
 
 local _traceOn = false
@@ -145,19 +145,52 @@ function Global:GroupIsParked(zone, group)
   
   Global:CheckType(zone, ZONE)
   Global:CheckType(group, GROUP)
-
-  Global:Trace(3, "zone: " .. zone:GetName())
-  Global:Trace(3, "group: " .. group:GetName())
+  
+  Global:Trace(4, "group: " .. group:GetName())
   
   local units = group:GetUnits()
-  if (units == nil) then
-    Global:Trace(3, "no units in group: " .. group:GetName())
+  if not units then
+    Global:Trace(4, "no units in group: " .. group:GetName())
     return nil
   end
   
+  return Global:UnitsAreParked(zone, units)
+end
+
+--- Checks if all units are in a zone.
+-- @param #Global self
+-- @param Core.Zone#ZONE zone Parking zone to check.
+-- @param #list<Wrapper.Unit#UNIT> units The list of units to check.
+-- @return true If all units are parked in the zone.
+function Global:UnitsAreInZone(zone, units)
+  
+  for i = 1, #units do
+    local unit = units[i]
+    self:Trace(4, "Checking if unit in zone: " .. unit:GetName())
+    if not zone:IsVec3InZone(unit:GetVec3()) then
+      self:Trace(4, "Unit is not in zone: " .. unit:GetName())
+      return false
+    end
+  end
+  
+  self:Trace(4, "All units are in the zone")
+  return true
+end
+
+--- Checks if all units are parked in a zone.
+-- @param #Global self
+-- @param Core.Zone#ZONE zone Parking zone to check.
+-- @param #list<Wrapper.Unit#UNIT> units The list of units to check.
+-- @return true If all units are parked in the zone.
+function Global:UnitsAreParked(zone, units)
+  
+  Global:CheckType(zone, ZONE)
+
+  Global:Trace(3, "zone: " .. zone:GetName())
+  
   local stoppedCount = 0
   for i = 1, #units do
-    unit = group:GetUnit(i)
+    local unit = units[i]
     Global:Trace(3, "unit name: " .. unit:GetName())
     Global:Trace(3, "unit velocity: " .. unit:GetVelocityKNOTS())
     
@@ -170,7 +203,7 @@ function Global:GroupIsParked(zone, group)
   Global:Trace(3, "stoppedCount: " .. stoppedCount)
   
   local stopped = stoppedCount == #units
-  local inParkZone = group:IsCompletelyInZone(zone)
+  local inParkZone = self:UnitsAreInZone(zone, units)
   
   return (inParkZone and stopped)
 end
@@ -247,24 +280,38 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If player is in the group. 
 function Global:GroupHasPlayer(group)
+
+  Global:Trace(3, "looking for player in group: " .. group:GetName())
   
   local units = group:GetUnits()
   if not units then
     return false
   end
   
+  return self:ListHasPlayer(units)
+end
+
+--- Check if a list has a player.
+-- @param #Global self
+-- @param #list<Wrapper.Unit#UNIT> units The list to check.
+-- @return true If player is in the list.
+function Global:ListHasPlayer(units)
+
+  Global:Trace(3, "looking for player in list")
+      
   for i = 1, #units do
     local unit = units[i]
     
     if unit:IsPlayer() then
-      Global:Trace(3, "found player in group: " .. group:GetName())
+      Global:Trace(3, "found player in list")
       return true
     end 
     
   end
   
-  Global:Trace(3, "no players in group: " .. group:GetName())
+  Global:Trace(3, "no players in list")
   return false
+  
 end
 
 ---
@@ -303,18 +350,39 @@ function Global:CheckGroup(group)
   
   local units = group:GetUnits()
   if units then
+    
+    Global:Trace(3, "Unit count: " .. #units)
+    
     for i = 1, #units do
       
       -- add all units to our own list so we can watch units come and go
       local unit = group:GetUnit(i)
-      local id = unit:GetID()
       
-      if not self.m_units[id] then
-        self.m_units[id] = unit
-        Global:Trace(3, "Firing unit spawn event: " .. unit:GetName())
-        Global:FireEvent(Event.Spawn, unit)
-      end
+      Global:Trace(3, "Checking unit: " .. unit:GetName())
+      self:AddUnit(unit)
     end
+  end
+end
+
+---
+-- @param #Global self
+-- @param Wrapper.Unit#UNIT unit
+function Global:AddUnit(unit)
+  
+  local id = unit:GetID()
+  if not self.units[id] then
+    self.units[id] = unit
+    Global:Trace(3, "Firing unit spawn event: " .. unit:GetName())
+    Global:FireEvent(Event.Spawn, unit)
+  end
+end
+
+---
+-- @param #Global self
+-- @param #list<Wrapper.Unit#UNIT> units
+function Global:AddUnitList(units)
+  for i = 1, #units do
+    self:AddUnit(units[i])
   end
 end
 
@@ -327,7 +395,7 @@ function Global:CheckGroupList(groups)
   
   -- check internal groups list by default
   if not groups then
-    groups = self.m_groups
+    groups = self.groups
   end
   
   for i = 1, #groups do
@@ -344,7 +412,7 @@ function Global:CheckUnitList()
 
   Global:Trace(3, "Checking unit list")
   
-  for id, unit in pairs(self.m_units) do
+  for id, unit in pairs(self.units) do
     self:CheckUnit(unit)
   end
 end
@@ -377,12 +445,12 @@ function Global:CheckSpawnerList()
 
   Global:Trace(3, "Checking spawner list")
   
-  for i = 1, #self.m_spawners do
-    local spawner = self.m_spawners[i]
+  for i = 1, #self.spawners do
+    local spawner = self.spawners[i]
     Global:Trace(3, "Checking spawner: " .. tostring(i))
     
     groups = {}
-    for i = 1, spawner.m_maxGroups do
+    for i = 1, spawner.maxGroups do
     
       local group = spawner:GetGroupFromIndex(i)
       if group then
@@ -409,17 +477,25 @@ end
 -- @param Core.Spawn#SPAWN spawner
 -- @param #number maxGroups
 function Global:AddSpawner(spawner, maxGroups)
-  spawner.m_maxGroups = maxGroups
-  self.m_spawners[#self.m_spawners + 1] = spawner
-  Global:Trace(3, "Spawner added, total=" .. #self.m_spawners)
+  spawner.maxGroups = maxGroups
+  self.spawners[#self.spawners + 1] = spawner
+  Global:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
 
 ---
 -- @param #Global self
 -- @param Wrapper.Group#GROUP group
 function Global:AddGroup(group)
-  self.m_groups[#self.m_groups + 1] = group
-  Global:Trace(3, "Group added, total=" .. #self.m_groups)
+  self.groups[#self.groups + 1] = group
+  Global:Trace(3, "Group added, total=" .. #self.groups)
+end
+
+---
+-- @param #Global self
+-- @param Wrapper.Group#GROUP group
+function Global:AddGroup(group)
+  self.groups[#self.groups + 1] = group
+  Global:Trace(3, "Group added, total=" .. #self.groups)
 end
 
 ---
@@ -427,15 +503,15 @@ end
 -- @param #Event event
 -- @param #function handler
 function Global:HandleEvent(event, handler)
-  self.m_eventHandlers[event] = handler
-  Global:Trace(3, "Event handler added, total=" .. #self.m_eventHandlers)
+  self.eventHandlers[event] = handler
+  Global:Trace(3, "Event handler added, total=" .. #self.eventHandlers)
 end
 
 ---
 -- @param #Global self
 -- @param #Event event
 function Global:FireEvent(event, arg)
-  local f = self.m_eventHandlers[event]
+  local f = self.eventHandlers[event]
   if f then
     f(arg)
   end
@@ -448,4 +524,47 @@ function Global:TestEvents()
   self:FireEvent(Event.Spawn, test)
   self:FireEvent(Event.Damaged, test)
   self:FireEvent(Event.Dead, test)
+end
+
+--- Get a list of all units with a certain prefix.
+-- The `GROUP:GetUnits` function seems unreliable for getting all players 
+-- in a groupo of multiplayer clients, so let's try finding by a prefix.
+-- Note: The units must use #00n
+-- @param #Global self
+-- @param #string prefix
+-- @param #number max
+-- @return #list<Wrapper.Unit#UNIT>
+function Global:FindUnitsByPrefix(prefix, max)
+  
+  local list = {}
+  for i = 1, max do
+    local name = prefix .. string.format(" #%03d", i)
+    self:Trace(4, "Finding unit in Moose: " .. name)
+    
+    local unit = UNIT:FindByName(UnitName)
+    if unit then
+      self:Trace(4, "Found unit in Moose: " .. unit:GetName())
+    else
+      self:Trace(4, "Did not find unit in Moose: " .. name)
+      
+      self:Trace(4, "Finding unit in DCS: " .. name)
+      local dcsUnit = Unit.getByName(name)
+      if dcsUnit then
+        self:Trace(4, "Found unit in DCS: " .. name)
+        _DATABASE:AddUnit(name)
+        unit = UNIT:FindByName(name)
+      else
+        self:Trace(4, "Did not find unit in DCS: " .. name)
+      end
+    end
+    
+    if unit then
+      self:Trace(4, "Adding unit to list: " .. unit:GetName())
+      list[#list + 1] = unit
+      self:Trace(4, "New list size: " .. #list)
+    end
+  end
+  
+  return list
+  
 end
