@@ -14,7 +14,7 @@ local _playerGroup = "Dodge"
 local _messageTimeShort = 10
 local _messageTimeLong = 100
 
-local _transportMaxCount = 5
+local _transportMaxCount = 3 -- easy to run out of fuel with >3
 local _transportSeparation = 300
 local _transportVariation = .5
 local _transportMinLife = 30
@@ -22,11 +22,11 @@ local _transportSpawnCount = 0
 local _transportSpawnStart = 10
 
 local _migsSpawnStart = 60
-local _migsPerAirbase = 3
+local _migsSpawnerMax = 3 -- 3 airfields
+local _migsPerSpawner = 2 -- 2 per airfield = 6
 local _migsSpawnSeparation = 700
 local _migsSpawnVariation = .5
 local _migsSpawnCount = 0
-local _migsGroupMax = 3
 local _migsDestroyed = 0
 
 ---
@@ -95,15 +95,15 @@ end
 function Mission:SpawnEnemies()
   Global:Trace(2, "Spawning enemy MiGs")
   
-  for i = 1, _migsGroupMax do
+  for i = 1, _migsSpawnerMax do
   
     local spawn = SPAWN:New("MiG " .. i)
-    Global:AddSpawner(spawn, _migsPerAirbase)
+    Global:AddSpawner(spawn, _migsPerSpawner)
     
     -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
     -- as it often spawns 1 less than you ask for.
     SCHEDULER:New(nil, function()
-      local migsMaxCount = _migsGroupMax * _migsPerAirbase
+      local migsMaxCount = _migsSpawnerMax * _migsPerSpawner
       if (_migsSpawnCount < migsMaxCount) then
         spawn:Spawn()
       end
@@ -227,7 +227,7 @@ function Mission:OnEnemyDead(unit)
   Mission:PlayEnemyDeadSound()
   
   _migsDestroyed = _inc(_migsDestroyed)
-  local remain = (_migsGroupMax * _migsPerAirbase) - _migsDestroyed
+  local remain = (_migsSpawnerMax * _migsPerSpawner) - _migsDestroyed
   
   if (remain > 0) then
     MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, _messageTimeShort):ToAll()
