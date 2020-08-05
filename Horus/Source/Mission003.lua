@@ -21,8 +21,8 @@ local _soundCounter = 1
 local _playerGroup = "Dodge"
 local _playerPrefix = "Dodge"
 local _playerMax = 4
-local _messageTimeShort = 1000--10
-local _messageTimeLong = 1000--100
+local _messageTimeShort = 20
+local _messageTimeLong = 200
 local _playerCountMax = 0
 
 local _transportMaxCount = 3 -- easy to run out of fuel with >3
