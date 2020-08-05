@@ -8,7 +8,10 @@ Mission = {
   playerGroup = nil,
   
   ---@field #list<Wrapper.Unit#UNIT> playerList
-  playerList = {}
+  playerList = {},
+  
+  --- @field Core.Spawn#SPAWN transportSpawn
+  transportSpawn = nil,
 }
 
 local _gameLoopInterval = 1
@@ -18,8 +21,9 @@ local _soundCounter = 1
 local _playerGroup = "Dodge"
 local _playerPrefix = "Dodge"
 local _playerMax = 4
-local _messageTimeShort = 10
-local _messageTimeLong = 100
+local _messageTimeShort = 1000--10
+local _messageTimeLong = 1000--100
+local _playerCountMax = 0
 
 local _transportMaxCount = 3 -- easy to run out of fuel with >3
 local _transportSeparation = 300
@@ -27,14 +31,19 @@ local _transportVariation = .5
 local _transportMinLife = 30
 local _transportSpawnCount = 0
 local _transportSpawnStart = 10
+local _transportSpawnStarted = false
 
 local _migsSpawnStart = 60
-local _migsSpawnerMax = 3 -- 3 airfields
-local _migsPerSpawner = 2 -- 2 per airfield = 6
-local _migsSpawnSeparation = 700
+local _migsSpawnSeparation = 300
 local _migsSpawnVariation = .5
-local _migsSpawnCount = 0
+local _migsSpawnerMax = 3
+local _migsPerPlayer = 4
+local _migsSpawnInitCount = 0
+local _migsSpawnDoneCount = 0
+local _migsGroupSize = 2 -- pairs in ME
 local _migsDestroyed = 0
+local _migsNextSpawner = 1
+local _migsSpawnStarted = false
 
 ---
 -- @param #Mission self
@@ -51,20 +60,17 @@ function Mission:Setup()
   
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
   
-  local transportSpawn = SPAWN:New("Transport")
-  Global:AddSpawner(transportSpawn, _transportMaxCount)
-  Mission:SpawnTransport(transportSpawn)
+  self.transportSpawn = SPAWN:New("Transport")
   
   local playerGroup = GROUP:FindByName(_playerGroup)
   self.playerGroup = playerGroup
   Global:AddGroup(playerGroup)
   
-  Mission:SetupMenu(transportSpawn)
+  Mission:SetupMenu(self.transportSpawn)
   Mission:SetupEvents()
-  Mission:SpawnEnemies()
   
   SCHEDULER:New(nil,
-    function() Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup) end, 
+    function() Mission:GameLoop(nalchikParkZone, self.transportSpawn, playerGroup) end, 
     {}, 0, _gameLoopInterval)
   
   Global:PlaySound(Sound.MissionLoaded)
@@ -99,38 +105,74 @@ end
 
 ---
 -- @param #Mission self
-function Mission:SpawnEnemies()
-  Global:Trace(2, "Spawning enemy MiGs")
-  
-  for i = 1, _migsSpawnerMax do
-  
-    local spawn = SPAWN:New("MiG " .. i)
-    Global:AddSpawner(spawn, _migsPerSpawner)
-    
-    -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
-    -- as it often spawns 1 less than you ask for.
-    SCHEDULER:New(nil, function()
-      local migsMaxCount = _migsSpawnerMax * _migsPerSpawner
-      if (_migsSpawnCount < migsMaxCount) then
-      
-        -- migs fly in pairs
-        spawn:Spawn()
-      end
-    end, {}, _migsSpawnStart, _migsSpawnSeparation, _migsSpawnVariation)
-    
-  end
+function Mission:GetMaxMigs()
+  return (_playerCountMax * _migsPerPlayer)
 end
 
 ---
 -- @param #Mission self
--- @param Core.Spawn#SPAWN transportSpawn
-function Mission:SpawnTransport(transportSpawn)
+function Mission:StartSpawnEnemies()
+  Global:Assert(not _migsSpawnStarted, "MiG spawner already started")
+  _migsSpawnStarted = true
+  
+  Global:Trace(2, "Setting up MiG spawners")
+  
+  local spawners = {}
+  for i = 1, _migsSpawnerMax do
+    
+    local spawn = SPAWN:New("MiG " .. i)
+    spawn.id = i
+    Global:AddSpawner(spawn)
+    spawners[#spawners + 1] = spawn
+    
+  end
+  
+  Global:ShuffleList(spawners)
+  
+  -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
+  -- as it often spawns 1 less than you ask for.
+  SCHEDULER:New(nil, function()
+    
+    _migsNextSpawner = _inc(_migsNextSpawner)
+    if (_migsNextSpawner > #spawners) then
+      _migsNextSpawner = 1
+    end 
+    
+    local spawn = spawners[_migsNextSpawner]
+    local maxMigs = self:GetMaxMigs()
+    
+    Global:Trace(2, "MiG spawn tick, id=" .. spawn.id .. " max=" .. maxMigs .. " count=" .. _migsSpawnInitCount)
+    
+    if (_migsSpawnInitCount < maxMigs) then
+      
+      -- spawns a pair
+      Global:Trace(2, "MiG spawn, id=" .. spawn.id)
+      spawn:Spawn()
+      
+      -- increment here instead of OnUnitSpawn to prevent race condition, since
+      -- events happen only on game tick
+      _migsSpawnInitCount = _migsSpawnInitCount + _migsGroupSize
+      
+    end
+  end, {}, _migsSpawnStart, _migsSpawnSeparation, _migsSpawnVariation)
+end
 
+---
+-- @param #Mission self
+function Mission:StartSpawnTransport()
+
+  Global:Assert(not _migsSpawnStarted, "Transport spawner already started")
+  _transportSpawnStarted = true
+  
+  Global:Trace(1, "Starting transport spawner")
+
+  Global:AddSpawner(self.transportSpawn, _transportMaxCount)
+  
   -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
   -- as it often spawns 1 less than you ask for. 
   SCHEDULER:New(nil, function()
     if (_transportSpawnCount < _transportMaxCount) then
-      transportSpawn:Spawn()
+      self.transportSpawn:Spawn()
     end
   end, {}, _transportSpawnStart, _transportSeparation)
 end
@@ -165,10 +207,23 @@ function Mission:OnUnitSpawn(unit)
   end
   
   if (string.match(unit:GetName(), "MiG")) then
-    _migsSpawnCount = _inc(_migsSpawnCount)
-    Global:Trace(1, "New enemy spawned, alive: " .. tostring(_migsSpawnCount))
-    MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnCount) .. " incoming, inbound to Nalchik", _messageTimeShort):ToAll()
+    _migsSpawnDoneCount = _inc(_migsSpawnDoneCount)
+    Global:Trace(1, "New enemy spawned, alive: " .. tostring(_migsSpawnDoneCount))
+    MESSAGE:New("Enemy MiG #" .. tostring(_migsSpawnDoneCount) .. " incoming, inbound to Nalchik", _messageTimeShort):ToAll()
     Global:PlaySound(Sound.EnemyApproching)
+  end
+  
+  if (string.match(unit:GetName(), _playerPrefix)) then
+    _playerCountMax = _inc(_playerCountMax)
+    Global:Trace(1, "New player spawned, alive: " .. tostring(_playerCountMax))
+    
+    if not _transportSpawnStarted then
+      Mission:StartSpawnTransport()
+    end
+    
+    if not _migsSpawnStarted then
+      Mission:StartSpawnEnemies()
+    end
   end
 end
 
@@ -218,6 +273,7 @@ end
 function Mission:OnPlayerDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Player is dead: " .. unit:GetName())
+  
   MESSAGE:New("Player is dead!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
@@ -236,11 +292,17 @@ function Mission:OnEnemyDead(unit)
   Mission:PlayEnemyDeadSound()
   
   _migsDestroyed = _inc(_migsDestroyed)
-  local remain = (_migsSpawnerMax * _migsPerSpawner) - _migsDestroyed
+  local remain = self:GetMaxMigs() - _migsDestroyed
+  
+  if (_winLoseDone) then
+    return
+  end
   
   if (remain > 0) then
+    Global:Trace(1, "MiGs remain: " .. remain)
     MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, _messageTimeShort):ToAll()
   else
+    Global:Trace(1, "All MiGs are dead")
     Global:PlaySound(Sound.FirstObjectiveMet, 2)
     MESSAGE:New("All enemy MiGs are dead!", _messageTimeLong):ToAll()
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", _messageTimeLong):ToAll()    
@@ -251,6 +313,8 @@ end
 ---
 -- @param #Mission self
 function Mission:AnnounceWin(soundDelay)
+  Global:Assert(not _winLoseDone, "Win/lose already announced")
+
   if not soundDelay then
     soundDelay = 0
   end
@@ -265,6 +329,8 @@ end
 ---
 -- @param #Mission self
 function Mission:AnnounceLose(soundDelay)
+  Global:Assert(not _winLoseDone, "Win/lose already announced")
+  
   if not soundDelay then
     soundDelay = 0
   end
@@ -301,10 +367,10 @@ function Mission:KillTransport(transportSpawn)
 end
 
 -- TODO: refactor into global class
----
+--- 
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
-function Mission:CheckTransportDamage(transportSpawn)
+function Mission:KillDamagedTransports(transportSpawn)
   Global:Trace(3, "Checking transport spawn groups for damage")
   for i = 1, _transportMaxCount do
     local group = transportSpawn:GetGroupFromIndex(i)
@@ -322,7 +388,7 @@ function Mission:CheckTransportDamage(transportSpawn)
           -- only kill the unit if it's alive, otherwise it'll never crash.
           -- explode transports below a certain live level, otherwise
           -- transports can land in a damaged and prevent other transports
-          -- from landing
+          -- from landing (also enemies will often stop attacking damaged units)
           if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < _transportMinLife)) then
             Global:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. _transportMinLife)
             unit:Explode(100, 1)
@@ -334,7 +400,7 @@ function Mission:CheckTransportDamage(transportSpawn)
   end
 end
 
--- TODO: consider merging this with CheckTransportDamage
+-- TODO: consider merging this with KillDamagedTransports
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN transportSpawn
@@ -415,7 +481,7 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   end
   
   Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportMaxCount)
-  Mission:CheckTransportDamage(transportSpawn)
+  Mission:KillDamagedTransports(transportSpawn)
   
 end
 

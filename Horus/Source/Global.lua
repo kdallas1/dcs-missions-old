@@ -94,6 +94,18 @@ function Global:Trace(level, line)
   end
 end
 
+--- Assert wrapper which can be turned off
+-- @param #Global self
+-- @param #boolean case If false, assert fails
+-- @param #string message Assert message if fail
+function Global:Assert(case, message)
+  if (not _assert) then
+    return
+  end
+  
+  assert(case, message)
+end
+
 --- Asserts the correct type (Lua is loosely typed, so this is helpful)
 -- @param #Global self
 -- @param Core.Base#BASE object Object to check
@@ -450,7 +462,7 @@ function Global:CheckSpawnerList()
     Global:Trace(3, "Checking spawner: " .. tostring(i))
     
     groups = {}
-    for i = 1, spawner.maxGroups do
+    for i = 1, spawner.SpawnCount do
     
       local group = spawner:GetGroupFromIndex(i)
       if group then
@@ -475,9 +487,7 @@ end
 ---
 -- @param #Global self
 -- @param Core.Spawn#SPAWN spawner
--- @param #number maxGroups
-function Global:AddSpawner(spawner, maxGroups)
-  spawner.maxGroups = maxGroups
+function Global:AddSpawner(spawner)
   self.spawners[#self.spawners + 1] = spawner
   Global:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
@@ -567,4 +577,13 @@ function Global:FindUnitsByPrefix(prefix, max)
   
   return list
   
+end
+
+--- 
+-- @param #list list
+function Global:ShuffleList(list)
+  for i = #list, 2, -1 do
+    local j = math.random(i)
+    list[i], list[j] = list[j], list[i]
+  end
 end
