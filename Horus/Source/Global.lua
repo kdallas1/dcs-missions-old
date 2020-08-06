@@ -53,6 +53,17 @@ function _inc(i)
   return i + 1
 end
 
+---
+-- @param #Global self
+-- @param child
+-- @return #Global
+function Global:New(child)
+  local o = child or {}
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
 --- Turn on trace (logging)
 -- @param #Global self
 -- @param #boolean traceOn True to enable trace.
@@ -481,7 +492,7 @@ end
 
 ---
 -- @param #Global self
-function Global:GameLoop()
+function Global:GameLoopBase()
   self:Trace(3, "*** Game loop start ***")
   self:CheckSpawnerList()
   self:CheckGroupList()
