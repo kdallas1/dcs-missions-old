@@ -12,15 +12,39 @@ Object = {
   assert = false
 }
 
----
--- @param #Object self
--- @param #table o
--- @return #Object
-function Object:_New(o)
-  local o = o or {}
-  setmetatable(o, self)
-  self.__index = self
-  return o
+-- https://www.lua.org/pil/16.3.html
+-- look up for `k' in list of tables `plist'
+local function search (k, plist)
+  for i=1, table.getn(plist) do
+    if plist[i] then
+      local v = plist[i][k]     -- try `i'-th superclass
+      if v then return v end
+    end
+  end
+end
+
+-- https://www.lua.org/pil/16.3.html
+function createClass (...)
+  local c = {}        -- new class
+
+  -- class will search for each method in the list of its
+  -- parents (`arg' is the list of parents)
+  setmetatable(c, {__index = function (t, k)
+    return search(k, arg)
+  end})
+
+  -- prepare `c' to be the metatable of its instances
+  c.__index = c
+
+  -- define a new constructor for this new class
+  function c:new (o)
+    o = o or {}
+    setmetatable(o, c)
+    return o
+  end
+
+  -- return new class
+  return c
 end
 
 --- Turn on trace (logging)
