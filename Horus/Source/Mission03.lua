@@ -218,7 +218,7 @@ function Mission03:SetupMenu(transportSpawn)
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
   MENU_COALITION_COMMAND:New(
     coalition.side.BLUE, "Kill transport", menu,
-    function() self:SelfDestructGroupsInSpawn(transportSpawn) end)
+    function() self:SelfDestructGroupsInSpawn(transportSpawn, 100, 1) end)
 end
 
 ---
@@ -293,69 +293,6 @@ function Mission03:OnEnemyDead(unit)
   end
 end
 
--- TODO: refactor into global class
---- 
--- @param #Mission03 self
--- @param Core.Spawn#SPAWN transportSpawn
-function Mission03:KillDamagedTransports(transportSpawn)
-  self:Trace(3, "Checking transport spawn groups for damage")
-  for i = 1, self.transportMaxCount do
-    local group = transportSpawn:GetGroupFromIndex(i)
-    if group then
-      self:Trace(3, "Checking group for damage: " .. group:GetName())
-      
-      local units = group:GetUnits()
-      if units then
-        for j = 1, #units do
-          local unit = group:GetUnit(j)
-          local life = unit:GetLife()
-          
-          self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
-          
-          -- only kill the unit if it's alive, otherwise it'll never crash.
-          -- explode transports below a certain live level, otherwise
-          -- transports can land in a damaged and prevent other transports
-          -- from landing (also enemies will often stop attacking damaged units)
-          if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < self.transportMinLife)) then
-            self:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. self.transportMinLife)
-            unit:Explode(100, 1)
-            unit.selfDestructDone = true
-          end
-        end
-      end
-    end
-  end
-end
-
--- TODO: consider merging this with KillDamagedTransports
----
--- @param #Mission03 self
--- @param Core.Spawn#SPAWN transportSpawn
-function Mission03:GetAliveTransportCount(transportSpawn)
-  self:Trace(3, "Checking spawn groups for alive count")
-  
-  local count = 0
-  for i = 1, self.transportMaxCount do
-    local group = transportSpawn:GetGroupFromIndex(i)
-    if group then
-      self:Trace(3, "Checking group for alive count: " .. group:GetName())
-      
-      local units = group:GetUnits()
-      if units then
-        for j = 1, #units do
-          local unit = group:GetUnit(j)
-          self:Trace(3, "Checking if unit is alive: " .. unit:GetName())
-          
-          if unit:IsAlive() then
-            count = _inc(count)
-          end
-        end
-      end
-    end
-  end
-  return count
-end
-
 ---
 -- @param #Mission03 self
 -- @param Core.Zone#ZONE nalchikParkZone
@@ -383,7 +320,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   local transportsAreParked = self:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, self.transportMaxCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
-  self:Trace(2, "Transports alive: " .. self:GetAliveTransportCount(transportSpawn))
+  self:Trace(2, "Transports alive: " .. self:GetAliveUnitsFromSpawn(transportSpawn))
   self:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
   self:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
@@ -408,7 +345,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   end
   
   self:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, self.transportMaxCount)
-  self:KillDamagedTransports(transportSpawn)
+  self:SelfDestructDamagedUnits(transportSpawn, self.transportMinLife)
   
 end
 

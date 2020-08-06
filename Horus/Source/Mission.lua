@@ -677,17 +677,88 @@ end
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
-function Mission:SelfDestructGroupsInSpawn(spawn)
+function Mission:SelfDestructGroupsInSpawn(spawn, power, delay)
   self:Trace(1, "Self-destructing groups in spawner")
-  for i = 1, #spawn.SpawnCount do
+  
+  if not power then
+    power = 100
+  end
+  
+  if not delay then
+    delay = 0
+  end
+
+  for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
     
     if group then
       local units = group:GetUnits()
       for j = 1, #units do
         local unit = units[j]
-        unit:Explode(100, 0)
+        unit:Explode(power, delay)
         unit.selfDestructDone = true
+      end
+    end
+  end
+end
+
+---
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN spawn
+function Mission:GetAliveUnitsFromSpawn(spawn)
+  self:Trace(3, "Checking spawn groups for alive count")
+  
+  local count = 0
+  for i = 1, spawn.SpawnCount do
+    local group = spawn:GetGroupFromIndex(i)
+    if group then
+      self:Trace(3, "Checking group for alive count: " .. group:GetName())
+      
+      local units = group:GetUnits()
+      if units then
+        for j = 1, #units do
+          local unit = group:GetUnit(j)
+          self:Trace(3, "Checking if unit is alive: " .. unit:GetName())
+          
+          if unit:IsAlive() then
+            count = _inc(count)
+          end
+        end
+      end
+    end
+  end
+  return count
+end
+
+--- 
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN spawn
+-- @param #number minLife
+function Mission:SelfDestructDamagedUnits(spawn, minLife)
+  self:Trace(3, "Checking spawn groups for damage, count=" .. spawn.SpawnCount)
+  for i = 1, spawn.SpawnCount do
+    local group = spawn:GetGroupFromIndex(i)
+    if group then
+      self:Trace(3, "Checking group for damage: " .. group:GetName())
+      
+      local units = group:GetUnits()
+      if units then
+        for j = 1, #units do
+          local unit = group:GetUnit(j)
+          local life = unit:GetLife()
+          
+          self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
+          
+          -- only kill the unit if it's alive, otherwise it'll never crash.
+          -- explode units below a certain live level, otherwise
+          -- units can land in a damaged and prevent other transports
+          -- from landing (also enemies will often stop attacking damaged units)
+          if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < minLife)) then
+            self:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. minLife)
+            unit:Explode(100, 1)
+            unit.selfDestructDone = true
+          end
+        end
       end
     end
   end
