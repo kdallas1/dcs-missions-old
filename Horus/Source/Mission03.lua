@@ -4,13 +4,13 @@ dofile(baseDir .. "Mission.lua")
 -- @module Mission03
 
 --- @type Mission03
--- @extends Mission#Mission 
-Mission03 = {
+-- @extends Mission#Mission
+Mission03 = Mission:_New {
   
-  ---@field #Wrapper.Group#GROUP playerGroup
+  --- @field Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
   
-  ---@field #list<Wrapper.Unit#UNIT> playerList
+  --- @field #list<Wrapper.Unit#UNIT> playerList
   playerList = {},
   
   --- @field Core.Spawn#SPAWN transportSpawn
@@ -31,25 +31,24 @@ Mission03 = {
   transportSpawnStart = 10,
   transportSpawnStarted = false,
   
-  migsSpawnStart = 60,
-  migsSpawnSeparation = 300,
-  migsSpawnVariation = .5,
   migsSpawnerMax = 3,
   migsPerPlayer = 4,
-  migsSpawnInitCount = 0,
   migsSpawnDoneCount = 0,
-  migsGroupSize = 2, -- pairs in ME
   migsDestroyed = 0,
-  migsNextSpawner = 1,
-  migsSpawnStarted = false
+  migsSpawnStarted = false,
+  
+  --- @field KD.Spawn#Spawn migsSpawn
+  migsSpawn = nil
 }
 
 ---
 -- @param #Mission03 self
 -- @return #Mission03
 function Mission03:New()
-  local new = Mission:New(self)
-  return new
+  local o = o or {}
+  setmetatable(o, self)
+  self.__index = self
+  return o
 end
 
 ---
@@ -96,57 +95,9 @@ end
 
 ---
 -- @param #Mission03 self
-function Mission03:StartSpawnEnemies()
-  self:Assert(not self.migsSpawnStarted, "MiG spawner already started")
-  self.migsSpawnStarted = true
-  
-  self:Trace(2, "Setting up MiG spawners")
-  
-  local spawners = {}
-  for i = 1, self.migsSpawnerMax do
-    
-    local spawn = SPAWN:New("MiG " .. i)
-    spawn.id = i
-    self:AddSpawner(spawn)
-    spawners[#spawners + 1] = spawn
-    
-  end
-  
-  self:ShuffleList(spawners)
-  
-  -- using a manual scheduler because Moose's SpawnScheduled/InitLimit isn't reliable,
-  -- as it often spawns 1 less than you ask for.
-  SCHEDULER:New(nil, function()
-    
-    self.migsNextSpawner = _inc(self.migsNextSpawner)
-    if (self.migsNextSpawner > #spawners) then
-      self.migsNextSpawner = 1
-    end 
-    
-    local spawn = spawners[self.migsNextSpawner]
-    local maxMigs = self:GetMaxMigs()
-    
-    self:Trace(2, "MiG spawn tick, id=" .. spawn.id .. " max=" .. maxMigs .. " count=" .. self.migsSpawnInitCount)
-    
-    if (self.migsSpawnInitCount < maxMigs) then
-      
-      -- spawns a pair
-      self:Trace(2, "MiG spawn, id=" .. spawn.id)
-      spawn:Spawn()
-      
-      -- increment here instead of OnUnitSpawn to prevent race condition, since
-      -- events happen only on game tick
-      self.migsSpawnInitCount = self.migsSpawnInitCount + self.migsGroupSize
-      
-    end
-  end, {}, self.migsSpawnStart, self.migsSpawnSeparation, self.migsSpawnVariation)
-end
-
----
--- @param #Mission03 self
 function Mission03:StartSpawnTransport()
 
-  self:Assert(not self.migsSpawnStarted, "Transport spawner already started")
+  self:Assert(not self.transportSpawnStarted, "Transport spawner already started")
   self.transportSpawnStarted = true
   
   self:Trace(1, "Starting transport spawner")
@@ -206,8 +157,11 @@ function Mission03:OnUnitSpawn(unit)
       self:StartSpawnTransport()
     end
     
-    if not self.migsSpawnStarted then
-      self:StartSpawnEnemies()
+    if not self.migsSpawnStarted then    
+      self:Assert(not self.migsSpawnStarted, "MiG spawner already started")
+      self.migsSpawnStarted = true
+      self.migsSpawn = Spawn:New(self, self.migsSpawnerMax, self.GetMaxMigs)
+      self.migsSpawn:StartSpawnEnemies()
     end
   end
 end

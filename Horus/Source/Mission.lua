@@ -1,10 +1,13 @@
-dofile(baseDir .. [[..\Moose\Moose.lua]])
+dofile(baseDir .. "../Moose/Moose.lua")
+dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/Spawn.lua")
 
 ---
 -- @module Mission
 
 --- @type Mission
-Mission = {
+-- @extends KD.Object#Object
+Mission = Object:_New {
 
   traceOn = false,
   traceLevel = 1,
@@ -61,108 +64,13 @@ end
 
 ---
 -- @param #Mission self
--- @param child
+-- @param #table o
 -- @return #Mission
-function Mission:New(child)
-  local o = child or {}
+function Mission:_New(o)
+  local o = o or {}
   setmetatable(o, self)
   self.__index = self
   return o
-end
-
---- Turn on trace (logging)
--- @param #Mission self
--- @param #boolean traceOn True to enable trace.
-function Mission:SetTraceOn(traceOn)
-  self.traceOn = traceOn
-end
-
---- Trace level (logging).
--- @param #Mission self
--- @param #number traceLevel 1 = low, 2 = med, 3 = high
-function Mission:SetTraceLevel(traceLevel)
-  self.traceLevel = traceLevel
-end
-
---- Enable assert (a type of error reporting).
--- @param #Mission self
--- @param #boolean assert True to enable assert. 
-function Mission:SetAssert(assert)
-  self.assert = assert
-end
-
---- Horus log function. Short hand for: env.info("Horus: " .. line)
--- @param #Mission self
--- @param #number level Level to trace at.
--- @param #string line Log line to output to env.info 
-function Mission:Trace(level, line)
-
-  if (self.assert) then
-    assert(type(level) == type(0), "level arg must be a number")
-    assert(type(line) == type(""), "line arg must be a string")
-  end
-  
-  if (self.traceOn and (level <= self.traceLevel)) then
-    local funcName = debug.getinfo(2, "n").name
-    local lineNum = debug.getinfo(2, "S").linedefined
-    funcName = (funcName and funcName or "?")
-    
-    env.info("Horus L" .. level .. " " .. funcName .. "@" .. lineNum .. ": " .. line)
-  end
-end
-
---- Assert wrapper which can be turned off
--- @param #Mission self
--- @param #boolean case If false, assert fails
--- @param #string message Assert message if fail
-function Mission:Assert(case, message)
-  if (not self.assert) then
-    return
-  end
-  
-  assert(case, message)
-end
-
---- Asserts the correct type (Lua is loosely typed, so this is helpful)
--- @param #Mission self
--- @param Core.Base#BASE object Object to check
--- @param #table _type Either Moose class or type string name to assert
-function Mission:CheckType(object, _type)
-  if (not self.assert) then
-    return
-  end
-  
-  assert(object, "Cannot check type, object is nil")
-  assert(_type, "Cannot check type, _type is nil")
-  
-  if (type(_type) == "string") then
-    assert(type(object) == _type,
-      "Invalid type, expected '" .. _type .. "' but was '" .. type(object) .. "'")
-    return
-  end
-  
-  -- in Lua, classes are tables
-  if (type(object) == "table") then
-    
-    self:Trace(4, "Listing type properties")
-    for field, v in pairs(object) do
-      self:Trace(4, "Property: " .. field)
-    end
-  
-    -- check for MOOSE class name
-    if (object.ClassName or _type.ClassName) then
-      assert(object.ClassName, "Missing ClassName property on object")
-      assert(_type.ClassName, "Missing ClassName property on _type")
-      
-      assert(object.ClassName == _type.ClassName, 
-        "Invalid type, expected '" .. _type.ClassName .. "' but was '" .. object.ClassName .. "'")
-    else
-      error("Type check failed, object and _type missing ClassName")
-    end
-  
-  else
-    error("Type check failed, invalid args")
-  end
 end
 
 --- Checks if entire group is parked in a zone.
@@ -598,15 +506,6 @@ function Mission:FindUnitsByPrefix(prefix, max)
   
   return list
   
-end
-
---- 
--- @param #list list
-function Mission:ShuffleList(list)
-  for i = #list, 2, -1 do
-    local j = math.random(i)
-    list[i], list[j] = list[j], list[i]
-  end
 end
 
 ---
