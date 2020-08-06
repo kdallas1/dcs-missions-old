@@ -127,9 +127,9 @@ function Global:CheckType(object, _type)
   -- in Lua, classes are tables
   if (type(object) == "table") then
     
-    Global:Trace(4, "Listing type properties")
+    self:Trace(4, "Listing type properties")
     for field, v in pairs(object) do
-      Global:Trace(4, "Property: " .. field)
+      self:Trace(4, "Property: " .. field)
     end
   
     -- check for MOOSE class name
@@ -155,18 +155,20 @@ end
 -- @return true If all units are parked in the zone.
 function Global:GroupIsParked(zone, group)
   
-  Global:CheckType(zone, ZONE)
-  Global:CheckType(group, GROUP)
+  self:CheckType(zone, ZONE)
+  self:CheckType(group, GROUP)
   
-  Global:Trace(4, "group: " .. group:GetName())
+  self:Trace(4, "group: " .. group:GetName())
   
   local units = group:GetUnits()
   if not units then
-    Global:Trace(4, "no units in group: " .. group:GetName())
+    self:Trace(4, "no units in group: " .. group:GetName())
     return nil
   end
   
-  return Global:UnitsAreParked(zone, units)
+  -- don't return function (for better trace info)
+  local r = self:UnitsAreParked(zone, units)
+  return r
 end
 
 --- Checks if all units are in a zone.
@@ -196,23 +198,23 @@ end
 -- @return true If all units are parked in the zone.
 function Global:UnitsAreParked(zone, units)
   
-  Global:CheckType(zone, ZONE)
+  self:CheckType(zone, ZONE)
 
-  Global:Trace(3, "zone: " .. zone:GetName())
+  self:Trace(3, "zone: " .. zone:GetName())
   
   local stoppedCount = 0
   for i = 1, #units do
     local unit = units[i]
-    Global:Trace(3, "unit name: " .. unit:GetName())
-    Global:Trace(3, "unit velocity: " .. unit:GetVelocityKNOTS())
+    self:Trace(3, "unit name: " .. unit:GetName())
+    self:Trace(3, "unit velocity: " .. unit:GetVelocityKNOTS())
     
     if (unit:GetVelocityKNOTS() < 1) then
       stoppedCount = _inc(stoppedCount)
     end
   end
   
-  Global:Trace(3, "#units: " .. #units)
-  Global:Trace(3, "stoppedCount: " .. stoppedCount)
+  self:Trace(3, "#units: " .. #units)
+  self:Trace(3, "stoppedCount: " .. stoppedCount)
   
   local stopped = stoppedCount == #units
   local inParkZone = self:UnitsAreInZone(zone, units)
@@ -228,21 +230,21 @@ end
 -- @return true If all units within all groups are parked in the zone. 
 function Global:SpawnGroupsAreParked(zone, spawn, spawnCount)
   
-  Global:CheckType(zone, ZONE)
-  Global:CheckType(spawn, SPAWN)
+  self:CheckType(zone, ZONE)
+  self:CheckType(spawn, SPAWN)
   
-  Global:Trace(3, "zone: " .. zone:GetName())
-  Global:Trace(3, "spawnCount: " .. spawnCount)
+  self:Trace(3, "zone: " .. zone:GetName())
+  self:Trace(3, "spawnCount: " .. spawnCount)
   
   local parkCount = 0
   for i = 1, spawnCount do
     local group = spawn:GetGroupFromIndex(i)
-    if (group and Global:GroupIsParked(zone, group)) then
+    if (group and self:GroupIsParked(zone, group)) then
       parkCount = _inc(parkCount)
     end
   end
   
-  Global:Trace(3, "parkCount: " .. parkCount)
+  self:Trace(3, "parkCount: " .. parkCount)
   
   return parkCount == spawnCount
 end
@@ -253,14 +255,14 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 function Global:KeepAliveGroupIfParked(zone, group)
   
-  Global:CheckType(zone, ZONE)
-  Global:CheckType(group, GROUP)
+  self:CheckType(zone, ZONE)
+  self:CheckType(group, GROUP)
   
-  local parked = Global:GroupIsParked(zone, group)
+  local parked = self:GroupIsParked(zone, group)
   if (parked and not group.keepAliveDone) then
     
     -- Respawn uncontrolled (3rd arg) seems to stop DCS from cleaning groups up!
-    Global:Trace(3, "respawning at airbase: " .. group:GetName())
+    self:Trace(3, "respawning at airbase: " .. group:GetName())
     group:RespawnAtCurrentAirbase(nil, nil, true)
     group.keepAliveDone = true
     
@@ -275,13 +277,13 @@ end
 -- @param #number spawnCount Number of groups in spawner to check.
 function Global:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
   
-  Global:CheckType(zone, ZONE)
-  Global:CheckType(spawn, SPAWN)
+  self:CheckType(zone, ZONE)
+  self:CheckType(spawn, SPAWN)
   
   for i = 1, spawnCount do
     local group = spawn:GetGroupFromIndex(i)
     if group then
-      Global:KeepAliveGroupIfParked(zone, group)
+      self:KeepAliveGroupIfParked(zone, group)
     end
   end
   
@@ -293,14 +295,16 @@ end
 -- @return true If player is in the group. 
 function Global:GroupHasPlayer(group)
 
-  Global:Trace(3, "looking for player in group: " .. group:GetName())
+  self:Trace(3, "looking for player in group: " .. group:GetName())
   
   local units = group:GetUnits()
   if not units then
     return false
   end
   
-  return self:ListHasPlayer(units)
+  -- don't return function (for better trace info)
+  local r = self:ListHasPlayer(units)
+  return r
 end
 
 --- Check if a list has a player.
@@ -309,19 +313,19 @@ end
 -- @return true If player is in the list.
 function Global:ListHasPlayer(units)
 
-  Global:Trace(3, "looking for player in list")
+  self:Trace(3, "looking for player in list")
       
   for i = 1, #units do
     local unit = units[i]
     
     if unit:IsPlayer() then
-      Global:Trace(3, "found player in list")
+      self:Trace(3, "found player in list")
       return true
     end 
     
   end
   
-  Global:Trace(3, "no players in list")
+  self:Trace(3, "no players in list")
   return false
   
 end
@@ -339,7 +343,7 @@ function Global:PlaySound(soundType, delay)
   local found = false
   for soundName, v in pairs(Sound) do
     if v == soundType then
-      Global:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
+      self:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
       local sound = USERSOUND:New(soundName .. ".ogg")
       SCHEDULER:New(nil, function() sound:ToAll() end, {}, delay)
       found = true
@@ -358,19 +362,19 @@ end
 -- @param Wrapper.Group#GROUP group
 function Global:CheckGroup(group)
 
-  Global:Trace(3, "Checking group: " .. group:GetName())
+  self:Trace(3, "Checking group: " .. group:GetName())
   
   local units = group:GetUnits()
   if units then
     
-    Global:Trace(3, "Unit count: " .. #units)
+    self:Trace(3, "Unit count: " .. #units)
     
     for i = 1, #units do
       
       -- add all units to our own list so we can watch units come and go
       local unit = group:GetUnit(i)
       
-      Global:Trace(3, "Checking unit: " .. unit:GetName())
+      self:Trace(3, "Checking unit: " .. unit:GetName())
       self:AddUnit(unit)
     end
   end
@@ -384,8 +388,8 @@ function Global:AddUnit(unit)
   local id = unit:GetID()
   if not self.units[id] then
     self.units[id] = unit
-    Global:Trace(3, "Firing unit spawn event: " .. unit:GetName())
-    Global:FireEvent(Event.Spawn, unit)
+    self:Trace(3, "Firing unit spawn event: " .. unit:GetName())
+    self:FireEvent(Event.Spawn, unit)
   end
 end
 
@@ -403,7 +407,7 @@ end
 -- @param #list<Wrapper.Group#GROUP> groups
 function Global:CheckGroupList(groups)
 
-  Global:Trace(3, "Checking group list")
+  self:Trace(3, "Checking group list")
   
   -- check internal groups list by default
   if not groups then
@@ -413,7 +417,7 @@ function Global:CheckGroupList(groups)
   for i = 1, #groups do
     local group = groups[i]
     if group then
-      Global:CheckGroup(group)
+      self:CheckGroup(group)
     end
   end
 end
@@ -422,7 +426,7 @@ end
 -- @param #Global self
 function Global:CheckUnitList()
 
-  Global:Trace(3, "Checking unit list")
+  self:Trace(3, "Checking unit list")
   
   for id, unit in pairs(self.units) do
     self:CheckUnit(unit)
@@ -436,7 +440,7 @@ function Global:CheckUnit(unit)
   
   local life = unit:GetLife()
   local fireDieEvent = false
-  Global:Trace(3, "Checking unit: " .. unit:GetName() .. ", health " .. tostring(life))
+  self:Trace(3, "Checking unit: " .. unit:GetName() .. ", health " .. tostring(life))
   
   -- we can't use IsAlive here, because the unit may not have spawned yet 
   if (life <= 1) then
@@ -445,7 +449,7 @@ function Global:CheckUnit(unit)
   
   -- previously using the EVENTS.Crash event, but it was a bit unreliable
   if (fireDieEvent and (not unit.eventDeadFired)) then
-    Global:Trace(3, "Firing unit dead event: " .. unit:GetName())
+    self:Trace(3, "Firing unit dead event: " .. unit:GetName())
     self:FireEvent(Event.Dead, unit)
     unit.eventDeadFired = true
   end
@@ -455,11 +459,11 @@ end
 -- @param #Global self
 function Global:CheckSpawnerList()
 
-  Global:Trace(3, "Checking spawner list")
+  self:Trace(3, "Checking spawner list")
   
   for i = 1, #self.spawners do
     local spawner = self.spawners[i]
-    Global:Trace(3, "Checking spawner: " .. tostring(i))
+    self:Trace(3, "Checking spawner: " .. tostring(i))
     
     groups = {}
     for i = 1, spawner.SpawnCount do
@@ -470,7 +474,7 @@ function Global:CheckSpawnerList()
       end
     end
     
-    Global:CheckGroupList(groups)
+    self:CheckGroupList(groups)
   end
 end
 
@@ -478,7 +482,7 @@ end
 ---
 -- @param #Global self
 function Global:GameLoop()
-  Global:Trace(3, "*** Game loop start ***")
+  self:Trace(3, "*** Game loop start ***")
   self:CheckSpawnerList()
   self:CheckGroupList()
   self:CheckUnitList()
@@ -489,7 +493,7 @@ end
 -- @param Core.Spawn#SPAWN spawner
 function Global:AddSpawner(spawner)
   self.spawners[#self.spawners + 1] = spawner
-  Global:Trace(3, "Spawner added, total=" .. #self.spawners)
+  self:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
 
 ---
@@ -497,7 +501,7 @@ end
 -- @param Wrapper.Group#GROUP group
 function Global:AddGroup(group)
   self.groups[#self.groups + 1] = group
-  Global:Trace(3, "Group added, total=" .. #self.groups)
+  self:Trace(3, "Group added, total=" .. #self.groups)
 end
 
 ---
@@ -505,7 +509,7 @@ end
 -- @param Wrapper.Group#GROUP group
 function Global:AddGroup(group)
   self.groups[#self.groups + 1] = group
-  Global:Trace(3, "Group added, total=" .. #self.groups)
+  self:Trace(3, "Group added, total=" .. #self.groups)
 end
 
 ---
@@ -514,7 +518,7 @@ end
 -- @param #function handler
 function Global:HandleEvent(event, handler)
   self.eventHandlers[event] = handler
-  Global:Trace(3, "Event handler added, total=" .. #self.eventHandlers)
+  self:Trace(3, "Event handler added, total=" .. #self.eventHandlers)
 end
 
 ---
