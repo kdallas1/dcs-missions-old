@@ -61,6 +61,8 @@ end
 -- @param #Mission03 self
 function Mission03:Start()
   self:StartBase()
+  
+  if not self.testPassed then return end
 
   self:Trace(1, "Setup begin")
     

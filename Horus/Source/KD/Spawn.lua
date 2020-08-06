@@ -17,7 +17,11 @@ Spawn = Object:_New {
   spawnVariation = .5,
   spawnStart = 60,
   spawnSeparation = 300,
+  
+  --- @type Core.Spawn#SPAWN mooseSpawn
   mooseSpawn = SPAWN,
+  
+  --- @type Core.Scheduler#SCHEDULER mooseScheduler
   mooseScheduler = SCHEDULER
 }
 
