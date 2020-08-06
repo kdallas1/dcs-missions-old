@@ -16,13 +16,10 @@ Mission03 = {
   
   gameLoopInterval = 1,
   playerOnline = false,
-  winLoseDone = false,
   soundCounter = 1,
   playerGroupName = "Dodge",
   playerPrefix = "Dodge",
   playerMax = 4,
-  messageTimeShort = 20,
-  messageTimeLong = 200,
   playerCountMax = 0,
   
   transportMaxCount = 3, -- easy to run out of fuel with >3
@@ -87,28 +84,6 @@ function Mission03:Start()
   MESSAGE:New("Please read the brief", self.messageTimeShort):ToAll()
   self:Trace(1, "Setup done")
   
-end
-
----
--- @param #Mission03 self
-function Mission03:PlayEnemyDeadSound(delay)
-  if not delay then
-    delay = 0
-  end
-  
-  local sounds = {
-    Sound.ForKingAndCountry,
-    Sound.KissItByeBye,
-    Sound.ShakeItBaby
-  }
-  
-  self:PlaySound(Sound.TargetDestoyed, delay)
-  self:PlaySound(sounds[self.soundCounter], delay + 2)
-  
-  self.soundCounter = _inc(self.soundCounter)
-  if self.soundCounter > #sounds then
-    self.soundCounter = 1
-  end
 end
 
 ---
@@ -243,7 +218,7 @@ function Mission03:SetupMenu(transportSpawn)
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
   MENU_COALITION_COMMAND:New(
     coalition.side.BLUE, "Kill transport", menu,
-    function() self:KillTransport(transportSpawn) end)
+    function() self:SelfDestructGroupsInSpawn(transportSpawn) end)
 end
 
 ---
@@ -314,63 +289,7 @@ function Mission03:OnEnemyDead(unit)
     self:PlaySound(Sound.FirstObjectiveMet, 2)
     MESSAGE:New("All enemy MiGs are dead!", self.messageTimeLong):ToAll()
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", self.messageTimeLong):ToAll()    
-    self:LandTestPlayers(self.playerGroup)
-  end
-end
-
----
--- @param #Mission03 self
-function Mission03:AnnounceWin(soundDelay)
-  self:Assert(not self.winLoseDone, "Win/lose already announced")
-
-  if not soundDelay then
-    soundDelay = 0
-  end
-  
-  self:Trace(1, "Mission accomplished")
-  MESSAGE:New("Mission accomplished!", self.messageTimeLong):ToAll()
-  self:PlaySound(Sound.MissionAccomplished, soundDelay)
-  self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
-  self.winLoseDone = true
-end
-
----
--- @param #Mission03 self
-function Mission03:AnnounceLose(soundDelay)
-  self:Assert(not self.winLoseDone, "Win/lose already announced")
-  
-  if not soundDelay then
-    soundDelay = 0
-  end
-  
-  self:Trace(1, "Mission failed")
-  MESSAGE:New("Mission failed!", self.messageTimeLong):ToAll()
-  self:PlaySound(Sound.MissionFailed, soundDelay)
-  self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
-  self.winLoseDone = true
-end
-
----
--- @param #Mission03 self
--- @param Wrapper.Group#GROUP playerGroup
-function Mission03:LandTestPlayers(playerGroup)
-  self:Trace(1, "Landing test players")
-  local airbase = AIRBASE:FindByName(AIRBASE.Caucasus.Nalchik)
-  local land = airbase:GetCoordinate():WaypointAirLanding(300, airbase)
-  local route = { land }
-  playerGroup:Route(route)
-end
-
----
--- @param #Mission03 self
--- @param Core.Spawn#SPAWN transportSpawn
-function Mission03:KillTransport(transportSpawn)
-  self:Trace(1, "Killing transport")
-  local group = transportSpawn:GetGroupFromIndex(1)
-  if group then
-    unit = group:GetUnit(1)
-    unit:Explode(100, 0)
-    unit.selfDestructDone = true
+    self:LandTestPlayers(self.playerGroup, AIRBASE.Caucasus.Nalchik, 300)
   end
 end
 

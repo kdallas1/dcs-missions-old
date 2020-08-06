@@ -4,6 +4,10 @@
 --- @type Mission
 Mission = {
 
+  traceOn = false,
+  traceLevel = 1,
+  assert = false,
+  
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = {},
   
@@ -16,9 +20,9 @@ Mission = {
   ---@field #list<#function> eventHandlers
   eventHandlers = {},
 
-  traceOn = false,
-  traceLevel = 1,
-  assert = false
+  winLoseDone = false,
+  messageTimeShort = 20,
+  messageTimeLong = 200
 }
 
 ---
@@ -600,5 +604,91 @@ function Mission:ShuffleList(list)
   for i = #list, 2, -1 do
     local j = math.random(i)
     list[i], list[j] = list[j], list[i]
+  end
+end
+
+---
+-- @param #Mission self
+function Mission:PlayEnemyDeadSound(delay)
+  if not delay then
+    delay = 0
+  end
+  
+  local sounds = {
+    Sound.ForKingAndCountry,
+    Sound.KissItByeBye,
+    Sound.ShakeItBaby
+  }
+  
+  self:PlaySound(Sound.TargetDestoyed, delay)
+  self:PlaySound(sounds[self.soundCounter], delay + 2)
+  
+  self.soundCounter = _inc(self.soundCounter)
+  if self.soundCounter > #sounds then
+    self.soundCounter = 1
+  end
+end
+
+---
+-- @param #Mission self
+function Mission:AnnounceWin(soundDelay)
+  self:Assert(not self.winLoseDone, "Win/lose already announced")
+
+  if not soundDelay then
+    soundDelay = 0
+  end
+  
+  self:Trace(1, "Mission accomplished")
+  MESSAGE:New("Mission accomplished!", self.messageTimeLong):ToAll()
+  self:PlaySound(Sound.MissionAccomplished, soundDelay)
+  self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
+  self.winLoseDone = true
+end
+
+---
+-- @param #Mission self
+function Mission:AnnounceLose(soundDelay)
+  self:Assert(not self.winLoseDone, "Win/lose already announced")
+  
+  if not soundDelay then
+    soundDelay = 0
+  end
+  
+  self:Trace(1, "Mission failed")
+  MESSAGE:New("Mission failed!", self.messageTimeLong):ToAll()
+  self:PlaySound(Sound.MissionFailed, soundDelay)
+  self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
+  self.winLoseDone = true
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Group#GROUP playerGroup
+-- @param Wrapper.Airbase#AIRBASE airbase
+-- @param #number speed
+function Mission:LandTestPlayers(playerGroup, airbase, speed)
+  self:Trace(1, "Landing test players")
+  local airbase = AIRBASE:FindByName(airbase)
+  local land = airbase:GetCoordinate():WaypointAirLanding(speed, airbase)
+  local route = { land }
+  playerGroup:Route(route)
+end
+
+---
+-- @param #Mission self
+-- @param Core.Spawn#SPAWN spawn
+function Mission:SelfDestructGroupsInSpawn(spawn)
+  self:Trace(1, "Self-destructing groups in spawner")
+  for i = 1, #spawn.SpawnCount do
+    local group = spawn:GetGroupFromIndex(i)
+    
+    if group then
+      local units = group:GetUnits()
+      for j = 1, #units do
+        local unit = units[j]
+        unit:Explode(100, 0)
+        unit.selfDestructDone = true
+      end
+    end
   end
 end
