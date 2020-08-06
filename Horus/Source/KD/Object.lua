@@ -6,7 +6,11 @@
 
 ---
 -- @field #Object
-Object = { }
+Object = {
+  traceOn = false,
+  traceLevel = 1,
+  assert = false
+}
 
 ---
 -- @param #Object self
@@ -76,7 +80,7 @@ end
 -- @param #Object self
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
-function Object:CheckType(object, _type)
+function Object:AssertType(object, _type)
   if (not self.assert) then
     return
   end

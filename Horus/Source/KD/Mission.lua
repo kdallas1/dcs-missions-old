@@ -12,10 +12,6 @@ dofile(baseDir .. "KD/Spawn.lua")
 ---
 -- @field #Mission
 Mission = Object:_New {
-
-  traceOn = false,
-  traceLevel = 1,
-  assert = false,
   
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = {},
@@ -84,8 +80,8 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:GroupIsParked(zone, group)
   
-  self:CheckType(zone, ZONE)
-  self:CheckType(group, GROUP)
+  self:AssertType(zone, ZONE)
+  self:AssertType(group, GROUP)
   
   self:Trace(4, "group: " .. group:GetName())
   
@@ -127,7 +123,7 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:UnitsAreParked(zone, units)
   
-  self:CheckType(zone, ZONE)
+  self:AssertType(zone, ZONE)
 
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -159,8 +155,8 @@ end
 -- @return true If all units within all groups are parked in the zone. 
 function Mission:SpawnGroupsAreParked(zone, spawn, spawnCount)
   
-  self:CheckType(zone, ZONE)
-  self:CheckType(spawn, SPAWN)
+  self:AssertType(zone, ZONE)
+  self:AssertType(spawn, SPAWN)
   
   self:Trace(3, "zone: " .. zone:GetName())
   self:Trace(3, "spawnCount: " .. spawnCount)
@@ -184,8 +180,8 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 function Mission:KeepAliveGroupIfParked(zone, group)
   
-  self:CheckType(zone, ZONE)
-  self:CheckType(group, GROUP)
+  self:AssertType(zone, ZONE)
+  self:AssertType(group, GROUP)
   
   local parked = self:GroupIsParked(zone, group)
   if (parked and not group.keepAliveDone) then
@@ -206,8 +202,8 @@ end
 -- @param #number spawnCount Number of groups in spawner to check.
 function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
   
-  self:CheckType(zone, ZONE)
-  self:CheckType(spawn, SPAWN)
+  self:AssertType(zone, ZONE)
+  self:AssertType(spawn, SPAWN)
   
   for i = 1, spawnCount do
     local group = spawn:GetGroupFromIndex(i)
