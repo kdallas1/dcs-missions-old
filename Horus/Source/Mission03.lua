@@ -1,3 +1,5 @@
+dofile(baseDir .. "Mission.lua")
+
 ---
 -- @module Mission03
 

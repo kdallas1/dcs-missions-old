@@ -1,3 +1,5 @@
+dofile(baseDir .. [[..\Moose\Moose.lua]])
+
 ---
 -- @module Mission
 
