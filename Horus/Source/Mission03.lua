@@ -36,6 +36,8 @@ Mission03 = Mission:_New {
   migsSpawnDoneCount = 0,
   migsDestroyed = 0,
   migsSpawnStarted = false,
+  migsGroupSize = 2, -- pairs in ME
+  migsPrefix = "MiG",
   
   --- @field KD.Spawn#Spawn migsSpawn
   migsSpawn = nil
@@ -160,12 +162,11 @@ function Mission03:OnUnitSpawn(unit)
     if not self.migsSpawnStarted then    
       self:Assert(not self.migsSpawnStarted, "MiG spawner already started")
       self.migsSpawnStarted = true
-      self.migsSpawn = Spawn:New(self, self.migsSpawnerMax, self.GetMaxMigs)
+      self.migsSpawn = Spawn:New(self, self.migsSpawnerMax, self.GetMaxMigs, self.migsGroupSize, self.migsPrefix)
       self.migsSpawn:StartSpawnEnemies()
     end
   end
 end
-
 
 ---
 -- @param #Mission03 self
