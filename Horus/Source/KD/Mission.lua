@@ -28,7 +28,8 @@ Mission = Object:_New {
 
   winLoseDone = false,
   messageTimeShort = 20,
-  messageTimeLong = 200
+  messageTimeLong = 200,
+  testPassed = false 
 }
 
 ---
@@ -77,7 +78,7 @@ end
 --- 
 -- @param #Mission self
 function Mission:StartBase()
-  Test()
+  self.testPassed = Test()
 end
 
 --- Checks if entire group is parked in a zone.
