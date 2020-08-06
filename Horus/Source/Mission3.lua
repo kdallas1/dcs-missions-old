@@ -1,8 +1,8 @@
 ---
--- @module Mission
+-- @module Mission03
 
---- @type Mission
-Mission = {
+--- @type Mission03
+Mission03 = {
   
   ---@field #Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
@@ -46,8 +46,8 @@ local _migsNextSpawner = 1
 local _migsSpawnStarted = false
 
 ---
--- @param #Mission self
-function Mission:Setup()
+-- @param #Mission03 self
+function Mission03:Setup()
   Global:Trace(1, "Setup begin")
     
   --BASE:TraceOnOff(true)
@@ -66,14 +66,14 @@ function Mission:Setup()
   self.playerGroup = playerGroup
   Global:AddGroup(playerGroup)
   
-  Mission:SetupMenu(self.transportSpawn)
-  Mission:SetupEvents()
+  Mission03:SetupMenu(self.transportSpawn)
+  Mission03:SetupEvents()
   
   SCHEDULER:New(nil,
-    function() Mission:GameLoop(nalchikParkZone, self.transportSpawn, playerGroup) end, 
+    function() Mission03:GameLoop(nalchikParkZone, self.transportSpawn, playerGroup) end, 
     {}, 0, _gameLoopInterval)
   
-  Global:PlaySound(Sound.MissionLoaded)
+  Global:PlaySound(Sound.Mission03Loaded)
   
   MESSAGE:New("Welcome to Mission 3", _messageTimeShort):ToAll()
   MESSAGE:New("Please read the brief", _messageTimeShort):ToAll()
@@ -82,8 +82,8 @@ function Mission:Setup()
 end
 
 ---
--- @param #Mission self
-function Mission:PlayEnemyDeadSound(delay)
+-- @param #Mission03 self
+function Mission03:PlayEnemyDeadSound(delay)
   if not delay then
     delay = 0
   end
@@ -104,14 +104,14 @@ function Mission:PlayEnemyDeadSound(delay)
 end
 
 ---
--- @param #Mission self
-function Mission:GetMaxMigs()
+-- @param #Mission03 self
+function Mission03:GetMaxMigs()
   return (_playerCountMax * _migsPerPlayer)
 end
 
 ---
--- @param #Mission self
-function Mission:StartSpawnEnemies()
+-- @param #Mission03 self
+function Mission03:StartSpawnEnemies()
   Global:Assert(not _migsSpawnStarted, "MiG spawner already started")
   _migsSpawnStarted = true
   
@@ -158,8 +158,8 @@ function Mission:StartSpawnEnemies()
 end
 
 ---
--- @param #Mission self
-function Mission:StartSpawnTransport()
+-- @param #Mission03 self
+function Mission03:StartSpawnTransport()
 
   Global:Assert(not _migsSpawnStarted, "Transport spawner already started")
   _transportSpawnStarted = true
@@ -178,18 +178,18 @@ function Mission:StartSpawnTransport()
 end
 
 ---
--- @param #Mission self
-function Mission:SetupEvents()
-  Global:HandleEvent(Event.Spawn, function(unit) Mission:OnUnitSpawn(unit) end)
-  Global:HandleEvent(Event.Damaged, function(unit) Mission:OnUnitDamaged(unit) end)
-  Global:HandleEvent(Event.Dead, function(unit) Mission:OnUnitDead(unit) end)
+-- @param #Mission03 self
+function Mission03:SetupEvents()
+  Global:HandleEvent(Event.Spawn, function(unit) Mission03:OnUnitSpawn(unit) end)
+  Global:HandleEvent(Event.Damaged, function(unit) Mission03:OnUnitDamaged(unit) end)
+  Global:HandleEvent(Event.Dead, function(unit) Mission03:OnUnitDead(unit) end)
 end
 
 -- TODO: implement own birth event, pretty sure this is unreliable
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnUnitSpawn(unit)
+function Mission03:OnUnitSpawn(unit)
 
   Global:CheckType(unit, UNIT)
   Global:Trace(2, "Unit spawned: " .. unit:GetName())
@@ -218,59 +218,59 @@ function Mission:OnUnitSpawn(unit)
     Global:Trace(1, "New player spawned, alive: " .. tostring(_playerCountMax))
     
     if not _transportSpawnStarted then
-      Mission:StartSpawnTransport()
+      Mission03:StartSpawnTransport()
     end
     
     if not _migsSpawnStarted then
-      Mission:StartSpawnEnemies()
+      Mission03:StartSpawnEnemies()
     end
   end
 end
 
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Core.Spawn#SPAWN transportSpawn
-function Mission:SetupMenu(transportSpawn)
+function Mission03:SetupMenu(transportSpawn)
   local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
   MENU_COALITION_COMMAND:New(
     coalition.side.BLUE, "Kill transport", menu,
-    function() Mission:KillTransport(transportSpawn) end)
+    function() Mission03:KillTransport(transportSpawn) end)
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnUnitDead(unit)
+function Mission03:OnUnitDead(unit)
   if (string.match(unit:GetName(), _playerGroup)) then
-    Mission:OnPlayerDead(unit)
+    Mission03:OnPlayerDead(unit)
   end
   if (string.match(unit:GetName(), "Transport")) then
-    Mission:OnTransportDead(unit)
+    Mission03:OnTransportDead(unit)
   end
   if (string.match(unit:GetName(), "MiG")) then
-    Mission:OnEnemyDead(unit)
+    Mission03:OnEnemyDead(unit)
   end
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnTransportDead(unit)
+function Mission03:OnTransportDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Transport destroyed: " .. unit:GetName())
   MESSAGE:New("Transport destroyed!", _messageTimeLong):ToAll()
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
-    Mission:AnnounceLose(2)
+    Mission03:AnnounceLose(2)
   end
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnPlayerDead(unit)
+function Mission03:OnPlayerDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Player is dead: " .. unit:GetName())
   
@@ -278,18 +278,18 @@ function Mission:OnPlayerDead(unit)
   Global:PlaySound(Sound.UnitLost)
   
   if (not _winLoseDone) then
-    Mission:AnnounceLose(2)
+    Mission03:AnnounceLose(2)
   end
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
-function Mission:OnEnemyDead(unit)
+function Mission03:OnEnemyDead(unit)
   Global:CheckType(unit, UNIT)
   Global:Trace(1, "Enemy MiG is dead: " .. unit:GetName())
   
-  Mission:PlayEnemyDeadSound()
+  Mission03:PlayEnemyDeadSound()
   
   _migsDestroyed = _inc(_migsDestroyed)
   local remain = self:GetMaxMigs() - _migsDestroyed
@@ -306,46 +306,46 @@ function Mission:OnEnemyDead(unit)
     Global:PlaySound(Sound.FirstObjectiveMet, 2)
     MESSAGE:New("All enemy MiGs are dead!", _messageTimeLong):ToAll()
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", _messageTimeLong):ToAll()    
-    Mission:LandTestPlayers(self.playerGroup)
+    Mission03:LandTestPlayers(self.playerGroup)
   end
 end
 
 ---
--- @param #Mission self
-function Mission:AnnounceWin(soundDelay)
+-- @param #Mission03 self
+function Mission03:AnnounceWin(soundDelay)
   Global:Assert(not _winLoseDone, "Win/lose already announced")
 
   if not soundDelay then
     soundDelay = 0
   end
   
-  Global:Trace(1, "Mission accomplished")
-  MESSAGE:New("Mission accomplished!", _messageTimeLong):ToAll()
-  Global:PlaySound(Sound.MissionAccomplished, soundDelay)
+  Global:Trace(1, "Mission03 accomplished")
+  MESSAGE:New("Mission03 accomplished!", _messageTimeLong):ToAll()
+  Global:PlaySound(Sound.Mission03Accomplished, soundDelay)
   Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
 end
 
 ---
--- @param #Mission self
-function Mission:AnnounceLose(soundDelay)
+-- @param #Mission03 self
+function Mission03:AnnounceLose(soundDelay)
   Global:Assert(not _winLoseDone, "Win/lose already announced")
   
   if not soundDelay then
     soundDelay = 0
   end
   
-  Global:Trace(1, "Mission failed")
-  MESSAGE:New("Mission failed!", _messageTimeLong):ToAll()
-  Global:PlaySound(Sound.MissionFailed, soundDelay)
+  Global:Trace(1, "Mission03 failed")
+  MESSAGE:New("Mission03 failed!", _messageTimeLong):ToAll()
+  Global:PlaySound(Sound.Mission03Failed, soundDelay)
   Global:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   _winLoseDone = true
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Wrapper.Group#GROUP playerGroup
-function Mission:LandTestPlayers(playerGroup)
+function Mission03:LandTestPlayers(playerGroup)
   Global:Trace(1, "Landing test players")
   local airbase = AIRBASE:FindByName(AIRBASE.Caucasus.Nalchik)
   local land = airbase:GetCoordinate():WaypointAirLanding(300, airbase)
@@ -354,9 +354,9 @@ function Mission:LandTestPlayers(playerGroup)
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Core.Spawn#SPAWN transportSpawn
-function Mission:KillTransport(transportSpawn)
+function Mission03:KillTransport(transportSpawn)
   Global:Trace(1, "Killing transport")
   local group = transportSpawn:GetGroupFromIndex(1)
   if group then
@@ -368,9 +368,9 @@ end
 
 -- TODO: refactor into global class
 --- 
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Core.Spawn#SPAWN transportSpawn
-function Mission:KillDamagedTransports(transportSpawn)
+function Mission03:KillDamagedTransports(transportSpawn)
   Global:Trace(3, "Checking transport spawn groups for damage")
   for i = 1, _transportMaxCount do
     local group = transportSpawn:GetGroupFromIndex(i)
@@ -402,9 +402,9 @@ end
 
 -- TODO: consider merging this with KillDamagedTransports
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Core.Spawn#SPAWN transportSpawn
-function Mission:GetAliveTransportCount(transportSpawn)
+function Mission03:GetAliveTransportCount(transportSpawn)
   Global:Trace(3, "Checking spawn groups for alive count")
   
   local count = 0
@@ -430,11 +430,11 @@ function Mission:GetAliveTransportCount(transportSpawn)
 end
 
 ---
--- @param #Mission self
+-- @param #Mission03 self
 -- @param Core.Zone#ZONE nalchikParkZone
 -- @param Core.Spawn#SPAWN transportSpawn
 -- @param Wrapper.Group#GROUP playerGroup
-function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
+function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   Global:CheckType(nalchikParkZone, ZONE)
   Global:CheckType(transportSpawn, SPAWN)
   
@@ -456,13 +456,13 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   local transportsAreParked = Global:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, _transportMaxCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
-  Global:Trace(2, "Transports alive: " .. Mission:GetAliveTransportCount(transportSpawn))
+  Global:Trace(2, "Transports alive: " .. Mission03:GetAliveTransportCount(transportSpawn))
   Global:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
   Global:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   Global:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
   if (everyoneParked) then
-    Mission:AnnounceWin()
+    Mission03:AnnounceWin()
   end
   
   -- no players can happen when no AI/human players are online yet
@@ -481,8 +481,8 @@ function Mission:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   end
   
   Global:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, _transportMaxCount)
-  Mission:KillDamagedTransports(transportSpawn)
+  Mission03:KillDamagedTransports(transportSpawn)
   
 end
 
-Mission:Setup()
+Mission03:Setup()
