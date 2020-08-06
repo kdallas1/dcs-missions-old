@@ -78,7 +78,7 @@ end
 --- 
 -- @param #Mission self
 function Mission:StartBase()
-  self.testPassed = Test()
+  --Test()
 end
 
 --- Checks if entire group is parked in a zone.
