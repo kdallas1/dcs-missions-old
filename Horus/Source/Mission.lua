@@ -14,12 +14,12 @@ Mission = {
   units = {},
   
   ---@field #list<#function> eventHandlers
-  eventHandlers = {}
-}
+  eventHandlers = {},
 
-local _traceOn = false
-local _traceLevel = 1
-local _assert = false
+  traceOn = false,
+  traceLevel = 1,
+  assert = false
+}
 
 ---
 -- @type Sound
@@ -68,21 +68,21 @@ end
 -- @param #Mission self
 -- @param #boolean traceOn True to enable trace.
 function Mission:SetTraceOn(traceOn)
-  _traceOn = traceOn
+  self.traceOn = traceOn
 end
 
 --- Trace level (logging).
 -- @param #Mission self
 -- @param #number traceLevel 1 = low, 2 = med, 3 = high
 function Mission:SetTraceLevel(traceLevel)
-  _traceLevel = traceLevel
+  self.traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
 -- @param #Mission self
 -- @param #boolean assert True to enable assert. 
 function Mission:SetAssert(assert)
-  _assert = assert
+  self.assert = assert
 end
 
 --- Horus log function. Short hand for: env.info("Horus: " .. line)
@@ -91,12 +91,12 @@ end
 -- @param #string line Log line to output to env.info 
 function Mission:Trace(level, line)
 
-  if (_assert) then
+  if (self.assert) then
     assert(type(level) == type(0), "level arg must be a number")
     assert(type(line) == type(""), "line arg must be a string")
   end
   
-  if (_traceOn and (level <= _traceLevel)) then
+  if (self.traceOn and (level <= self.traceLevel)) then
     local funcName = debug.getinfo(2, "n").name
     local lineNum = debug.getinfo(2, "S").linedefined
     funcName = (funcName and funcName or "?")
@@ -110,7 +110,7 @@ end
 -- @param #boolean case If false, assert fails
 -- @param #string message Assert message if fail
 function Mission:Assert(case, message)
-  if (not _assert) then
+  if (not self.assert) then
     return
   end
   
@@ -122,7 +122,7 @@ end
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
 function Mission:CheckType(object, _type)
-  if (not _assert) then
+  if (not self.assert) then
     return
   end
   
