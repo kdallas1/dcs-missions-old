@@ -9,22 +9,19 @@ dofile(baseDir .. "KD/Test/Test.lua")
 --- 
 -- @type Mission
 -- @extends KD.Object#Object
-
----
--- @field #Mission
 Mission = {
   
   ---@field #list<Core.Spawn#SPAWN> spawners
-  spawners = {},
+  spawners = nil,
   
   ---@field #list<Wrapper.Group#GROUP> groups
-  groups = {},
+  groups = nil,
   
   ---@field #list<Wrapper.Unit#UNIT> units
-  units = {},
+  units = nil,
   
   ---@field #list<#function> eventHandlers
-  eventHandlers = {},
+  eventHandlers = nil,
 
   winLoseDone = false,
   messageTimeShort = 20,
@@ -64,18 +61,15 @@ function _inc(i)
   return i + 1
 end
 
----
--- @param #Mission self
--- @param #table o
--- @return #Mission
-function Mission:_New(o)
-  return createClass(o, Mission, Object)
-end
-
 --- 
 -- @param #Mission self
 function Mission:StartBase()
-  --Test()
+  Test()
+  
+  self.spawners = {}
+  self.groups = {}
+  self.units = {}
+  self.eventHandlers = {}
 end
 
 --- Checks if entire group is parked in a zone.

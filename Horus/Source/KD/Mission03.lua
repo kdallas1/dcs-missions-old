@@ -6,19 +6,19 @@ dofile(baseDir .. "KD/Mission.lua")
 --- 
 -- @type Mission03
 -- @extends KD.Mission#Mission
-
----
--- @field #Mission03
 Mission03 = {
   
   --- @field Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
   
   --- @field #list<Wrapper.Unit#UNIT> playerList
-  playerList = {},
+  playerList = nil,
   
   --- @field Core.Spawn#SPAWN transportSpawn
   transportSpawn = nil,
+  
+  --- @field KD.Spawn#Spawn migsSpawn
+  migsSpawn = nil,
   
   gameLoopInterval = 1,
   playerOnline = false,
@@ -42,17 +42,9 @@ Mission03 = {
   migsSpawnStarted = false,
   migsGroupSize = 2, -- pairs in ME
   migsPrefix = "MiG",
-  
-  --- @field KD.Spawn#Spawn migsSpawn
-  migsSpawn = nil
 }
 
----
--- @param #Mission03 self
--- @return #Mission03
-function Mission03:New()
-  return Mission:_New(self)
-end
+Mission03 = createClass(Mission03, Mission, Object)
 
 ---
 -- @param #Mission03 self
@@ -72,6 +64,8 @@ function Mission03:Start()
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
   
   self.transportSpawn = SPAWN:New("Transport")
+  
+  self.playerList = {}
   
   local playerGroup = GROUP:FindByName(self.playerGroupName)
   self.playerGroup = playerGroup
@@ -165,7 +159,7 @@ function Mission03:OnUnitSpawn(unit)
     if not self.migsSpawnStarted then    
       self:Assert(not self.migsSpawnStarted, "MiG spawner already started")
       self.migsSpawnStarted = true
-      self.migsSpawn = Spawn:New(self, self.migsSpawnerMax, self.GetMaxMigs, self.migsGroupSize, self.migsPrefix)
+      self.migsSpawn = Spawn:_New(self, self.migsSpawnerMax, self.GetMaxMigs, self.migsGroupSize, self.migsPrefix)
       self.migsSpawn:StartSpawnEnemies()
     end
   end

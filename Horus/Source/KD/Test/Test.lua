@@ -1,8 +1,13 @@
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
+dofile(baseDir .. "KD/Test/TestObject.lua")
 
 function RunTests(list)
   for i = 1, #list do
     local test = list[i]
+    if not test then
+      env.error("Test error: Invalid test name", true)
+    end
+    
     env.info("Test: Start #" .. i .. " of " .. #list)
     test()
     env.info("Test: Passed")
@@ -18,6 +23,7 @@ function Test()
   env.setErrorMessageBoxEnabled(true)
   
   RunTests {
+    Test_Object,
     Test_Spawn
   }
   

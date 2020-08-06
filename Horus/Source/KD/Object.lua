@@ -3,9 +3,6 @@
 
 --- 
 -- @type Object
-
----
--- @field #Object
 Object = {
   traceOn = false,
   traceLevel = 1,
@@ -37,8 +34,8 @@ function createClass (...)
   c.__index = c
 
   -- define a new constructor for this new class
-  function c:new (o)
-    o = o or {}
+  function c:New (...)
+    o = {}
     setmetatable(o, c)
     return o
   end
