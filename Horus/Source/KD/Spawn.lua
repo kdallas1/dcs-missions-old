@@ -17,6 +17,8 @@ Spawn = Object:_New {
   spawnVariation = .5,
   spawnStart = 60,
   spawnSeparation = 300,
+  mooseSpawn = SPAWN,
+  mooseScheduler = SCHEDULER
 }
 
 ---
@@ -62,7 +64,7 @@ function Spawn:StartSpawnEnemies()
   
   for i = 1, self.spawnerCount do
     
-    local spawn = SPAWN:New(self.prefix .. " " .. i)
+    local spawn = self.mooseSpawn:New(self.prefix .. " " .. i)
     spawn.id = i
     self.mission:AddSpawner(spawn)
     self.spawners[#self.spawners + 1] = spawn
@@ -71,7 +73,7 @@ function Spawn:StartSpawnEnemies()
   
   self:ShuffleList(self.spawners)
   
-  SCHEDULER:New(
+  self.mooseScheduler:New(
     nil, function() self:SpawnTick() end, {},
     self.spawnStart, self.spawnSeparation, self.spawnVariation)
 end

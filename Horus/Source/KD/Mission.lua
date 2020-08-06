@@ -1,6 +1,7 @@
 dofile(baseDir .. "../Moose/Moose.lua")
 dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
+dofile(baseDir .. "KD/Test/Test.lua")
 
 ---
 -- @module KD.Mission
@@ -71,6 +72,12 @@ function Mission:_New(o)
   setmetatable(o, self)
   self.__index = self
   return o
+end
+
+--- 
+-- @param #Mission self
+function Mission:StartBase()
+  Test()
 end
 
 --- Checks if entire group is parked in a zone.

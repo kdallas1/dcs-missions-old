@@ -60,6 +60,8 @@ end
 ---
 -- @param #Mission03 self
 function Mission03:Start()
+  self:StartBase()
+
   self:Trace(1, "Setup begin")
     
   --BASE:TraceOnOff(true)
