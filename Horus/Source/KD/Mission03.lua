@@ -133,7 +133,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission03:OnUnitSpawn(unit)
 
-  self:CheckType(unit, UNIT)
+  self:AssertType(unit, UNIT)
   self:Trace(2, "Unit spawned: " .. unit:GetName())
   
   if (string.match(unit:GetName(), "Transport")) then
@@ -201,7 +201,7 @@ end
 -- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
 function Mission03:OnTransportDead(unit)
-  self:CheckType(unit, UNIT)
+  self:AssertType(unit, UNIT)
   self:Trace(1, "Transport destroyed: " .. unit:GetName())
   MESSAGE:New("Transport destroyed!", self.messageTimeLong):ToAll()
   self:PlaySound(Sound.UnitLost)
@@ -215,7 +215,7 @@ end
 -- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
 function Mission03:OnPlayerDead(unit)
-  self:CheckType(unit, UNIT)
+  self:AssertType(unit, UNIT)
   self:Trace(1, "Player is dead: " .. unit:GetName())
   
   MESSAGE:New("Player is dead!", self.messageTimeLong):ToAll()
@@ -230,7 +230,7 @@ end
 -- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
 function Mission03:OnEnemyDead(unit)
-  self:CheckType(unit, UNIT)
+  self:AssertType(unit, UNIT)
   self:Trace(1, "Enemy MiG is dead: " .. unit:GetName())
   
   self:PlayEnemyDeadSound()
@@ -260,8 +260,8 @@ end
 -- @param Core.Spawn#SPAWN transportSpawn
 -- @param Wrapper.Group#GROUP playerGroup
 function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
-  self:CheckType(nalchikParkZone, ZONE)
-  self:CheckType(transportSpawn, SPAWN)
+  self:AssertType(nalchikParkZone, ZONE)
+  self:AssertType(transportSpawn, SPAWN)
   
   self.playerList = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
   self:AddUnitList(self.playerList)
