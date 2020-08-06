@@ -12,7 +12,7 @@ dofile(baseDir .. "KD/Test/Test.lua")
 
 ---
 -- @field #Mission
-Mission = Object:_New {
+Mission = {
   
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = {},
@@ -69,10 +69,7 @@ end
 -- @param #table o
 -- @return #Mission
 function Mission:_New(o)
-  local o = o or {}
-  setmetatable(o, self)
-  self.__index = self
-  return o
+  return createClass(o, Mission, Object)
 end
 
 --- 

@@ -9,7 +9,7 @@ dofile(baseDir .. "KD/Mission.lua")
 
 ---
 -- @field #Mission03
-Mission03 = Mission:_New {
+Mission03 = {
   
   --- @field Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
@@ -51,10 +51,7 @@ Mission03 = Mission:_New {
 -- @param #Mission03 self
 -- @return #Mission03
 function Mission03:New()
-  local o = o or {}
-  setmetatable(o, self)
-  self.__index = self
-  return o
+  return Mission:_New(self)
 end
 
 ---

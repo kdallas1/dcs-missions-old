@@ -7,7 +7,7 @@
 
 ---
 -- @field #Spawn
-Spawn = Object:_New {
+Spawn = {
   spawners = {},
   mission = nil,
   spawnerCount = 3,
@@ -52,10 +52,7 @@ end
 -- @param #table o
 -- @return #Spawn
 function Spawn:_New(o)
-  local o = o or {}
-  setmetatable(o, self)
-  self.__index = self
-  return o
+  return createClass(o, Spawn, Object)
 end
 
 ---
