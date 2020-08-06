@@ -2,7 +2,7 @@
 -- @module Mission03
 
 --- @type Mission03
--- @extends Global#Global 
+-- @extends Mission#Mission 
 Mission03 = {
   
   ---@field #Wrapper.Group#GROUP playerGroup
@@ -50,7 +50,7 @@ local _migsSpawnStarted = false
 -- @param #Mission03 self
 -- @return #Mission03
 function Mission03:New()
-  local new = Global:New(self)
+  local new = Mission:New(self)
   return new
 end
 
