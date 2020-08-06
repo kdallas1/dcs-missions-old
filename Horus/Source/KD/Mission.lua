@@ -3,10 +3,14 @@ dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
 
 ---
--- @module Mission
+-- @module KD.Mission
 
---- @type Mission
+--- 
+-- @type Mission
 -- @extends KD.Object#Object
+
+---
+-- @field #Mission
 Mission = Object:_New {
 
   traceOn = false,

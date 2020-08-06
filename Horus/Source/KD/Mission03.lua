@@ -1,10 +1,14 @@
-dofile(baseDir .. "Mission.lua")
+dofile(baseDir .. "KD/Mission.lua")
 
 ---
--- @module Mission03
+-- @module KD.Mission03
 
---- @type Mission03
--- @extends Mission#Mission
+--- 
+-- @type Mission03
+-- @extends KD.Mission#Mission
+
+---
+-- @field #Mission03
 Mission03 = Mission:_New {
   
   --- @field Wrapper.Group#GROUP playerGroup
@@ -305,6 +309,3 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   self:SelfDestructDamagedUnits(transportSpawn, self.transportMinLife)
   
 end
-
-local m = Mission03:New()
-m:Start()

@@ -1,3 +1,5 @@
+--- Random experimental snippet sandbox
+
 -- testing trigger on waypoint
 function helloWaypoint(unit, waypoints)
   hlog("Hello waypoint: " .. unit:GetName())
