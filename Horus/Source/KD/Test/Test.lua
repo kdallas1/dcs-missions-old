@@ -1,27 +1,12 @@
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
 
 function RunTests(list)
-  local pass = true
   for i = 1, #list do
     local test = list[i]
-    
-    env.info("Test: Start " .. i)
-    
-    local noError, result = pcall(test)
-    
-    if noError then
-      if result then
-        env.info("Test: Passed")
-      else
-        pass = false
-        env.error("Test: Failed")
-      end
-    else
-      pass = false
-      env.error("Test: Error: " .. result)
-    end
+    env.info("Test: Start #" .. i .. " of " .. #list)
+    test()
+    env.info("Test: Passed")
   end
-  return pass
 end
 
 function TestAssert(condition, errorString)
@@ -29,17 +14,13 @@ function TestAssert(condition, errorString)
 end
 
 function Test()
-  env.info("Test: Running")
+  env.info("Test: Running")  
+  env.setErrorMessageBoxEnabled(true)
   
-  local pass = RunTests {
+  RunTests {
     Test_Spawn
   }
   
-  if pass then
-    env.info("Test: Finished")
-    return true
-  else
-    env.error("Test: Failed", true)
-    return false
-  end
+  env.setErrorMessageBoxEnabled(false)
+  env.info("Test: Finished")
 end
