@@ -1,8 +1,8 @@
 ---
--- @module Global
+-- @module Mission
 
---- @type Global
-Global = {
+--- @type Mission
+Mission = {
 
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = {},
@@ -54,10 +54,10 @@ function _inc(i)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param child
--- @return #Global
-function Global:New(child)
+-- @return #Mission
+function Mission:New(child)
   local o = child or {}
   setmetatable(o, self)
   self.__index = self
@@ -65,31 +65,31 @@ function Global:New(child)
 end
 
 --- Turn on trace (logging)
--- @param #Global self
+-- @param #Mission self
 -- @param #boolean traceOn True to enable trace.
-function Global:SetTraceOn(traceOn)
+function Mission:SetTraceOn(traceOn)
   _traceOn = traceOn
 end
 
 --- Trace level (logging).
--- @param #Global self
+-- @param #Mission self
 -- @param #number traceLevel 1 = low, 2 = med, 3 = high
-function Global:SetTraceLevel(traceLevel)
+function Mission:SetTraceLevel(traceLevel)
   _traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
--- @param #Global self
+-- @param #Mission self
 -- @param #boolean assert True to enable assert. 
-function Global:SetAssert(assert)
+function Mission:SetAssert(assert)
   _assert = assert
 end
 
 --- Horus log function. Short hand for: env.info("Horus: " .. line)
--- @param #Global self
+-- @param #Mission self
 -- @param #number level Level to trace at.
 -- @param #string line Log line to output to env.info 
-function Global:Trace(level, line)
+function Mission:Trace(level, line)
 
   if (_assert) then
     assert(type(level) == type(0), "level arg must be a number")
@@ -106,10 +106,10 @@ function Global:Trace(level, line)
 end
 
 --- Assert wrapper which can be turned off
--- @param #Global self
+-- @param #Mission self
 -- @param #boolean case If false, assert fails
 -- @param #string message Assert message if fail
-function Global:Assert(case, message)
+function Mission:Assert(case, message)
   if (not _assert) then
     return
   end
@@ -118,10 +118,10 @@ function Global:Assert(case, message)
 end
 
 --- Asserts the correct type (Lua is loosely typed, so this is helpful)
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
-function Global:CheckType(object, _type)
+function Mission:CheckType(object, _type)
   if (not _assert) then
     return
   end
@@ -160,11 +160,11 @@ function Global:CheckType(object, _type)
 end
 
 --- Checks if entire group is parked in a zone.
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If all units are parked in the zone.
-function Global:GroupIsParked(zone, group)
+function Mission:GroupIsParked(zone, group)
   
   self:CheckType(zone, ZONE)
   self:CheckType(group, GROUP)
@@ -183,11 +183,11 @@ function Global:GroupIsParked(zone, group)
 end
 
 --- Checks if all units are in a zone.
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param #list<Wrapper.Unit#UNIT> units The list of units to check.
 -- @return true If all units are parked in the zone.
-function Global:UnitsAreInZone(zone, units)
+function Mission:UnitsAreInZone(zone, units)
   
   for i = 1, #units do
     local unit = units[i]
@@ -203,11 +203,11 @@ function Global:UnitsAreInZone(zone, units)
 end
 
 --- Checks if all units are parked in a zone.
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param #list<Wrapper.Unit#UNIT> units The list of units to check.
 -- @return true If all units are parked in the zone.
-function Global:UnitsAreParked(zone, units)
+function Mission:UnitsAreParked(zone, units)
   
   self:CheckType(zone, ZONE)
 
@@ -234,12 +234,12 @@ function Global:UnitsAreParked(zone, units)
 end
 
 --- Checks if all groups from a spawner are parked in a zone.
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
 -- @return true If all units within all groups are parked in the zone. 
-function Global:SpawnGroupsAreParked(zone, spawn, spawnCount)
+function Mission:SpawnGroupsAreParked(zone, spawn, spawnCount)
   
   self:CheckType(zone, ZONE)
   self:CheckType(spawn, SPAWN)
@@ -261,10 +261,10 @@ function Global:SpawnGroupsAreParked(zone, spawn, spawnCount)
 end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Wrapper.Group#GROUP group The group to check.
-function Global:KeepAliveGroupIfParked(zone, group)
+function Mission:KeepAliveGroupIfParked(zone, group)
   
   self:CheckType(zone, ZONE)
   self:CheckType(group, GROUP)
@@ -282,11 +282,11 @@ function Global:KeepAliveGroupIfParked(zone, group)
 end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
-function Global:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
+function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
   
   self:CheckType(zone, ZONE)
   self:CheckType(spawn, SPAWN)
@@ -301,10 +301,10 @@ function Global:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
 end
 
 --- Check if the group has a player.
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Group#GROUP group The group to check.
 -- @return true If player is in the group. 
-function Global:GroupHasPlayer(group)
+function Mission:GroupHasPlayer(group)
 
   self:Trace(3, "looking for player in group: " .. group:GetName())
   
@@ -319,10 +319,10 @@ function Global:GroupHasPlayer(group)
 end
 
 --- Check if a list has a player.
--- @param #Global self
+-- @param #Mission self
 -- @param #list<Wrapper.Unit#UNIT> units The list to check.
 -- @return true If player is in the list.
-function Global:ListHasPlayer(units)
+function Mission:ListHasPlayer(units)
 
   self:Trace(3, "looking for player in list")
       
@@ -342,11 +342,11 @@ function Global:ListHasPlayer(units)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param #Sound soundType
 -- @param #number delay (optional)
 -- @return #boolean True if sound was found
-function Global:PlaySound(soundType, delay)
+function Mission:PlaySound(soundType, delay)
   if not delay then
     delay = 0
   end
@@ -369,9 +369,9 @@ function Global:PlaySound(soundType, delay)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Group#GROUP group
-function Global:CheckGroup(group)
+function Mission:CheckGroup(group)
 
   self:Trace(3, "Checking group: " .. group:GetName())
   
@@ -392,9 +392,9 @@ function Global:CheckGroup(group)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
-function Global:AddUnit(unit)
+function Mission:AddUnit(unit)
   
   local id = unit:GetID()
   if not self.units[id] then
@@ -405,18 +405,18 @@ function Global:AddUnit(unit)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param #list<Wrapper.Unit#UNIT> units
-function Global:AddUnitList(units)
+function Mission:AddUnitList(units)
   for i = 1, #units do
     self:AddUnit(units[i])
   end
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param #list<Wrapper.Group#GROUP> groups
-function Global:CheckGroupList(groups)
+function Mission:CheckGroupList(groups)
 
   self:Trace(3, "Checking group list")
   
@@ -434,8 +434,8 @@ function Global:CheckGroupList(groups)
 end
 
 ---
--- @param #Global self
-function Global:CheckUnitList()
+-- @param #Mission self
+function Mission:CheckUnitList()
 
   self:Trace(3, "Checking unit list")
   
@@ -445,9 +445,9 @@ function Global:CheckUnitList()
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
-function Global:CheckUnit(unit)
+function Mission:CheckUnit(unit)
   
   local life = unit:GetLife()
   local fireDieEvent = false
@@ -467,8 +467,8 @@ function Global:CheckUnit(unit)
 end
 
 ---
--- @param #Global self
-function Global:CheckSpawnerList()
+-- @param #Mission self
+function Mission:CheckSpawnerList()
 
   self:Trace(3, "Checking spawner list")
   
@@ -491,8 +491,8 @@ end
 
 
 ---
--- @param #Global self
-function Global:GameLoopBase()
+-- @param #Mission self
+function Mission:GameLoopBase()
   self:Trace(3, "*** Game loop start ***")
   self:CheckSpawnerList()
   self:CheckGroupList()
@@ -500,42 +500,42 @@ function Global:GameLoopBase()
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Core.Spawn#SPAWN spawner
-function Global:AddSpawner(spawner)
+function Mission:AddSpawner(spawner)
   self.spawners[#self.spawners + 1] = spawner
   self:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Group#GROUP group
-function Global:AddGroup(group)
+function Mission:AddGroup(group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, total=" .. #self.groups)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param Wrapper.Group#GROUP group
-function Global:AddGroup(group)
+function Mission:AddGroup(group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, total=" .. #self.groups)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param #Event event
 -- @param #function handler
-function Global:HandleEvent(event, handler)
+function Mission:HandleEvent(event, handler)
   self.eventHandlers[event] = handler
   self:Trace(3, "Event handler added, total=" .. #self.eventHandlers)
 end
 
 ---
--- @param #Global self
+-- @param #Mission self
 -- @param #Event event
-function Global:FireEvent(event, arg)
+function Mission:FireEvent(event, arg)
   local f = self.eventHandlers[event]
   if f then
     f(arg)
@@ -543,8 +543,8 @@ function Global:FireEvent(event, arg)
 end
 
 ---
--- @param #Global self
-function Global:TestEvents()
+-- @param #Mission self
+function Mission:TestEvents()
   local test = "Hello world"
   self:FireEvent(Event.Spawn, test)
   self:FireEvent(Event.Damaged, test)
@@ -555,11 +555,11 @@ end
 -- The `GROUP:GetUnits` function seems unreliable for getting all players 
 -- in a groupo of multiplayer clients, so let's try finding by a prefix.
 -- Note: The units must use #00n
--- @param #Global self
+-- @param #Mission self
 -- @param #string prefix
 -- @param #number max
 -- @return #list<Wrapper.Unit#UNIT>
-function Global:FindUnitsByPrefix(prefix, max)
+function Mission:FindUnitsByPrefix(prefix, max)
   
   local list = {}
   for i = 1, max do
@@ -596,7 +596,7 @@ end
 
 --- 
 -- @param #list list
-function Global:ShuffleList(list)
+function Mission:ShuffleList(list)
   for i = #list, 2, -1 do
     local j = math.random(i)
     list[i], list[j] = list[j], list[i]
