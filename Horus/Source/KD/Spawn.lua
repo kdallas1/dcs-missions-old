@@ -11,13 +11,12 @@ Spawn = Object:_New {
   spawners = {},
   mission = nil,
   spawnerCount = 3,
-  migsNextSpawner = 1,
+  nextSpawner = 1,
   maxUnitsFunc = nil,
-  migsSpawnInitCount = 0,
-  groupSize = 2, -- pairs in ME
-  migsSpawnVariation = .5,
-  migsSpawnStart = 60,
-  migsSpawnSeparation = 300,
+  spawnInitCount = 0,
+  spawnVariation = .5,
+  spawnStart = 60,
+  spawnSeparation = 300,
 }
 
 ---
@@ -27,12 +26,13 @@ Spawn = Object:_New {
 -- @param #function maxUnitsFunc
 -- @param #number groupSize
 -- @return #Spawn
-function Spawn:New(mission, spawnerCount, maxUnitsFunc, groupSize)
+function Spawn:New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
   local o = self:_New(nil)
   o.mission = mission
   o.spawnerCount = spawnerCount
   o.maxUnitsFunc = maxUnitsFunc
   o.groupSize = groupSize
+  o.prefix = prefix
   
   o:SetTraceOn(true)
   o:SetTraceLevel(3)
@@ -58,11 +58,11 @@ function Spawn:StartSpawnEnemies()
   self:Assert(self.mission, "Field: mission cannot be nil")
   self:Assert(self.maxUnitsFunc, "Field: maxUnitsFunc cannot be nil")
   
-  self:Trace(2, "Setting up MiG spawners")
+  self:Trace(2, "Setting up spawners: " .. self.prefix)
   
   for i = 1, self.spawnerCount do
     
-    local spawn = SPAWN:New("MiG " .. i)
+    local spawn = SPAWN:New(self.prefix .. " " .. i)
     spawn.id = i
     self.mission:AddSpawner(spawn)
     self.spawners[#self.spawners + 1] = spawn
@@ -73,31 +73,31 @@ function Spawn:StartSpawnEnemies()
   
   SCHEDULER:New(
     nil, function() self:SpawnTick() end, {},
-    self.migsSpawnStart, self.migsSpawnSeparation, self.migsSpawnVariation)
+    self.spawnStart, self.spawnSeparation, self.spawnVariation)
 end
 
 ---
 -- @param #Spawn self
 function Spawn:SpawnTick()
-  self.migsNextSpawner = _inc(self.migsNextSpawner)
-  if (self.migsNextSpawner > #self.spawners) then
-    self.migsNextSpawner = 1
+  self.nextSpawner = _inc(self.nextSpawner)
+  if (self.nextSpawner > #self.spawners) then
+    self.nextSpawner = 1
   end
   
-  local spawn = self.spawners[self.migsNextSpawner]
+  local spawn = self.spawners[self.nextSpawner]
   local maxMigs = self.maxUnitsFunc(self.mission)
   
-  self:Trace(2, "MiG spawn tick, id=" .. spawn.id .. " max=" .. maxMigs .. " count=" .. self.migsSpawnInitCount)
+  self:Trace(2, "Spawn tick, id=" .. spawn.id .. " max=" .. maxMigs .. " count=" .. self.spawnInitCount)
   
-  if (self.migsSpawnInitCount < maxMigs) then
+  if (self.spawnInitCount < maxMigs) then
     
     -- spawns a pair
-    self:Trace(2, "MiG spawn, id=" .. spawn.id)
+    self:Trace(2, "Spawn, id=" .. spawn.id)
     spawn:Spawn()
     
     -- increment here instead of OnUnitSpawn to prevent race condition, since
     -- events happen only on game tick
-    self.migsSpawnInitCount = self.migsSpawnInitCount + self.groupSize
+    self.spawnInitCount = self.spawnInitCount + self.groupSize
     
   end
 end
