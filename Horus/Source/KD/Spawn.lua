@@ -4,11 +4,8 @@
 --- 
 -- @type Spawn
 -- @extends KD.Object#Object
-
----
--- @field #Spawn
 Spawn = {
-  spawners = {},
+  spawners = nil,
   mission = nil,
   spawnerCount = 3,
   nextSpawner = 1,
@@ -18,12 +15,14 @@ Spawn = {
   spawnStart = 60,
   spawnSeparation = 300,
   
-  --- @type Core.Spawn#SPAWN mooseSpawn
+  --- @field Core.Spawn#SPAWN mooseSpawn
   mooseSpawn = SPAWN,
   
-  --- @type Core.Scheduler#SCHEDULER mooseScheduler
+  --- @field Core.Scheduler#SCHEDULER mooseScheduler
   mooseScheduler = SCHEDULER
 }
+
+Spawn = createClass(Spawn, Object)
 
 ---
 -- @param #Spawn self
@@ -32,27 +31,20 @@ Spawn = {
 -- @param #function maxUnitsFunc
 -- @param #number groupSize
 -- @return #Spawn
-function Spawn:New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
-  local o = self:_New(nil)
+function Spawn:_New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
+  local o = self:New()
   o.mission = mission
   o.spawnerCount = spawnerCount
   o.maxUnitsFunc = maxUnitsFunc
   o.groupSize = groupSize
   o.prefix = prefix
+  o.spawners = {}
   
   o:SetTraceOn(true)
   o:SetTraceLevel(3)
   o:SetAssert(true)
   
   return o
-end
-
----
--- @param #Spawn self
--- @param #table o
--- @return #Spawn
-function Spawn:_New(o)
-  return createClass(o, Spawn, Object)
 end
 
 ---
