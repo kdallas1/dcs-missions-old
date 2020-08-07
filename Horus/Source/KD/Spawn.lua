@@ -8,6 +8,8 @@ dofile(baseDir .. "KD/Utilities.lua")
 -- @type Spawn
 -- @extends KD.Object#Object
 Spawn = {
+  className = "Spawn",
+  
   spawners = nil,
   mission = nil,
   spawnerCount = 3,
@@ -29,6 +31,12 @@ Spawn = createClass(Spawn, Object)
 
 ---
 -- @param #Spawn self
+function Spawn:Spawn()
+  self.spawners = {}
+end
+
+---
+-- @param #Spawn self
 -- @param Mission#Mission mission
 -- @param #number spawnerCount
 -- @param #function maxUnitsFunc
@@ -42,7 +50,6 @@ function Spawn:_New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
   o.maxUnitsFunc = maxUnitsFunc
   o.groupSize = groupSize
   o.prefix = prefix
-  o.spawners = {}
   return o
   
 end

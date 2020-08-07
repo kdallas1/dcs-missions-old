@@ -9,6 +9,7 @@ dofile(baseDir .. "KD/Spawn.lua")
 -- @type Mission
 -- @extends KD.Object#Object
 Mission = {
+  className = "Mission",
   
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = nil,
@@ -55,9 +56,9 @@ Event = {
   Dead      = 2,
 }
 
---- 
--- @param #Mission self
-function Mission:StartBase()
+---
+-- @param #Mission03 self
+function Mission:Mission()
   self.spawners = {}
   self.groups = {}
   self.units = {}
