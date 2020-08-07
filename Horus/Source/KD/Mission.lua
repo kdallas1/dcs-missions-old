@@ -1,7 +1,6 @@
 dofile(baseDir .. "../Moose/Moose.lua")
 dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
-dofile(baseDir .. "KD/Test/Test.lua")
 
 ---
 -- @module KD.Mission
@@ -54,18 +53,9 @@ Event = {
   Dead      = 2,
 }
 
---- Short hand to increment a number (no ++ in Lua)
--- @param #number i Start increment from this number.
--- @return #number Returns i + 1   
-function _inc(i)
-  return i + 1
-end
-
 --- 
 -- @param #Mission self
 function Mission:StartBase()
-  Test()
-  
   self.spawners = {}
   self.groups = {}
   self.units = {}
@@ -133,7 +123,7 @@ function Mission:UnitsAreParked(zone, units)
     self:Trace(3, "unit velocity: " .. unit:GetVelocityKNOTS())
     
     if (unit:GetVelocityKNOTS() < 1) then
-      stoppedCount = _inc(stoppedCount)
+      stoppedCount = stoppedCount + 1
     end
   end
   
@@ -164,7 +154,7 @@ function Mission:SpawnGroupsAreParked(zone, spawn, spawnCount)
   for i = 1, spawnCount do
     local group = spawn:GetGroupFromIndex(i)
     if (group and self:GroupIsParked(zone, group)) then
-      parkCount = _inc(parkCount)
+      parkCount = parkCount + 1
     end
   end
   
@@ -523,7 +513,7 @@ function Mission:PlayEnemyDeadSound(delay)
   self:PlaySound(Sound.TargetDestoyed, delay)
   self:PlaySound(sounds[self.soundCounter], delay + 2)
   
-  self.soundCounter = _inc(self.soundCounter)
+  self.soundCounter = self.soundCounter + 1
   if self.soundCounter > #sounds then
     self.soundCounter = 1
   end
@@ -621,7 +611,7 @@ function Mission:GetAliveUnitsFromSpawn(spawn)
           self:Trace(3, "Checking if unit is alive: " .. unit:GetName())
           
           if unit:IsAlive() then
-            count = _inc(count)
+            count = count + 1
           end
         end
       end

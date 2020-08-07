@@ -138,13 +138,3 @@ function Object:AssertType(object, _type)
     error("Type check failed, invalid args")
   end
 end
-
---- 
--- @param #Object self
--- @param #list list
-function Object:ShuffleList(list)
-  for i = #list, 2, -1 do
-    local j = math.random(i)
-    list[i], list[j] = list[j], list[i]
-  end
-end
