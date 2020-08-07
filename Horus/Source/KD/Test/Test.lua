@@ -7,14 +7,13 @@ testTrace = {
   _assert = true
 }
 
-function RunTests(list)
-  for i = 1, #list do
-    local test = list[i]
+function RunTests(tests)
+  for i, test in pairs(tests) do
     if not test then
       env.error("Test: Error, invalid test name", true)
     end
     
-    env.info("Test: Start #" .. i .. " of " .. #list)
+    env.info("Test: Start #" .. i .. " of " .. #tests)
     test()
     env.info("Test: Passed")
   end
