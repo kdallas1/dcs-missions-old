@@ -7,6 +7,7 @@ dofile(baseDir .. "KD/Mission.lua")
 -- @type Mission03
 -- @extends KD.Mission#Mission
 Mission03 = {
+  className = "Mission03",
 
   traceOn = true,
   traceLevel = 1,
@@ -53,10 +54,7 @@ Mission03 = createClass(Mission03, Mission)
 
 ---
 -- @param #Mission03 self
-function Mission03:Start()
-  self:StartBase()
-
-  self:Trace(1, "Setup begin")
+function Mission03:Mission03()
   
   if self.mooseTrace then  
     BASE:TraceOnOff(true)
@@ -68,28 +66,33 @@ function Mission03:Start()
   self:SetTraceLevel(self.traceLevel)
   self:SetAssert(self.assert)
   
-  local nalchikParkZone = ZONE:FindByName("Nalchik Park")
-  
+  self.nalchikParkZone = ZONE:FindByName("Nalchik Park")
   self.transportSpawn = SPAWN:New("Transport")
-  
+  self.playerGroup = GROUP:FindByName(self.playerGroupName)
   self.playerList = {}
   
-  local playerGroup = GROUP:FindByName(self.playerGroupName)
-  self.playerGroup = playerGroup
-  self:AddGroup(playerGroup)
+end
+
+---
+-- @param #Mission03 self
+function Mission03:Start()
+
+  self:Trace(1, "Starting mission")
   
+  self:AddGroup(self.playerGroup)
   self:SetupMenu(self.transportSpawn)
   self:SetupEvents()
   
   SCHEDULER:New(nil,
-    function() self:GameLoop(nalchikParkZone, self.transportSpawn, playerGroup) end, 
+    function() self:GameLoop(self.nalchikParkZone, self.transportSpawn, self.playerGroup) end, 
     {}, 0, self.gameLoopInterval)
   
   self:PlaySound(Sound.MissionLoaded)
   
   MESSAGE:New("Welcome to Mission 3", self.messageTimeShort):ToAll()
   MESSAGE:New("Please read the brief", self.messageTimeShort):ToAll()
-  self:Trace(1, "Setup done")
+  
+  self:Trace(1, "Mission started")
   
 end
 

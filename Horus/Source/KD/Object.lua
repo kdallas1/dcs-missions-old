@@ -4,6 +4,8 @@
 ---
 -- @type Object
 Object = {
+  className = "Object",
+  
   _traceOn = false,
   _traceLevel = 1,
   _assert = false
