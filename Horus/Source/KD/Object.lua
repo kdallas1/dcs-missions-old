@@ -9,20 +9,28 @@ Object = {
   _assert = false
 }
 
--- https://www.lua.org/pil/16.3.html
--- look up for `k' in list of tables `plist'
-local function search (k, plist)
+--- Search for a field in a list of objects
+-- Source: https://www.lua.org/pil/16.3.html
+-- @param #string k Name of field to search for
+local function search(k, plist)
   for i=1, table.getn(plist) do
     if plist[i] then
-      local v = plist[i][k]     -- try `i'-th superclass
+      -- try `i'-th superclass
+      local v = plist[i][k]
       if v then return v end
     end
   end
 end
 
--- https://www.lua.org/pil/16.3.html
-function createClass (...)
-  local c = {}        -- new class
+--- Combine multiple classes together.
+-- Arg ... for classes to combine (list of args)
+-- 
+-- Source: https://www.lua.org/pil/16.3.html
+-- @return #table Returns a class
+function createClass(...)
+
+  -- new class
+  local c = {}
 
   -- class will search for each method in the list of its
   -- parents (`arg' is the list of parents)
@@ -34,13 +42,12 @@ function createClass (...)
   c.__index = c
 
   -- define a new constructor for this new class
-  function c:New (...)
+  function c:New(...)
     o = {}
     setmetatable(o, c)
     return o
   end
-
-  -- return new class
+  
   return c
 end
 
@@ -145,15 +152,5 @@ function Object:AssertType(object, _type)
   
   else
     error("Type check failed, invalid args")
-  end
-end
-
---- 
--- @param #Object self
--- @param #list list
-function Object:ShuffleList(list)
-  for i = #list, 2, -1 do
-    local j = math.random(i)
-    list[i], list[j] = list[j], list[i]
   end
 end
