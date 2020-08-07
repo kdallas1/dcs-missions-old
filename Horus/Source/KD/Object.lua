@@ -4,9 +4,9 @@
 --- 
 -- @type Object
 Object = {
-  traceOn = false,
-  traceLevel = 1,
-  assert = false
+  _traceOn = false,
+  _traceLevel = 1,
+  _assert = false
 }
 
 -- https://www.lua.org/pil/16.3.html
@@ -48,21 +48,30 @@ end
 -- @param #Object self
 -- @param #boolean traceOn True to enable trace.
 function Object:SetTraceOn(traceOn)
-  self.traceOn = traceOn
+  self._traceOn = traceOn
 end
 
 --- Trace level (logging).
 -- @param #Object self
 -- @param #number traceLevel 1 = low, 2 = med, 3 = high
 function Object:SetTraceLevel(traceLevel)
-  self.traceLevel = traceLevel
+  self._traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
 -- @param #Object self
 -- @param #boolean assert True to enable assert. 
 function Object:SetAssert(assert)
-  self.assert = assert
+  self._assert = assert
+end
+
+--- Copies trace options from an object.
+-- @param #Object self
+-- @param #Object object Object to copy from. 
+function Object:CopyTrace(object)
+  self._traceOn = object._traceOn
+  self._traceLevel = object._traceLevel
+  self._assert = object._assert
 end
 
 --- Horus log function. Short hand for: env.info("Horus: " .. line)
@@ -71,12 +80,12 @@ end
 -- @param #string line Log line to output to env.info 
 function Object:Trace(level, line)
 
-  if (self.assert) then
+  if (self._assert) then
     assert(type(level) == type(0), "level arg must be a number")
     assert(type(line) == type(""), "line arg must be a string")
   end
   
-  if (self.traceOn and (level <= self.traceLevel)) then
+  if (self._traceOn and (level <= self._traceLevel)) then
     local funcName = debug.getinfo(2, "n").name
     local lineNum = debug.getinfo(2, "S").linedefined
     funcName = (funcName and funcName or "?")
@@ -90,7 +99,7 @@ end
 -- @param #boolean case If false, assert fails
 -- @param #string message Assert message if fail
 function Object:Assert(case, message)
-  if (not self.assert) then
+  if (not self._assert) then
     return
   end
   
@@ -102,7 +111,7 @@ end
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
 function Object:AssertType(object, _type)
-  if (not self.assert) then
+  if (not self._assert) then
     return
   end
   
@@ -136,5 +145,15 @@ function Object:AssertType(object, _type)
   
   else
     error("Type check failed, invalid args")
+  end
+end
+
+--- 
+-- @param #Object self
+-- @param #list list
+function Object:ShuffleList(list)
+  for i = #list, 2, -1 do
+    local j = math.random(i)
+    list[i], list[j] = list[j], list[i]
   end
 end

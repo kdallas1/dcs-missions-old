@@ -35,6 +35,7 @@ Spawn = createClass(Spawn, Object)
 -- @param #number groupSize
 -- @return #Spawn
 function Spawn:_New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
+
   local o = self:New()
   o.mission = mission
   o.spawnerCount = spawnerCount
@@ -42,12 +43,8 @@ function Spawn:_New(mission, spawnerCount, maxUnitsFunc, groupSize, prefix)
   o.groupSize = groupSize
   o.prefix = prefix
   o.spawners = {}
-  
-  o:SetTraceOn(true)
-  o:SetTraceLevel(3)
-  o:SetAssert(true)
-  
   return o
+  
 end
 
 ---

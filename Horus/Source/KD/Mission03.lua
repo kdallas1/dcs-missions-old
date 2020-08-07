@@ -7,6 +7,11 @@ dofile(baseDir .. "KD/Mission.lua")
 -- @type Mission03
 -- @extends KD.Mission#Mission
 Mission03 = {
+
+  traceOn = true,
+  traceLevel = 1,
+  assert = true,
+  mooseTrace = false,
   
   --- @field Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
@@ -52,14 +57,16 @@ function Mission03:Start()
   self:StartBase()
 
   self:Trace(1, "Setup begin")
-    
-  --BASE:TraceOnOff(true)
-  BASE:TraceAll(true)
-  BASE:TraceLevel(3)
   
-  self:SetTraceOn(true)
-  self:SetTraceLevel(3)
-  self:SetAssert(true)
+  if self.mooseTrace then  
+    BASE:TraceOnOff(true)
+    BASE:TraceAll(true)
+    BASE:TraceLevel(3)
+  end
+  
+  self:SetTraceOn(self.traceOn)
+  self:SetTraceLevel(self.traceLevel)
+  self:SetAssert(self.assert)
   
   local nalchikParkZone = ZONE:FindByName("Nalchik Park")
   
@@ -160,6 +167,7 @@ function Mission03:OnUnitSpawn(unit)
       self:Assert(not self.migsSpawnStarted, "MiG spawner already started")
       self.migsSpawnStarted = true
       self.migsSpawn = Spawn:_New(self, self.migsSpawnerMax, self.GetMaxMigs, self.migsGroupSize, self.migsPrefix)
+      self.migsSpawn:CopyTrace(self)
       self.migsSpawn:StartSpawnEnemies()
     end
   end

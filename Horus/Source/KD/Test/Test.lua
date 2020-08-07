@@ -1,6 +1,12 @@
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestObject.lua")
 
+testTrace = {
+  _traceOn = true,
+  _traceLevel = 3,
+  _assert = true
+}
+
 function RunTests(list)
   for i = 1, #list do
     local test = list[i]
