@@ -49,7 +49,7 @@ Mission03 = {
   migsPrefix = "MiG",
 }
 
-Mission03 = createClass(Mission03, Mission, Object)
+Mission03 = createClass(Mission03, Mission)
 
 ---
 -- @param #Mission03 self

@@ -28,6 +28,8 @@ Mission = {
   testPassed = false 
 }
 
+Mission = createClass(Mission, Object)
+
 ---
 -- @type Sound
 Sound = {
