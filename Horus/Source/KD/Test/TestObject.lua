@@ -42,6 +42,7 @@ end
 
 function Test_Object()
   return RunTests {
+    "Object",
     Test_ObjectsInherit,
     Test_ObjectsInheritDeeply,
     Test_ObjectsAreUnique,

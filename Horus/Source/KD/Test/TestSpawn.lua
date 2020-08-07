@@ -85,6 +85,7 @@ end
 
 function Test_Spawn()
   return RunTests {
+    "Spawn",
     Test_StartSpawnEnemies_SchedulerCalled,
     Test_StartSpawnEnemies_TwoSpawnsCreated,
     Test_SpawnTick_SpawnsFour
