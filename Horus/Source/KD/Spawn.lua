@@ -1,3 +1,6 @@
+dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/Utilities.lua")
+
 ---
 -- @module KD.Spawn
 
@@ -64,7 +67,7 @@ function Spawn:StartSpawnEnemies()
     
   end
   
-  self:ShuffleList(self.spawners)
+  shuffleList(self.spawners)
   
   self.mooseScheduler:New(
     nil, function() self:SpawnTick() end, {},
@@ -74,7 +77,7 @@ end
 ---
 -- @param #Spawn self
 function Spawn:SpawnTick()
-  self.nextSpawner = _inc(self.nextSpawner)
+  self.nextSpawner = self.nextSpawner + 1
   if (self.nextSpawner > #self.spawners) then
     self.nextSpawner = 1
   end

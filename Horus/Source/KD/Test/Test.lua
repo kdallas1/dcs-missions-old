@@ -5,7 +5,7 @@ function RunTests(list)
   for i = 1, #list do
     local test = list[i]
     if not test then
-      env.error("Test error: Invalid test name", true)
+      env.error("Test: Error, invalid test name", true)
     end
     
     env.info("Test: Start #" .. i .. " of " .. #list)

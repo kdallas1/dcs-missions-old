@@ -130,7 +130,7 @@ function Mission03:OnUnitSpawn(unit)
   self:Trace(2, "Unit spawned: " .. unit:GetName())
   
   if (string.match(unit:GetName(), "Transport")) then
-    self.transportSpawnCount = _inc(self.transportSpawnCount)
+    self.transportSpawnCount = self.transportSpawnCount + 1
     self:Trace(1, "New transport spawned, alive: " .. tostring(self.transportSpawnCount))
     
     MESSAGE:New(
@@ -142,14 +142,14 @@ function Mission03:OnUnitSpawn(unit)
   end
   
   if (string.match(unit:GetName(), "MiG")) then
-    self.migsSpawnDoneCount = _inc(self.migsSpawnDoneCount)
+    self.migsSpawnDoneCount = self.migsSpawnDoneCount + 1
     self:Trace(1, "New enemy spawned, alive: " .. tostring(self.migsSpawnDoneCount))
     MESSAGE:New("Enemy MiG #" .. tostring(self.migsSpawnDoneCount) .. " incoming, inbound to Nalchik", self.messageTimeShort):ToAll()
     self:PlaySound(Sound.EnemyApproching)
   end
   
   if (string.match(unit:GetName(), self.playerPrefix)) then
-    self.playerCountMax = _inc(self.playerCountMax)
+    self.playerCountMax = self.playerCountMax + 1
     self:Trace(1, "New player spawned, alive: " .. tostring(self.playerCountMax))
     
     if not self.transportSpawnStarted then
@@ -228,7 +228,7 @@ function Mission03:OnEnemyDead(unit)
   
   self:PlayEnemyDeadSound()
   
-  self.migsDestroyed = _inc(self.migsDestroyed)
+  self.migsDestroyed = self.migsDestroyed + 1
   local remain = self:GetMaxMigs() - self.migsDestroyed
   
   if (self.winLoseDone) then

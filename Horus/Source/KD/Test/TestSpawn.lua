@@ -1,3 +1,5 @@
+dofile(baseDir .. "KD/Spawn.lua")
+
 local function Test_StartSpawnEnemies_SchedulerCalled()
   
   local mission = {}
@@ -28,7 +30,7 @@ local function Test_StartSpawnEnemies_TwoSpawnsCreated()
   local spawnCount = 0
   spawn.mooseSpawn = {}
   spawn.mooseSpawn.New = function() 
-    spawnCount = _inc(spawnCount)
+    spawnCount = spawnCount + 1
     return {} 
   end
   
@@ -55,12 +57,12 @@ local function Test_SpawnTick_SpawnsFour()
   
   local spawnCalls = 0
   local mockSpawn = {}
-  mockSpawn.Spawn = function() spawnCalls = _inc(spawnCalls) end 
+  mockSpawn.Spawn = function() spawnCalls = spawnCalls + 1 end 
   
   local spawnCount = 0
   spawn.mooseSpawn = {}
   spawn.mooseSpawn.New = function() 
-    spawnCount = _inc(spawnCount)
+    spawnCount = spawnCount + 1
     return mockSpawn
   end
   
