@@ -8,19 +8,26 @@ testTrace = {
 }
 
 local testError = false
+local passCount = 0
+local failCount = 0
 
 function Test()
-  env.info("Test: Running")  
-  env.setErrorMessageBoxEnabled(true)
+  env.info("Test: Running")
   
   RunTests {
     "*",
     Test_Object,
     Test_Spawn
   }
+
+  env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))
   
-  env.setErrorMessageBoxEnabled(false)
-  env.info("Test: Finished")
+  if (failCount > 0) then
+    env.error("Unit tests failed: " .. failCount, true)
+    return false
+  end
+  
+  return true
 end
 
 function RunTests(tests)
@@ -38,8 +45,10 @@ function RunTests(tests)
       
       if testError then
         env.info("Test: [" ..suite .. "] Failed")
+        failCount = failCount + 1 
       else
         env.info("Test: [" ..suite .. "] Passed")
+        passCount = passCount + 1
       end
       
     else
@@ -49,8 +58,16 @@ function RunTests(tests)
 end
 
 function TestAssert(condition, errorString)
-  if not condition then 
-    error(errorString)
+  if not condition then
+    
+    local lineNum = debug.getinfo(2, "S").linedefined
+    local fileName = debug.getinfo(2, "S").source:match("^.+[\\\/](.+)\"?.?$")
+    if not fileName then fileName = "Unknown" end
+
+    funcName = (funcName and funcName or "?")
+    env.info("Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString)
+    
     testError = true
+    
   end
 end
