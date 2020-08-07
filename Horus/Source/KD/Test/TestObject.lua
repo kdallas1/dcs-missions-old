@@ -2,9 +2,9 @@ dofile(baseDir .. "KD/Object.lua")
 
 local function Test_CreateClass_ObjectsAreUnique()
 
-  TestChild1 = { }
-  TestChild2 = { }
-  TestChild3 = createClass(TestChild2, TestChild1, Object)
+  local TestChild1 = { }
+  local TestChild2 = { }
+  local TestChild3 = createClass(TestChild2, TestChild1, Object)
   local c1 = TestChild3:New()
   local c2 = TestChild3:New()
   
@@ -17,8 +17,8 @@ end
 
 local function Test_CreateClass_ObjectsInherit()
 
-  TestChild1 = { foo = "test" }
-  TestChild1 = createClass(TestChild1, Object)
+  local TestChild1 = { foo = "test" }
+  local TestChild1 = createClass(TestChild1, Object)
   local c = TestChild1:New()
   
   TestAssert(c.foo, "Expected field from Child1")
@@ -28,10 +28,10 @@ end
 
 local function Test_CreateClass_ObjectsInheritWidely()
 
-  TestChild1 = { foo = "test" }
-  TestChild2 = { bar = "test" }
-  TestChild3 = { baz = "test" }
-  TestChild3 = createClass(TestChild3, TestChild2, TestChild1, Object)
+  local TestChild1 = { foo = "test" }
+  local TestChild2 = { bar = "test" }
+  local TestChild3 = { baz = "test" }
+  local TestChild3 = createClass(TestChild3, TestChild2, TestChild1, Object)
   local c = TestChild3:New()
   
   TestAssert(c.foo == "test", "Expected string from Child1")
@@ -42,14 +42,14 @@ end
 
 local function Test_CreateClass_ObjectsInheritDeeply()
 
-  TestChild1 = { foo = "test" }
-  TestChild1 = createClass(TestChild1, Object)
+  local TestChild1 = { foo = "test" }
+  local TestChild1 = createClass(TestChild1, Object)
   
-  TestChild2 = { bar = "test" }
-  TestChild2 = createClass(TestChild2, TestChild1)
+  local TestChild2 = { bar = "test" }
+  local TestChild2 = createClass(TestChild2, TestChild1)
   
-  TestChild3 = { baz = "test" }
-  TestChild3 = createClass(TestChild3, TestChild2)
+  local TestChild3 = { baz = "test" }
+  local TestChild3 = createClass(TestChild3, TestChild2)
   
   local c = TestChild3:New()
   
@@ -68,6 +68,40 @@ local function Test_CreateClass_ArgTypeError()
   
 end
 
+ function Test_New_ConstructorsCalled()
+  
+  local calledCtor1 = false
+  local TestChild1 = {
+    className = "TestChild1",
+    TestChild1 = function() calledCtor1 = true end
+  }
+  local TestChild1 = createClass(TestChild1, Object)
+  
+  local calledCtor2 = false
+  local TestChild2 = {
+    className = "TestChild2",
+    TestChild2 = function() calledCtor2 = true end
+  }
+  function TestChild2:TestChild2()
+    calledCtor2 = true
+  end
+  local TestChild2 = createClass(TestChild2, TestChild1)
+  
+  local calledCtor3 = false
+  local TestChild3 = {
+    className = "TestChild3",
+    TestChild3 = function() calledCtor3 = true end
+  }
+  local TestChild3 = createClass(TestChild3, TestChild2)
+  
+  local c = TestChild3:New()
+  
+  TestAssert(calledCtor1, "Expected ctor call for TestChild1")
+  TestAssert(calledCtor2, "Expected ctor call for TestChild2")
+  TestAssert(calledCtor3, "Expected ctor call for TestChild3")
+  
+end
+
 function Test_Object()
   return RunTests {
     "Object",
@@ -75,6 +109,7 @@ function Test_Object()
     Test_CreateClass_ObjectsInheritWidely,
     Test_CreateClass_ObjectsInheritDeeply,
     Test_CreateClass_ObjectsAreUnique,
-    Test_CreateClass_ArgTypeError
+    Test_CreateClass_ArgTypeError,
+    Test_New_ConstructorsCalled,
   }
 end

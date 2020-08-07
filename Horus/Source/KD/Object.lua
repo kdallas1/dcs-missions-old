@@ -1,7 +1,7 @@
 ---
 -- @module KD.Object
 
---- 
+---
 -- @type Object
 Object = {
   _traceOn = false,
@@ -28,10 +28,11 @@ end
 -- Source: https://www.lua.org/pil/16.3.html
 -- @return #table Returns a class
 function createClass(...)
-
+  local classList = arg
+  
   -- ensure all args are tables
-  for i = 1, arg.n do
-    class = arg[i]
+  for i = 1, classList.n do
+    local class = classList[i]
     
     if type(class) ~= "table" then
       local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
@@ -51,29 +52,38 @@ function createClass(...)
   -- class will search for each method in the list of its
   -- parents (`arg' is the list of parents)
   setmetatable(c, {__index = function (t, k)
-    return search(k, arg)
+    return search(k, classList)
   end})
-
+  
   -- prepare `c' to be the metatable of its instances
   c.__index = c
+  
+  if not c.classes then
+    c.classes = {}
+  end
+  
+  -- save parents
+  for i = 1, classList.n do
+    local class = classList[i]
+    if class.className then
+      c.classes[class.className] = class
+    end
+  end
 
   -- define a new function for returned class
-  function c:New(...)
+  function c:New()
   
     -- new object
     local o = {}
     setmetatable(o, c)
-    
+      
     -- call constructors for each class
-    for class, i in pairs(arg) do
-      if type(class) == "table" and class.className then
-        env.info("Debug: class=" .. class.className)
-        
-        -- constructors are named the same as their class
-        if o[class] then
-          local ctor = o[class]
-          ctor(o)
-        end
+    for className, class in pairs(o.classes) do
+      local ctor = o[class.className]
+      
+      -- constructors are named the same as their class
+      if ctor then
+        ctor(o)
       end
     end
     
