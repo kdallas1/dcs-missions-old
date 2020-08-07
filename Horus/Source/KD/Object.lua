@@ -29,6 +29,22 @@ end
 -- @return #table Returns a class
 function createClass(...)
 
+  -- ensure all args are tables
+  for i = 1, arg.n do
+    class = arg[i]
+    
+    if type(class) ~= "table" then
+      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      if not fileName then fileName = "Unknown file" end
+      
+      error(
+        "Error: Expected `table` type, but arg #" .. i .. " was `" .. type(class) .. "`. " ..
+        "All createClass args must be tables. Called from: " .. fileName)
+        
+      return
+    end
+  end
+
   -- new class
   local c = {}
 
@@ -41,13 +57,31 @@ function createClass(...)
   -- prepare `c' to be the metatable of its instances
   c.__index = c
 
-  -- define a new constructor for this new class
+  -- define a new function for returned class
   function c:New(...)
-    o = {}
+  
+    -- new object
+    local o = {}
     setmetatable(o, c)
+    
+    -- call constructors for each class
+    for class, i in pairs(arg) do
+      if type(class) == "table" and class.className then
+        env.info("Debug: class=" .. class.className)
+        
+        -- constructors are named the same as their class
+        if o[class] then
+          local ctor = o[class]
+          ctor(o)
+        end
+      end
+    end
+    
+    -- object
     return o
   end
   
+  -- class
   return c
 end
 
