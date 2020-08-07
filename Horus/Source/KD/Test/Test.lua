@@ -7,6 +7,20 @@ testTrace = {
   _assert = true
 }
 
+function Test()
+  env.info("Test: Running")  
+  env.setErrorMessageBoxEnabled(true)
+  
+  RunTests {
+    "*",
+    Test_Object,
+    Test_Spawn
+  }
+  
+  env.setErrorMessageBoxEnabled(false)
+  env.info("Test: Finished")
+end
+
 function RunTests(tests)
   local suite = "?"
   
@@ -31,18 +45,4 @@ end
 
 function TestAssert(condition, errorString)
   if not condition then error(errorString) end
-end
-
-function Test()
-  env.info("Test: Running")  
-  env.setErrorMessageBoxEnabled(true)
-  
-  RunTests {
-    "*",
-    Test_Object,
-    Test_Spawn
-  }
-  
-  env.setErrorMessageBoxEnabled(false)
-  env.info("Test: Finished")
 end
