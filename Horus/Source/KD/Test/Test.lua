@@ -8,14 +8,24 @@ testTrace = {
 }
 
 function RunTests(tests)
+  local suite = "?"
+  
   for i, test in pairs(tests) do
-    if not test then
-      env.error("Test: Error, invalid test name", true)
-    end
+    if (type(test) == "string") then
+      suite = test
+    elseif (type(test) == "function") then
     
-    env.info("Test: Start #" .. i .. " of " .. #tests)
-    test()
-    env.info("Test: Passed")
+      if not test then
+        env.error("Test: [" ..suite .. "] Error, invalid test name", true)
+      end
+      
+      env.info("Test: [" ..suite .. "] Start #" .. (i - 1) .. " of " .. (#tests - 1))
+      test()
+      env.info("Test: [" ..suite .. "] Passed")
+      
+    else
+      env.error("Test: [" ..suite .. "] Invalid test entry", true)
+    end
   end
 end
 
@@ -28,6 +38,7 @@ function Test()
   env.setErrorMessageBoxEnabled(true)
   
   RunTests {
+    "*",
     Test_Object,
     Test_Spawn
   }
