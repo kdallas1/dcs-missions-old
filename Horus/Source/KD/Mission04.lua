@@ -61,8 +61,8 @@ function Mission04:Start()
   
   self:PlaySound(Sound.MissionLoaded)
   
-  MESSAGE:New("Welcome to Mission 4", self.messageTimeShort):ToAll()
-  MESSAGE:New("Please read the brief", self.messageTimeShort):ToAll()
+  MESSAGE:New("Mission 4: Assist rescue of downed recon pilots", self.messageTimeShort):ToAll()
+  MESSAGE:New("Read the mission brief before takeoff", self.messageTimeShort):ToAll()
   
   self:Trace(1, "Mission started")
   
