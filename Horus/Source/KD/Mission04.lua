@@ -21,7 +21,10 @@ Mission04 = {
   friendlyHeloGroup = nil,
   
   --- @field #Wrapper.Group#GROUP enemyHeloGroup
-  enemyHeloGroup = nil
+  enemyHeloGroup = nil,
+  
+  --- @field #Wrapper.Zone#ZONE extractionLandZone 
+  extractionLandZone = nil
 }
 
 Mission04 = createClass(Mission04, Mission)
@@ -43,6 +46,7 @@ function Mission04:Mission04()
   self.playerGroup = GROUP:FindByName("Dodge Squadron")
   self.friendlyHeloGroup = GROUP:FindByName("Friendly Helos")
   self.enemyHeloGroup = GROUP:FindByName("Enemy Helos")
+  self.extractionLandZone = ZONE:New("Extraction Land")
   
   self:Assert(self.playerGroup, "Player group not found")
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
@@ -54,6 +58,15 @@ end
 function Mission04:Start()
 
   self:Trace(1, "Starting mission")
+  
+  -- TODO: delay as this only lasts for a short period
+  --self.extractionLandZone:SmokeZone(SMOKECOLOR.Red)
+  
+  -- TODO: trigger activate when players come close
+  self.friendlyHeloGroup:Activate(0)
+  
+  -- TODO: trigger when friendly helo lands
+  --self.enemyHeloGroup:Activate(0)
   
   SCHEDULER:New(nil,
     function() self:GameLoop() end, 
