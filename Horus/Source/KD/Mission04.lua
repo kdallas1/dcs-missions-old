@@ -9,10 +9,7 @@ dofile(baseDir .. "KD/Mission.lua")
 Mission04 = {
   className = "Mission04",
 
-  traceOn = true,
   traceLevel = 1,
-  assert = true,
-  mooseTrace = false,
   
   --- @field #Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
@@ -33,16 +30,6 @@ Mission04 = createClass(Mission04, Mission)
 -- @param #Mission04 self
 function Mission04:Mission04()
   
-  if self.mooseTrace then  
-    BASE:TraceOnOff(true)
-    BASE:TraceAll(true)
-    BASE:TraceLevel(3)
-  end
-  
-  self:SetTraceOn(self.traceOn)
-  self:SetTraceLevel(self.traceLevel)
-  self:SetAssert(self.assert)
-  
   self.playerGroup = GROUP:FindByName("Dodge Squadron")
   self.friendlyHeloGroup = GROUP:FindByName("Friendly Helos")
   self.enemyHeloGroup = GROUP:FindByName("Enemy Helos")
@@ -55,9 +42,7 @@ end
 
 ---
 -- @param #Mission04 self
-function Mission04:Start()
-
-  self:Trace(1, "Starting mission")
+function Mission04:OnStart()
   
   -- TODO: delay as this only lasts for a short period
   --self.extractionLandZone:SmokeZone(SMOKECOLOR.Red)
@@ -68,21 +53,13 @@ function Mission04:Start()
   -- TODO: trigger when friendly helo lands
   --self.enemyHeloGroup:Activate(0)
   
-  SCHEDULER:New(nil,
-    function() self:GameLoop() end, 
-    {}, 0, self.gameLoopInterval)
-  
-  self:PlaySound(Sound.MissionLoaded)
-  
   MESSAGE:New("Mission 4: Assist rescue of downed recon pilots", self.messageTimeShort):ToAll()
   MESSAGE:New("Read the mission brief before takeoff", self.messageTimeShort):ToAll()
-  
-  self:Trace(1, "Mission started")
   
 end
 
 ---
 -- @param #Mission04 self
-function Mission04:GameLoop()
+function Mission04:OnGameLoop()
   
 end

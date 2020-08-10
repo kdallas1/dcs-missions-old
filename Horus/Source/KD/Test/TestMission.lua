@@ -2,10 +2,34 @@ skipMoose = true
 dofile(baseDir .. "KD/Mission.lua")
 skipMoose = false
 
+---
+-- @module KD.Test.TestMission
+
+--- 
+-- @type TestMission
+-- @extends KD.Mission#Mission
+TestMission = {
+  className = "TestMission"
+}
+TestMission = createClass(TestMission, Mission)
+
+---
+-- @param #self #TestMission
+function TestMission:TestMission()
+  self.mooseZone = { ClassName = "MockZone" }
+  self.mooseSpawn = { ClassName =  "MockSpawn" }
+  self.mooseGroup = { ClassName =  "MockGroup" }
+  self.mooseUnit = { ClassName =  "MockUnit" }
+  self.mooseScheduler = { ClassName = "MockScheduler" }
+  self.mooseUserSound = { ClassName = "MockUserSound" }
+end
+
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
 
-  local mission = Mission:New()
+  local mission = TestMission:New()
+  
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
     IsVec3InZone = function() return true end
   }
@@ -24,8 +48,9 @@ end
 
 local function Test_UnitsAreParked_SomeVehiclesMoving_ReturnsFalse()
 
-  local mission = Mission:New()
+  local mission = TestMission:New()
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
     IsVec3InZone = function() return true end
   }
@@ -49,11 +74,12 @@ end
 
 local function Test_UnitsAreParked_SomeNotInZone_ReturnsFalse()
 
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   local callCount = 0
   
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
     IsVec3InZone = function()
       callCount = callCount + 1
@@ -81,17 +107,20 @@ local function Test_UnitsAreParked_SomeNotInZone_ReturnsFalse()
 end
 
 local function Test_SpawnGroupsAreParked_AllGroupsParked_ReturnsTrue()
-  local mission = Mission:New()
+  local mission = TestMission:New()
   function mission:UnitsAreParked() return true end
   
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
   }
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -107,7 +136,7 @@ local function Test_SpawnGroupsAreParked_AllGroupsParked_ReturnsTrue()
 end
 
 local function Test_SpawnGroupsAreParked_SomeGroupsParked_ReturnsFalse()
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   local callCount = 0
   function mission:UnitsAreParked()
@@ -118,13 +147,16 @@ local function Test_SpawnGroupsAreParked_SomeGroupsParked_ReturnsFalse()
   end
   
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
   }
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 2,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -141,17 +173,20 @@ end
 
 local function Test_KeepAliveSpawnGroupsIfParked_GroupIsParked_RespawnedAtAirbase()
   local respawnCalled = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   function mission:UnitsAreParked() return true end
   
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
   }
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -173,17 +208,20 @@ end
 
 local function Test_KeepAliveSpawnGroupsIfParked_GroupNotParked_NotRespawned()
   local respawnCalled = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   function mission:UnitsAreParked() return false end
   
   local zone = {
+    ClassName = mission.mooseZone.ClassName,
     GetName = function() return "Test" end,
   }
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -205,7 +243,7 @@ end
 
 local function Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce()
   local explodeCallCount = 0
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   local units = {
     {
@@ -217,10 +255,12 @@ local function Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce()
   }
   
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function() return units end,
       }
@@ -235,13 +275,15 @@ end
 
 local function Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct()
   local selfDestructCalled = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -265,12 +307,14 @@ end
 
 local function Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
   
-  local mission = Mission:New()
+  local mission = TestMission:New()
   local spawn = {
+    ClassName = mission.mooseSpawn.ClassName,
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
       {
+        ClassName = mission.mooseGroup.ClassName,
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -300,7 +344,7 @@ end
 local function Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase()
   
   local addedToMooseDatabase = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   mission.mooseUnit = {
     FindByName = function(self, name)
@@ -331,7 +375,7 @@ end
 local function Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase()
   
   local addedToMooseDatabase = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   mission.mooseUnit = {
     FindByName = function() end
@@ -355,7 +399,7 @@ end
 local function Test_FindUnitsByPrefix_ExistsInMoose_ReturnsMatches()
   
   local mooseDatabaseAddCalled = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   mission.mooseUnit = {
     FindByName = function()
@@ -371,7 +415,7 @@ end
 local function Test_FindUnitsByPrefix_ExistsInMoose_ReturnsMatches()
   
   local mooseDatabaseAddCalled = false
-  local mission = Mission:New()
+  local mission = TestMission:New()
   
   mission.mooseUnit = {
     FindByName = function() end
@@ -389,6 +433,42 @@ local function Test_FindUnitsByPrefix_ExistsInMoose_ReturnsMatches()
   TestAssert(#result == 2, "Expected to find 2 DCS units, but found " .. #result)
 end
 
+local function Test_Start_OnStartCalled()
+  
+  local onStartCalled = false
+  local MissionImpl = {
+    OnStart = function() onStartCalled = true end,
+  }
+  local MissionImpl = createClass(MissionImpl, TestMission)
+  local mission = MissionImpl:New()
+  
+  function mission.mooseScheduler:New() end
+  function mission.mooseUserSound:New() end
+  function mission.mooseUnit:FindByName() end
+  
+  mission:Start()
+  
+  TestAssert(onStartCalledx, "Expected OnStart to be called")
+  
+end
+
+local function Test_GameLoop_OnGameLoop()
+  
+  local onGameLoopCalled = false
+  local MissionImpl = {
+    OnGameLoop = function() onGameLoopCalled = true end,
+  }
+  local MissionImpl = createClass(MissionImpl, TestMission)
+  local mission = MissionImpl:New()
+  
+  function mission:FindUnitsByPrefix() return {} end
+  
+  mission:GameLoop()
+  
+  TestAssert(onGameLoopCalled, "Expected OnGameLoop to be called")
+  
+end
+
 function Test_Mission()
   return RunTests {
     "Mission",
@@ -403,6 +483,8 @@ function Test_Mission()
     Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct,
     Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect,
     Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase,
-    Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase
+    Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase,
+    Test_Start_OnStartCalled,
+    Test_GameLoop_OnGameLoop,
   }
 end
