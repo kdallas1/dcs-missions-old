@@ -57,6 +57,7 @@ Mission = {
   OnUnitSpawn = function(self, unit) end,
   OnUnitDamaged = function(self, unit) end,
   OnUnitDead = function(self, unit) end,
+  OnPlayerSpawn = function(self, unit) end,
   OnPlayerDead = function(self, unit) end,
 }
 
