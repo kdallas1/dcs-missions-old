@@ -11,6 +11,8 @@ Object = {
   _assert = false
 }
 
+local _tracePrefix = "Horus"
+
 --- Search for a field in a list of objects
 -- Source: https://www.lua.org/pil/16.3.html
 -- @param #string k Name of field to search for
@@ -143,7 +145,7 @@ function Object:Trace(level, line)
     local lineNum = debug.getinfo(2, "S").linedefined
     funcName = (funcName and funcName or "?")
     
-    env.info("Horus L" .. level .. " " .. funcName .. "@" .. lineNum .. ": " .. line)
+    env.info(_tracePrefix .. " L" .. level .. " " .. funcName .. "@" .. lineNum .. ": " .. line)
   end
 end
 
@@ -169,8 +171,8 @@ function Object:Assert(case, message, stackPosition)
   if not funcName then funcName = "Unknown" end
   
   if (not case) then
-    env.info("Assert: " .. message .. " [" .. fileName .. ":" .. funcName .. "@" .. lineNum .. "]")
-    env.info("Assert: Debug " .. debug.traceback())
+    env.info(_tracePrefix .. " Assert: " .. message .. " [" .. fileName .. ":" .. funcName .. "@" .. lineNum .. "]")
+    env.info(_tracePrefix .. " Assert: Debug " .. debug.traceback())
   end
   
   assert(case, message)
