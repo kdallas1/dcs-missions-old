@@ -334,7 +334,7 @@ function Mission:FindUnitsByPrefix(prefix, max)
     local name = prefix .. string.format(" #%03d", i)
     self:Trace(4, "Finding unit in Moose: " .. name)
     
-    local unit = UNIT:FindByName(UnitName)
+    local unit = UNIT:FindByName(name)
     if unit then
       self:Trace(4, "Found unit in Moose: " .. unit:GetName())
     else
