@@ -1,5 +1,6 @@
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestObject.lua")
+dofile(baseDir .. "KD/Test/TestEvents.lua")
 
 testTrace = {
   _traceOn = true,
@@ -7,6 +8,7 @@ testTrace = {
   _assert = true
 }
 
+local testErrors = {}
 local testError = false
 local passCount = 0
 local failCount = 0
@@ -17,12 +19,16 @@ function Test()
   RunTests {
     "*",
     Test_Object,
+    Test_Events,
     Test_Spawn
   }
 
   env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))
   
   if (failCount > 0) then
+    for i = 1, #testErrors do
+      env.info(testErrors[i])
+    end
     env.error("Unit tests failed: " .. failCount, true)
     return false
   end
@@ -34,7 +40,7 @@ function RunTests(tests)
   local suite = "?"
   
   for i, test in pairs(tests) do
-    position = "#" .. (i - 1) .. " of " .. (#tests - 1)
+    local position = "#" .. (i - 1) .. " of " .. (#tests - 1)
     
     if (type(test) == "string") then
       suite = test
@@ -45,7 +51,7 @@ function RunTests(tests)
       
       if testError then
         env.info("Test: [" ..suite .. "] Failed")
-        failCount = failCount + 1 
+        failCount = failCount + 1
       else
         env.info("Test: [" ..suite .. "] Passed")
         passCount = passCount + 1
@@ -58,6 +64,10 @@ function RunTests(tests)
 end
 
 function TestAssert(condition, errorString)
+
+  -- TODO: consider making this thread safe
+  testError = not condition
+  
   if not condition then
     
     local lineNum = debug.getinfo(2, "S").linedefined
@@ -65,9 +75,9 @@ function TestAssert(condition, errorString)
     if not fileName then fileName = "Unknown" end
 
     funcName = (funcName and funcName or "?")
-    env.info("Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString)
-    
-    testError = true
+    local error = "Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString
+    env.info(error)
+    testErrors[#testErrors + 1] = error 
     
   end
 end
