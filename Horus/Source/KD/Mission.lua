@@ -4,6 +4,7 @@ end
 
 dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
+dofile(baseDir .. "KD/Events.lua")
 
 ---
 -- @module KD.Mission
@@ -29,7 +30,11 @@ Mission = {
   winLoseDone = false,
   messageTimeShort = 20,
   messageTimeLong = 200,
-  testPassed = false 
+  testPassed = false,
+  
+  mooseDatabase = _DATABASE,
+  mooseUnit = UNIT,
+  dcsUnit = Unit,
 }
 
 ---
@@ -233,11 +238,14 @@ function Mission:ListHasPlayer(units)
   for i = 1, #units do
     local unit = units[i]
     
-    if unit:IsPlayer() then
-      self:Trace(3, "found player in list")
-      return true
-    end 
-    
+    if unit:GetGroup() then
+      if unit:IsPlayer() then
+        self:Trace(3, "found player in list")
+        return true
+      end 
+    else
+      self:Trace(3, "can't check if unit is player, no group")
+    end
   end
   
   self:Trace(3, "no players in list")
@@ -321,7 +329,7 @@ end
 
 --- Get a list of all units with a certain prefix.
 -- The `GROUP:GetUnits` function seems unreliable for getting all players 
--- in a groupo of multiplayer clients, so let's try finding by a prefix.
+-- in a group of multiplayer clients, so let's try finding by a prefix.
 -- Note: The units must use #00n
 -- @param #Mission self
 -- @param #string prefix
@@ -334,27 +342,26 @@ function Mission:FindUnitsByPrefix(prefix, max)
     local name = prefix .. string.format(" #%03d", i)
     self:Trace(4, "Finding unit in Moose: " .. name)
     
-    local unit = UNIT:FindByName(name)
+    local unit = self.mooseUnit:FindByName(name)
     if unit then
       self:Trace(4, "Found unit in Moose: " .. unit:GetName())
     else
       self:Trace(4, "Did not find unit in Moose: " .. name)
       
       self:Trace(4, "Finding unit in DCS: " .. name)
-      local dcsUnit = Unit.getByName(name)
+      local dcsUnit = self.dcsUnit.getByName(name)
       if dcsUnit then
-        self:Trace(4, "Found unit in DCS: " .. name)
-        _DATABASE:AddUnit(name)
-        unit = UNIT:FindByName(name)
+        self:Trace(4, "Found unit in DCS, adding to Moose database: " .. name)
+        self.mooseDatabase:AddUnit(name)
+        unit = self.mooseUnit:FindByName(name)
       else
         self:Trace(4, "Did not find unit in DCS: " .. name)
       end
     end
     
     if unit then
-      self:Trace(4, "Adding unit to list: " .. unit:GetName())
       list[#list + 1] = unit
-      self:Trace(4, "New list size: " .. #list)
+      self:Trace(4, "Total units found: " .. #list)
     end
   end
   

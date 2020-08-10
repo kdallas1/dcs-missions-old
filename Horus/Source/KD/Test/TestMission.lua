@@ -1,5 +1,6 @@
 skipMoose = true
 dofile(baseDir .. "KD/Mission.lua")
+skipMoose = false
 
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
 
@@ -301,7 +302,7 @@ local function Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase()
   local addedToMooseDatabase = false
   local mission = Mission:New()
   
-  UNIT = {
+  mission.mooseUnit = {
     FindByName = function(self, name)
       if name == "Test #001" then
         return
@@ -311,12 +312,12 @@ local function Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase()
       end
     end
   }
-  Unit = {
+  mission.dcsUnit = {
     getByName = function()
       return {}
     end
   }
-  _DATABASE = {
+  mission.mooseDatabase = {
     AddUnit = function(self, unit)
       addedToMooseDatabase = true
     end
@@ -327,22 +328,20 @@ local function Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase()
   TestAssert(not addedToMooseDatabase, "Expected DCS unit not to be added Moose database")
 end
 
-testOnly = Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase
-
 local function Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase()
   
   local addedToMooseDatabase = false
   local mission = Mission:New()
   
-  UNIT = {
+  mission.mooseUnit = {
     FindByName = function() end
   }
-  Unit = {
+  mission.dcsUnit = {
     getByName = function()
       return {}
     end
   }
-  _DATABASE = {
+  mission.mooseDatabase = {
     AddUnit = function(self, unit)
       addedToMooseDatabase = (unit == "Test #001")
     end
@@ -353,14 +352,12 @@ local function Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase()
   TestAssert(addedToMooseDatabase, "Expected DCS unit to be added Moose database")
 end
 
---testOnly = Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase
-
 local function Test_FindUnitsByPrefix_ExistsInMoose_ReturnsMatches()
   
   local mooseDatabaseAddCalled = false
   local mission = Mission:New()
   
-  UNIT = {
+  mission.mooseUnit = {
     FindByName = function()
       return {}
     end
@@ -376,10 +373,10 @@ local function Test_FindUnitsByPrefix_ExistsInMoose_ReturnsMatches()
   local mooseDatabaseAddCalled = false
   local mission = Mission:New()
   
-  UNIT = {
+  mission.mooseUnit = {
     FindByName = function() end
   }
-  Unit = {
+  mission.dcsUnit = {
     getByName = function()
       return {
         {}
