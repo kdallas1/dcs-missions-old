@@ -180,9 +180,9 @@ function Object:AssertType(object, _type)
   -- in Lua, classes are tables
   if (type(object) == "table") then
     
-    self:Trace(4, "Listing type properties")
+    self:Trace(5, "Listing type properties")
     for field, v in pairs(object) do
-      self:Trace(4, "Property: " .. field)
+      self:Trace(5, "Property: " .. field)
     end
   
     -- check for MOOSE class name
