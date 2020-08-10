@@ -84,9 +84,11 @@ function TestAssert(condition, errorString)
     local fileName = debug.getinfo(2, "S").source:match("^.+[\\\/](.+)\"?.?$")
     if not fileName then fileName = "Unknown" end
 
-    funcName = (funcName and funcName or "?")
     local error = "Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString
+    
     env.info(error)
+    env.info("Test: Debug " .. debug.traceback())
+    
     testErrors[#testErrors + 1] = error 
     
   end
