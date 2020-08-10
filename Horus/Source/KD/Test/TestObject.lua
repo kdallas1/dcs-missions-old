@@ -68,7 +68,7 @@ local function Test_CreateClass_ArgTypeError()
   
 end
 
- function Test_New_ConstructorsCalled()
+local function Test_New_ConstructorsCalled()
   
   local calledCtor1 = false
   local TestChild1 = {
