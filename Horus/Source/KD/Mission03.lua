@@ -36,8 +36,6 @@ Mission03 = {
   migsPrefix = "MiG",
 }
 
-Mission03 = createClass(Mission03, Mission)
-
 ---
 -- @param #Mission03 self
 function Mission03:Mission03()
@@ -229,3 +227,5 @@ function Mission03:OnGameLoop()
   self:SelfDestructDamagedUnits(self.transportSpawn, self.transportMinLife)
   
 end
+
+Mission03 = createClass(Mission, Mission03)

@@ -27,8 +27,6 @@ Spawn = {
   mooseScheduler = SCHEDULER
 }
 
-Spawn = createClass(Spawn, Object)
-
 ---
 -- @param #Spawn self
 function Spawn:Spawn()
@@ -103,3 +101,5 @@ function Spawn:SpawnTick()
     
   end
 end
+
+Spawn = createClass(Object, Spawn)

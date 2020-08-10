@@ -67,8 +67,6 @@ Mission = {
 -- @param #Mission self
 -- @return #Mission
 
-Mission = createClass(Mission, Object)
-
 ---
 -- @type Sound
 Sound = {
@@ -687,3 +685,5 @@ function Mission:MessageAll(length, message)
   self:Assert(duration, "Unknown message length")
   self.mooseMessage:New(message, duration):ToAll()
 end
+
+Mission = createClass(Mission, Object)

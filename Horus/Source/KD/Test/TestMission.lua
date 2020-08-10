@@ -11,7 +11,6 @@ skipMoose = false
 TestMission = {
   className = "TestMission"
 }
-TestMission = createClass(TestMission, Mission)
 
 ---
 -- @param #self #TestMission
@@ -24,6 +23,8 @@ function TestMission:TestMission()
   self.mooseUserSound = { ClassName = "MockUserSound" }
   self.mooseMessage = { ClassName = "MockMessage" }
 end
+
+TestMission = createClass(TestMission, Mission)
 
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
 
@@ -437,11 +438,10 @@ end
 local function Test_Start_OnStartCalled()
   
   local onStartCalled = false
-  local MissionImpl = {
-    OnStart = function() onStartCalled = true end,
-  }
-  local MissionImpl = createClass(MissionImpl, TestMission)
-  local mission = MissionImpl:New()
+  local mission = TestMission:New()
+  function mission:OnStart()
+    onStartCalled = true
+  end
   
   function mission.mooseScheduler:New() end
   function mission.mooseUserSound:New() end
@@ -456,11 +456,10 @@ end
 local function Test_GameLoop_OnGameLoop()
   
   local onGameLoopCalled = false
-  local MissionImpl = {
-    OnGameLoop = function() onGameLoopCalled = true end,
-  }
-  local MissionImpl = createClass(MissionImpl, TestMission)
-  local mission = MissionImpl:New()
+  local mission = TestMission:New()
+  function mission:OnGameLoop()
+    onGameLoopCalled = true
+  end
   
   function mission:FindUnitsByPrefix() return {} end
   
