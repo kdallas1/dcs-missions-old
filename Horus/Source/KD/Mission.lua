@@ -44,6 +44,7 @@ Mission = {
   soundCounter = 1,
   
   mooseScheduler = SCHEDULER,
+  mooseMessage = MESSAGE,
   mooseDatabase = _DATABASE,
   mooseUserSound = USERSOUND,
   mooseUnit = UNIT,
@@ -83,6 +84,13 @@ Sound = {
   UnitLost                      = 9,
   BattleControlTerminated       = 10,
   ReinforcementsHaveArrived     = 11
+}
+
+---
+-- @type MessageLength
+MessageLength = {
+  Short = 0,
+  Long  = 1
 }
 
 ---
@@ -185,7 +193,7 @@ function Mission:_OnPlayerDead(unit)
   self:AssertType(unit, self.mooseUnit)
   self:Trace(1, "Player is dead: " .. unit:GetName())
   
-  MESSAGE:New("Player is dead!", self.messageTimeLong):ToAll()
+  self:MessageAll(MessageLength.Long, "Player is dead!")
   self:PlaySound(Sound.UnitLost)
   
   self:OnPlayerDead(unit)
@@ -537,7 +545,7 @@ function Mission:AnnounceWin(soundDelay)
   end
   
   self:Trace(1, "Mission accomplished")
-  MESSAGE:New("Mission accomplished!", self.messageTimeLong):ToAll()
+  self:MessageAll(MessageLength.Long, "Mission accomplished!")
   self:PlaySound(Sound.MissionAccomplished, soundDelay)
   self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   self.winLoseDone = true
@@ -553,7 +561,7 @@ function Mission:AnnounceLose(soundDelay)
   end
   
   self:Trace(1, "Mission failed")
-  MESSAGE:New("Mission failed!", self.messageTimeLong):ToAll()
+  self:MessageAll(MessageLength.Long, "Mission failed!")
   self:PlaySound(Sound.MissionFailed, soundDelay)
   self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
   self.winLoseDone = true
@@ -660,4 +668,22 @@ function Mission:SelfDestructDamagedUnits(spawn, minLife)
       end
     end
   end
+end
+
+---
+-- @param #Mission self
+-- @param #MessageLength length
+-- @param #string message
+function Mission:MessageAll(length, message)
+  self:Trace(2, "Message: " .. message)
+  
+  local duration = nil
+  if length == MessageLength.Short then
+    duration = self.messageTimeShort
+  elseif length == MessageLength.Long then
+    duration = self.messageTimeLong
+  end
+  
+  self:Assert(duration, "Unknown message length")
+  self.mooseMessage:New(message, duration):ToAll()
 end

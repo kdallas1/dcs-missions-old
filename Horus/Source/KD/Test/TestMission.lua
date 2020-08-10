@@ -22,6 +22,7 @@ function TestMission:TestMission()
   self.mooseUnit = { ClassName =  "MockUnit" }
   self.mooseScheduler = { ClassName = "MockScheduler" }
   self.mooseUserSound = { ClassName = "MockUserSound" }
+  self.mooseMessage = { ClassName = "MockMessage" }
 end
 
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
@@ -469,6 +470,36 @@ local function Test_GameLoop_OnGameLoop()
   
 end
 
+local function Test_MessageAllLong_MessageSent()
+  local mission = TestMission:New()
+  
+  local sent = false
+  function mission.mooseMessage:New()
+    return {
+      ToAll = function() sent = true end
+    }
+  end
+  
+  mission:MessageAll(MessageLength.Long, "Test")
+  
+  TestAssert(sent, "Expected long message to send")
+end
+
+local function Test_MessageAllShort_MessageSent()
+  local mission = TestMission:New()
+  
+  local sent = false
+  function mission.mooseMessage:New()
+    return {
+      ToAll = function() sent = true end
+    }
+  end
+  
+  mission:MessageAll(MessageLength.Short, "Test")
+  
+  TestAssert(sent, "Expected short message to send")
+end
+
 function Test_Mission()
   return RunTests {
     "Mission",
@@ -486,5 +517,7 @@ function Test_Mission()
     Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase,
     Test_Start_OnStartCalled,
     Test_GameLoop_OnGameLoop,
+    Test_MessageAllLong_MessageSent,
+    Test_MessageAllShort_MessageSent
   }
 end
