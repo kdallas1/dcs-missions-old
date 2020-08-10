@@ -62,7 +62,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Events:TryAddUnit(unit)
   
-  local id = unit:GetID()
+  local id = unit:GetName()
   if not self.units[id] then
     self.units[id] = unit
     self:Trace(3, "Firing unit spawn event: " .. unit:GetName())
