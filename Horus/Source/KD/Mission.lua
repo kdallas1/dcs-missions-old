@@ -14,6 +14,11 @@ dofile(baseDir .. "KD/Events.lua")
 -- @extends KD.Object#Object
 Mission = {
   className = "Mission",
+
+  traceOn = true,
+  traceLevel = 1,
+  assert = true,
+  mooseTrace = false,
   
   ---@field #list<Core.Spawn#SPAWN> spawners
   spawners = nil,
@@ -26,15 +31,33 @@ Mission = {
   
   --- @field KD.Events#Events events
   events = nil,
-
+  
+  playerGroupName = "Dodge Squadron",
+  playerPrefix = "Dodge",
+  playerCountMax = 0,
+  playerMax = 4,
+  
+  gameLoopInterval = 1,
   winLoseDone = false,
   messageTimeShort = 20,
   messageTimeLong = 200,
-  testPassed = false,
+  soundCounter = 1,
   
+  mooseScheduler = SCHEDULER,
   mooseDatabase = _DATABASE,
+  mooseUserSound = USERSOUND,
   mooseUnit = UNIT,
+  mooseZone = ZONE,
+  mooseSpawn = SPAWN,
+  mooseGroup = GROUP,
   dcsUnit = Unit,
+  
+  OnStart = function(self) end,
+  OnGameLoop = function(self) end,
+  OnUnitSpawn = function(self, unit) end,
+  OnUnitDamaged = function(self, unit) end,
+  OnUnitDead = function(self, unit) end,
+  OnPlayerDead = function(self, unit) end,
 }
 
 ---
@@ -62,12 +85,114 @@ Sound = {
 }
 
 ---
--- @param #Mission03 self
+-- @param #Mission self
 function Mission:Mission()
+  
+  if self.mooseTrace then  
+    BASE:TraceOnOff(true)
+    BASE:TraceAll(true)
+    BASE:TraceLevel(3)
+  end
+  
+  self:SetTraceOn(self.traceOn)
+  self:SetTraceLevel(self.traceLevel)
+  self:SetAssert(self.assert)
+
   self.spawners = {}
   self.groups = {}
   self.players = {}
   self.events = Events:New()
+  
+  self:HandleEvent(Event.Spawn, function(unit) self:_OnUnitSpawn(unit) end)
+  self:HandleEvent(Event.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
+  self:HandleEvent(Event.Dead, function(unit) self:_OnUnitDead(unit) end)
+  
+end
+
+---
+-- @param #Mission self
+function Mission:Start()
+  
+  self:Trace(1, "Starting mission")
+  self:OnStart()
+  self.mooseScheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
+  self:PlaySound(Sound.MissionLoaded)
+  self:Trace(1, "Mission started")
+  
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:_OnUnitSpawn(unit)
+
+  self:AssertType(unit, self.mooseUnit)
+  self:Trace(2, "Unit spawned: " .. unit:GetName())
+
+  self:OnUnitSpawn(unit)
+  
+  if (string.match(unit:GetName(), self.playerPrefix)) then
+    self:_OnPlayerSpawn(unit)
+  end
+  
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:_OnPlayerSpawn(unit)
+
+  self.playerCountMax = self.playerCountMax + 1
+  self:Trace(1, "New player spawned, alive: " .. tostring(self.playerCountMax))
+  
+  self:OnPlayerSpawn(unit)
+  
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:_OnUnitDamaged(unit)
+
+  self:AssertType(unit, self.mooseUnit)
+  self:Trace(2, "Unit damaged: " .. unit:GetName())
+
+  self:OnUnitDamaged(unit)
+  
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:_OnUnitDead(unit)
+
+  self:AssertType(unit, self.mooseUnit)
+  self:Trace(2, "Unit dead: " .. unit:GetName())
+  
+  if (string.match(unit:GetName(), self.playerGroupName)) then
+    self:_OnPlayerDead(unit)
+  end
+  
+  self:OnUnitDead(unit)
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:_OnPlayerDead(unit)
+
+  self:AssertType(unit, self.mooseUnit)
+  self:Trace(1, "Player is dead: " .. unit:GetName())
+  
+  MESSAGE:New("Player is dead!", self.messageTimeLong):ToAll()
+  self:PlaySound(Sound.UnitLost)
+  
+  self:OnPlayerDead(unit)
+  
+  if (not self.winLoseDone) then
+    self:AnnounceLose(2)
+  end
+  
 end
 
 --- Checks if entire group is parked in a zone.
@@ -77,8 +202,8 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:GroupIsParked(zone, group)
   
-  self:AssertType(zone, ZONE)
-  self:AssertType(group, GROUP)
+  self:AssertType(zone, self.mooseZone)
+  self:AssertType(group, self.mooseGroup)
   
   self:Trace(4, "group: " .. group:GetName())
   
@@ -120,7 +245,7 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:UnitsAreParked(zone, units)
   
-  self:AssertType(zone, ZONE)
+  self:AssertType(zone, self.mooseZone)
 
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -151,8 +276,8 @@ end
 -- @return true If all units within all groups are parked in the zone. 
 function Mission:SpawnGroupsAreParked(zone, spawn)
   
-  self:AssertType(zone, ZONE)
-  self:AssertType(spawn, SPAWN)
+  self:AssertType(zone, self.mooseZone)
+  self:AssertType(spawn, self.mooseSpawn)
   
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -175,8 +300,8 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 function Mission:KeepAliveGroupIfParked(zone, group)
   
-  self:AssertType(zone, ZONE)
-  self:AssertType(group, GROUP)
+  self:AssertType(zone, self.mooseZone)
+  self:AssertType(group, self.mooseGroup)
   
   local parked = self:GroupIsParked(zone, group)
   if (parked and not group.keepAliveDone) then
@@ -197,8 +322,8 @@ end
 -- @param #number spawnCount Number of groups in spawner to check.
 function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn)
   
-  self:AssertType(zone, ZONE)
-  self:AssertType(spawn, SPAWN)
+  self:AssertType(zone, self.mooseZone)
+  self:AssertType(spawn, self.mooseSpawn)
   
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
@@ -267,8 +392,8 @@ function Mission:PlaySound(soundType, delay)
   for soundName, v in pairs(Sound) do
     if v == soundType then
       self:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
-      local sound = USERSOUND:New(soundName .. ".ogg")
-      SCHEDULER:New(nil, function() sound:ToAll() end, {}, delay)
+      local sound = self.mooseUserSound:New(soundName .. ".ogg")
+      self.mooseScheduler:New(nil, function() sound:ToAll() end, {}, delay)
       found = true
     end
   end
@@ -282,12 +407,22 @@ end
 
 ---
 -- @param #Mission self
-function Mission:GameLoopBase()
+function Mission:GameLoop()
+
   self:Trace(3, "*** Game loop start ***")
+  
+  -- player list can change at any moment on an MP server, and is often 
+  -- out of sync with the group. this is used by the events system
+  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  
   self.events:UpdateFromGroupList(self.groups)
   self.events:UpdateFromSpawnerList(self.spawners)
   self.events:UpdateFromUnitList(self.players)
   self.events:CheckUnitList()
+  
+  self:OnGameLoop()
+  
+  self:Trace(3, "*** Game loop end ***")
 end
 
 ---
