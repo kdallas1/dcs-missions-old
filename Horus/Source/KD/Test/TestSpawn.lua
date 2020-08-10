@@ -14,8 +14,6 @@ local function Test_StartSpawnEnemies_SchedulerCalled()
   
   TestAssert(schedulerCalled, "Scheduler not called")
   
-  return true
-  
 end
 
 local function Test_StartSpawnEnemies_TwoSpawnsCreated()
@@ -41,8 +39,6 @@ local function Test_StartSpawnEnemies_TwoSpawnsCreated()
   
   TestAssert(spawnCount == 2, "Expected 2 spawn objects created")
   TestAssert(#spawn.spawners == 2, "Expected 2 spawn objects saved")
-  
-  return true
   
 end
 
@@ -80,7 +76,6 @@ local function Test_SpawnTick_SpawnsFour()
   TestAssert(spawnCalls == 2, "Expected 2 spawn calls")
   TestAssert(spawn.spawnInitCount == 4, "Expected 4 spawn count (2 groups)")
   
-  return true
 end
 
 function Test_Spawn()
