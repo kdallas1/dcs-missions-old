@@ -17,9 +17,6 @@ Mission03 = {
   --- @field Wrapper.Group#GROUP playerGroup
   playerGroup = nil,
   
-  --- @field #list<Wrapper.Unit#UNIT> playerList
-  playerList = nil,
-  
   --- @field Core.Spawn#SPAWN transportSpawn
   transportSpawn = nil,
   
@@ -69,14 +66,13 @@ function Mission03:Mission03()
   self.nalchikParkZone = ZONE:FindByName("Nalchik Park")
   self.transportSpawn = SPAWN:New("Transport")
   self.playerGroup = GROUP:FindByName(self.playerGroupName)
-  self.playerList = {}
   
 end
 
 ---
 -- @param #Mission03 self
 function Mission03:Start()
-
+  
   self:Trace(1, "Starting mission")
   
   self:AddGroup(self.playerGroup)
@@ -130,7 +126,6 @@ function Mission03:SetupEvents()
   self:HandleEvent(Event.Dead, function(unit) self:OnUnitDead(unit) end)
 end
 
--- TODO: implement own birth event, pretty sure this is unreliable
 ---
 -- @param #Mission03 self
 -- @param Wrapper.Unit#UNIT unit
@@ -267,11 +262,13 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   self:AssertType(nalchikParkZone, ZONE)
   self:AssertType(transportSpawn, SPAWN)
   
-  self.playerList = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
-  self:AddUnitList(self.playerList)
+  -- TODO: consider moving to the parent `Mission`
+  -- player list can change at any moment on an MP server, and is often 
+  -- out of sync with the group. this is used by the events system
+  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
   
-  local playersExist = (#self.playerList > 0)
-  self:Trace(2, "Players list size: " .. #self.playerList)
+  local playersExist = (#self.players > 0)
+  self:Trace(2, "Player count: " .. #self.players)
   self:Trace(2, "Players exist: " .. (playersExist and "true" or "false")) 
   
   self:GameLoopBase()
@@ -281,7 +278,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   end
 
   -- if no players, then say all players are parked (not sure if this makes sense).
-  local playersAreParked = ((not playersExist) or self:UnitsAreParked(nalchikParkZone, self.playerList))
+  local playersAreParked = ((not playersExist) or self:UnitsAreParked(nalchikParkZone, self.players))
   local transportsAreParked = self:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, self.transportMaxCount)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
@@ -297,7 +294,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
   -- no players can happen when no AI/human players are online yet
   if (playersExist) then
   
-    if (self:ListHasPlayer(self.playerList) and not self.playerOnline) then
+    if (self:ListHasPlayer(self.players) and not self.playerOnline) then
       self:Trace(1, "Player is now online (in player group)")
       self.playerOnline = true
     end

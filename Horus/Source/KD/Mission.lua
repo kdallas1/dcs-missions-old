@@ -17,11 +17,11 @@ Mission = {
   ---@field #list<Wrapper.Group#GROUP> groups
   groups = nil,
   
-  ---@field #list<Wrapper.Unit#UNIT> units
-  units = nil,
+  ---@field #list<Wrapper.Units#UNIT> players
+  players = nil,
   
-  ---@field #list<#function> eventHandlers
-  eventHandlers = nil,
+  --- @field KD.Events#Events events
+  events = nil,
 
   winLoseDone = false,
   messageTimeShort = 20,
@@ -49,20 +49,12 @@ Sound = {
 }
 
 ---
--- @type Event
-Event = {
-  Spawn     = 0,
-  Damaged   = 1,
-  Dead      = 2,
-}
-
----
 -- @param #Mission03 self
 function Mission:Mission()
   self.spawners = {}
   self.groups = {}
-  self.units = {}
-  self.eventHandlers = {}
+  self.players = {}
+  self.events = Events:New()
 end
 
 --- Checks if entire group is parked in a zone.
@@ -276,133 +268,12 @@ end
 
 ---
 -- @param #Mission self
--- @param Wrapper.Group#GROUP group
-function Mission:CheckGroup(group)
-
-  self:Trace(3, "Checking group: " .. group:GetName())
-  
-  local units = group:GetUnits()
-  if units then
-    
-    self:Trace(3, "Unit count: " .. #units)
-    
-    for i = 1, #units do
-      
-      -- add all units to our own list so we can watch units come and go
-      local unit = group:GetUnit(i)
-      
-      self:Trace(3, "Checking unit: " .. unit:GetName())
-      self:AddUnit(unit)
-    end
-  end
-end
-
----
--- @param #Mission self
--- @param Wrapper.Unit#UNIT unit
-function Mission:AddUnit(unit)
-  
-  local id = unit:GetID()
-  if not self.units[id] then
-    self.units[id] = unit
-    self:Trace(3, "Firing unit spawn event: " .. unit:GetName())
-    self:FireEvent(Event.Spawn, unit)
-  end
-end
-
----
--- @param #Mission self
--- @param #list<Wrapper.Unit#UNIT> units
-function Mission:AddUnitList(units)
-  for i = 1, #units do
-    self:AddUnit(units[i])
-  end
-end
-
----
--- @param #Mission self
--- @param #list<Wrapper.Group#GROUP> groups
-function Mission:CheckGroupList(groups)
-
-  self:Trace(3, "Checking group list")
-  
-  -- check internal groups list by default
-  if not groups then
-    groups = self.groups
-  end
-  
-  for i = 1, #groups do
-    local group = groups[i]
-    if group then
-      self:CheckGroup(group)
-    end
-  end
-end
-
----
--- @param #Mission self
-function Mission:CheckUnitList()
-
-  self:Trace(3, "Checking unit list")
-  
-  for id, unit in pairs(self.units) do
-    self:CheckUnit(unit)
-  end
-end
-
----
--- @param #Mission self
--- @param Wrapper.Unit#UNIT unit
-function Mission:CheckUnit(unit)
-  
-  local life = unit:GetLife()
-  local fireDieEvent = false
-  self:Trace(3, "Checking unit: " .. unit:GetName() .. ", health " .. tostring(life))
-  
-  -- we can't use IsAlive here, because the unit may not have spawned yet 
-  if (life <= 1) then
-    fireDieEvent = true
-  end
-  
-  -- previously using the EVENTS.Crash event, but it was a bit unreliable
-  if (fireDieEvent and (not unit.eventDeadFired)) then
-    self:Trace(3, "Firing unit dead event: " .. unit:GetName())
-    self:FireEvent(Event.Dead, unit)
-    unit.eventDeadFired = true
-  end
-end
-
----
--- @param #Mission self
-function Mission:CheckSpawnerList()
-
-  self:Trace(3, "Checking spawner list")
-  
-  for i = 1, #self.spawners do
-    local spawner = self.spawners[i]
-    self:Trace(3, "Checking spawner: " .. tostring(i))
-    
-    groups = {}
-    for i = 1, spawner.SpawnCount do
-    
-      local group = spawner:GetGroupFromIndex(i)
-      if group then
-        groups[#groups + 1] = group
-      end
-    end
-    
-    self:CheckGroupList(groups)
-  end
-end
-
-
----
--- @param #Mission self
 function Mission:GameLoopBase()
   self:Trace(3, "*** Game loop start ***")
-  self:CheckSpawnerList()
-  self:CheckGroupList()
-  self:CheckUnitList()
+  self.events:UpdateFromGroupList(self.groups)
+  self.events:UpdateFromSpawnerList(self.spawners)
+  self.events:UpdateFromUnitList(self.players)
+  self.events:CheckUnitList()
 end
 
 ---
@@ -423,38 +294,23 @@ end
 
 ---
 -- @param #Mission self
--- @param Wrapper.Group#GROUP group
-function Mission:AddGroup(group)
-  self.groups[#self.groups + 1] = group
-  self:Trace(3, "Group added, total=" .. #self.groups)
-end
-
----
--- @param #Mission self
 -- @param #Event event
 -- @param #function handler
 function Mission:HandleEvent(event, handler)
-  self.eventHandlers[event] = handler
-  self:Trace(3, "Event handler added, total=" .. #self.eventHandlers)
+  self.events:HandleEvent(event, handler)
 end
 
 ---
 -- @param #Mission self
 -- @param #Event event
 function Mission:FireEvent(event, arg)
-  local f = self.eventHandlers[event]
-  if f then
-    f(arg)
-  end
+  self.events:FireEvent(event, arg)
 end
 
 ---
--- @param #Mission self
-function Mission:TestEvents()
-  local test = "Hello world"
-  self:FireEvent(Event.Spawn, test)
-  self:FireEvent(Event.Damaged, test)
-  self:FireEvent(Event.Dead, test)
+-- @param #list unitList
+function Mission:UpdateUnitList(unitList)
+  self.events:UpdateUnitList(unitList)
 end
 
 --- Get a list of all units with a certain prefix.
