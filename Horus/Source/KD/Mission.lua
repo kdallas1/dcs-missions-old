@@ -1,4 +1,7 @@
-dofile(baseDir .. "../Moose/Moose.lua")
+if not skipMoose then
+  dofile(baseDir .. "../Moose/Moose.lua")
+end
+
 dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
 
@@ -28,6 +31,11 @@ Mission = {
   messageTimeLong = 200,
   testPassed = false 
 }
+
+---
+-- @function [parent=#Mission] New
+-- @param #Mission self
+-- @return #Mission
 
 Mission = createClass(Mission, Object)
 
@@ -135,18 +143,16 @@ end
 -- @param #Mission self
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
--- @param #number spawnCount Number of groups in spawner to check.
 -- @return true If all units within all groups are parked in the zone. 
-function Mission:SpawnGroupsAreParked(zone, spawn, spawnCount)
+function Mission:SpawnGroupsAreParked(zone, spawn)
   
   self:AssertType(zone, ZONE)
   self:AssertType(spawn, SPAWN)
   
   self:Trace(3, "zone: " .. zone:GetName())
-  self:Trace(3, "spawnCount: " .. spawnCount)
   
   local parkCount = 0
-  for i = 1, spawnCount do
+  for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
     if (group and self:GroupIsParked(zone, group)) then
       parkCount = parkCount + 1
@@ -155,7 +161,7 @@ function Mission:SpawnGroupsAreParked(zone, spawn, spawnCount)
   
   self:Trace(3, "parkCount: " .. parkCount)
   
-  return parkCount == spawnCount
+  return parkCount == spawn.SpawnCount
 end
 
 --- Keep alive air units when parked (to stop DCS from cleaning them up).
@@ -184,12 +190,12 @@ end
 -- @param Core.Zone#ZONE zone Parking zone to check.
 -- @param Core.Spawn#SPAWN spawn The spawner to check.
 -- @param #number spawnCount Number of groups in spawner to check.
-function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn, spawnCount)
+function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn)
   
   self:AssertType(zone, ZONE)
   self:AssertType(spawn, SPAWN)
   
-  for i = 1, spawnCount do
+  for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
     if group then
       self:KeepAliveGroupIfParked(zone, group)
@@ -466,7 +472,7 @@ function Mission:GetAliveUnitsFromSpawn(spawn)
       local units = group:GetUnits()
       if units then
         for j = 1, #units do
-          local unit = group:GetUnit(j)
+          local unit = units[j]
           self:Trace(3, "Checking if unit is alive: " .. unit:GetName())
           
           if unit:IsAlive() then
@@ -493,7 +499,7 @@ function Mission:SelfDestructDamagedUnits(spawn, minLife)
       local units = group:GetUnits()
       if units then
         for j = 1, #units do
-          local unit = group:GetUnit(j)
+          local unit = units[j]
           local life = unit:GetLife()
           
           self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
