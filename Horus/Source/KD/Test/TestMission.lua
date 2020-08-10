@@ -448,7 +448,7 @@ local function Test_Start_OnStartCalled()
   
   mission:Start()
   
-  TestAssert(onStartCalledx, "Expected OnStart to be called")
+  TestAssert(onStartCalled, "Expected OnStart to be called")
   
 end
 
