@@ -279,7 +279,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
 
   -- if no players, then say all players are parked (not sure if this makes sense).
   local playersAreParked = ((not playersExist) or self:UnitsAreParked(nalchikParkZone, self.players))
-  local transportsAreParked = self:SpawnGroupsAreParked(nalchikParkZone, transportSpawn, self.transportMaxCount)
+  local transportsAreParked = self:SpawnGroupsAreParked(nalchikParkZone, transportSpawn)
   local everyoneParked = (playersAreParked and transportsAreParked)
   
   self:Trace(2, "Transports alive: " .. self:GetAliveUnitsFromSpawn(transportSpawn))
@@ -306,7 +306,7 @@ function Mission03:GameLoop(nalchikParkZone, transportSpawn, playerGroup)
     
   end
   
-  self:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn, self.transportMaxCount)
+  self:KeepAliveSpawnGroupsIfParked(nalchikParkZone, transportSpawn)
   self:SelfDestructDamagedUnits(transportSpawn, self.transportMinLife)
   
 end
