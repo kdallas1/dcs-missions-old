@@ -151,9 +151,26 @@ end
 -- @param #Object self
 -- @param #boolean case If false, assert fails
 -- @param #string message Assert message if fail
-function Object:Assert(case, message)
+-- @param #number stackPosition Adjust stack position of debug info
+function Object:Assert(case, message, stackPosition)
   if (not self._assert) then
     return
+  end
+  
+  if (not stackPosition) then
+    stackPosition = 0
+  end
+  
+  local funcName = debug.getinfo(2 + stackPosition, "n").name
+  local lineNum = debug.getinfo(2 + stackPosition, "S").linedefined
+  local fileName = debug.getinfo(2 + stackPosition, "S").source:match("^.+[\\\/](.+)\"?.?$")
+  
+  if not fileName then fileName = "Unknown" end
+  if not funcName then funcName = "Unknown" end
+  
+  if (not case) then
+    env.info("Assert: " .. message .. " [" .. fileName .. ":" .. funcName .. "@" .. lineNum .. "]")
+    env.info("Assert: Debug " .. debug.traceback())
   end
   
   assert(case, message)
@@ -168,12 +185,12 @@ function Object:AssertType(object, _type)
     return
   end
   
-  assert(object, "Cannot check type, object is nil")
-  assert(_type, "Cannot check type, _type is nil")
+  self:Assert(object, "Cannot check type, object is nil", 1)
+  self:Assert(_type, "Cannot check type, _type is nil", 1)
   
   if (type(_type) == "string") then
-    assert(type(object) == _type,
-      "Invalid type, expected '" .. _type .. "' but was '" .. type(object) .. "'")
+    self:Assert(type(object) == _type,
+      "Invalid type, expected '" .. _type .. "' but was '" .. type(object) .. "'", 1)
     return
   end
   
@@ -187,11 +204,11 @@ function Object:AssertType(object, _type)
   
     -- check for MOOSE class name
     if (object.ClassName or _type.ClassName) then
-      assert(object.ClassName, "Missing ClassName property on object")
-      assert(_type.ClassName, "Missing ClassName property on _type")
+      self:Assert(object.ClassName, "Missing ClassName property on object", 1) 
+      self:Assert(_type.ClassName, "Missing ClassName property on _type", 1)
       
-      assert(object.ClassName == _type.ClassName, 
-        "Invalid type, expected '" .. _type.ClassName .. "' but was '" .. object.ClassName .. "'")
+      self:Assert(object.ClassName == _type.ClassName, 
+        "Invalid type, expected '" .. _type.ClassName .. "' but was '" .. object.ClassName .. "'", 1)
     else
       error("Type check failed, object and _type missing ClassName")
     end
