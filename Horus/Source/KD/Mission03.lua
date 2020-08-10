@@ -55,8 +55,8 @@ function Mission03:OnStart()
   self:AddGroup(self.playerGroup)
   self:SetupMenu(self.transportSpawn)
   
-  MESSAGE:New("Welcome to Mission 3", self.messageTimeShort):ToAll()
-  MESSAGE:New("Please read the brief", self.messageTimeShort):ToAll()
+  MESSAGE:New("Mission 3: Protect inbound transports to Nalchik", self.messageTimeShort):ToAll()
+  MESSAGE:New("Read the mission brief before takeoff", self.messageTimeShort):ToAll()
   
 end
 
