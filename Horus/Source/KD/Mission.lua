@@ -52,14 +52,6 @@ Mission = {
   mooseSpawn = SPAWN,
   mooseGroup = GROUP,
   dcsUnit = Unit,
-  
-  OnStart = function(self) end,
-  OnGameLoop = function(self) end,
-  OnUnitSpawn = function(self, unit) end,
-  OnUnitDamaged = function(self, unit) end,
-  OnUnitDead = function(self, unit) end,
-  OnPlayerSpawn = function(self, unit) end,
-  OnPlayerDead = function(self, unit) end,
 }
 
 ---
@@ -108,7 +100,9 @@ function Mission:Mission()
   self.spawners = {}
   self.groups = {}
   self.players = {}
+  
   self.events = Events:New()
+  self.events:CopyTrace(self)
   
   self:HandleEvent(Event.Spawn, function(unit) self:_OnUnitSpawn(unit) end)
   self:HandleEvent(Event.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
@@ -121,7 +115,11 @@ end
 function Mission:Start()
   
   self:Trace(1, "Starting mission")
-  self:OnStart()
+  
+  if self.OnStart then
+    self:OnStart()
+  end
+  
   self.mooseScheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
   self:PlaySound(Sound.MissionLoaded)
   self:Trace(1, "Mission started")
@@ -136,7 +134,9 @@ function Mission:_OnUnitSpawn(unit)
   self:AssertType(unit, self.mooseUnit)
   self:Trace(2, "Unit spawned: " .. unit:GetName())
 
-  self:OnUnitSpawn(unit)
+  if self.OnUnitSpawn then
+    self:OnUnitSpawn(unit)
+  end
   
   if (string.match(unit:GetName(), self.playerPrefix)) then
     self:_OnPlayerSpawn(unit)
@@ -152,7 +152,9 @@ function Mission:_OnPlayerSpawn(unit)
   self.playerCountMax = self.playerCountMax + 1
   self:Trace(1, "New player spawned, alive: " .. tostring(self.playerCountMax))
   
-  self:OnPlayerSpawn(unit)
+  if self.OnPlayerSpawn then
+    self:OnPlayerSpawn(unit)
+  end
   
 end
 
@@ -164,8 +166,9 @@ function Mission:_OnUnitDamaged(unit)
   self:AssertType(unit, self.mooseUnit)
   self:Trace(2, "Unit damaged: " .. unit:GetName())
 
-  self:OnUnitDamaged(unit)
-  
+  if self.OnUnitDamaged then
+    self:OnUnitDamaged(unit)
+  end
 end
 
 ---
@@ -180,7 +183,9 @@ function Mission:_OnUnitDead(unit)
     self:_OnPlayerDead(unit)
   end
   
-  self:OnUnitDead(unit)
+  if self.OnUnitDead then
+    self:OnUnitDead(unit)
+  end
 end
 
 ---
@@ -194,7 +199,9 @@ function Mission:_OnPlayerDead(unit)
   self:MessageAll(MessageLength.Long, "Player is dead!")
   self:PlaySound(Sound.UnitLost)
   
-  self:OnPlayerDead(unit)
+  if self.OnPlayerDead then
+    self:OnPlayerDead(unit)
+  end
   
   if (not self.winLoseDone) then
     self:AnnounceLose(2)
@@ -427,7 +434,9 @@ function Mission:GameLoop()
   self.events:UpdateFromUnitList(self.players)
   self.events:CheckUnitList()
   
-  self:OnGameLoop()
+  if self.OnGameLoop then
+    self:OnGameLoop()
+  end
   
   self:Trace(3, "*** Game loop end ***")
 end
@@ -644,25 +653,31 @@ function Mission:SelfDestructDamagedUnits(spawn, minLife)
     local group = spawn:GetGroupFromIndex(i)
     if group then
       self:Trace(3, "Checking group for damage: " .. group:GetName())
+      self:SelfDestructDamagedUnitsInList(group:GetUnits(), minLife)
+    end
+  end
+end
+
+---
+-- @param #Mission self
+-- @param #list<Wrapper.Unit#UNIT> list
+-- @param #number minLife
+function Mission:SelfDestructDamagedUnitsInList(units, minLife)
+  if units then
+    for i = 1, #units do
+      local unit = units[i]
+      local life = unit:GetLife()
       
-      local units = group:GetUnits()
-      if units then
-        for j = 1, #units do
-          local unit = units[j]
-          local life = unit:GetLife()
-          
-          self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
-          
-          -- only kill the unit if it's alive, otherwise it'll never crash.
-          -- explode units below a certain live level, otherwise
-          -- units can land in a damaged and prevent other transports
-          -- from landing (also enemies will often stop attacking damaged units)
-          if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < minLife)) then
-            self:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. minLife)
-            unit:Explode(100, 1)
-            unit.selfDestructDone = true
-          end
-        end
+      self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
+      
+      -- only kill the unit if it's alive, otherwise it'll never crash.
+      -- explode units below a certain live level, otherwise
+      -- units can land in a damaged and prevent other transports
+      -- from landing (also enemies will often stop attacking damaged units)
+      if (unit:IsAlive() and (not unit.selfDestructDone) and (unit:GetLife() < minLife)) then
+        self:Trace(1, "Auto-kill " .. unit:GetName() .. ", health " .. tostring(life) .. "<" .. minLife)
+        unit:Explode(100, 1)
+        unit.selfDestructDone = true
       end
     end
   end

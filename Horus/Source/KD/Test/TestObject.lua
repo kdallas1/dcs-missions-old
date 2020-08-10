@@ -133,6 +133,30 @@ local function Test_CreateClass_CtorCallOrder()
   
 end
 
+local function Test_CreateClass_FunctionOverrideNotPossible()
+
+  local TestChild1 = { className = "TestChild1" }
+  
+  local called = nil
+  
+  function Object:Foo()
+    called = "Object"
+  end
+  
+  function TestChild1:Foo()
+    called = "TestChild1"
+  end
+  
+  TestChild1 = createClass(Object, TestChild1)
+  
+  local test = TestChild1:New()
+  test:Foo()
+  
+  -- TODO: figure out how to implement overriding of functions
+  TestAssert(called == "Object", "Expected TestChild2 function to be called, but was " .. called)
+  
+end
+
 function Test_Object()
   return RunTests {
     "Object",
@@ -142,6 +166,7 @@ function Test_Object()
     Test_CreateClass_ObjectsAreUnique,
     Test_CreateClass_ArgTypeError,
     Test_CreateClass_CtorCallOrder,
+    Test_CreateClass_FunctionOverrideNotPossible,
     Test_New_ConstructorsCalled,
   }
 end
