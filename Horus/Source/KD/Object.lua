@@ -27,7 +27,9 @@ local function search(k, plist)
 end
 
 --- Combine multiple classes together.
--- Arg ... for classes to combine (list of args)
+-- 
+-- Arg ... for classes to combine (list of args). The order is important; 
+-- constructors are called in the order that classes are listed.
 -- 
 -- Source: https://www.lua.org/pil/16.3.html
 -- @return #table Returns a class
@@ -69,9 +71,27 @@ function createClass(...)
   -- save parents
   for i = 1, classList.n do
     local class = classList[i]
-    if class.className then
-      c.classes[class.className] = class
+    if not class.className then
+      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      if not fileName then fileName = "Unknown file" end
+      env.info("Error: Debug " .. debug.traceback())
+      error("Error: The `className` field cannot be nil. Called from: " .. fileName)
     end
+    
+    -- search for the existing class, and replace if exists.
+    -- we're using a list instead of a table to maintain the ctor call order.
+    local replaced = false
+    for i = 1, #c.classes do
+      if c.classes[i].className == class.className then
+        c.classes[i] = class
+        replaced = true
+      end
+    end
+    
+    if not replaced then
+      c.classes[#c.classes + 1] = class
+    end
+    
   end
 
   -- define a new function for returned class
@@ -82,10 +102,13 @@ function createClass(...)
     setmetatable(o, c)
       
     -- call constructors for each class
-    for className, class in pairs(o.classes) do
-      local ctor = o[class.className]
+    local classes = o.classes
+    for i = 1, #classes do
+      local class = classes[i]
       
       -- constructors are named the same as their class
+      local ctor = class[class.className]
+      
       if ctor then
         ctor(o)
       end

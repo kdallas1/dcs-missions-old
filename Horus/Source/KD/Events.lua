@@ -21,8 +21,6 @@ Events = {
 -- @param #Events self
 -- @return #Events
 
-Events = createClass(Events, Object)
-
 ---
 -- @type Event
 Event = {
@@ -174,3 +172,5 @@ function Events:UpdateFromSpawnerList(spawners)
     self:UpdateFromGroupList(groups)
   end
 end
+
+Events = createClass(Object, Events)
