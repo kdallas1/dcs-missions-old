@@ -8,11 +8,11 @@ local TestState = {
   TestState2 = 1
 }
 
-local function Test_Change_OnceStateCalledTwice_EventFiresOnce()
+local function Test_ActionOnce_ChangeCalledTwice_ActionFiresOnce()
   local sm = StateMachine:New()
   
   local calls = 0
-  sm:AddOnce(TestState.TestState1, function() calls = calls + 1 end)
+  sm:ActionOnce(TestState.TestState1, function() calls = calls + 1 end)
   
   local result1 = sm:Change(TestState.TestState1)
   local result2 = sm:Change(TestState.TestState1)
@@ -26,7 +26,7 @@ local function Test_Change_OnceStateNotAdded_NoEventFired()
   local sm = StateMachine:New()
   
   local fired = false
-  function StateMachine:FireEvent() fired = true end
+  function sm:FireEvent() fired = true end
   
   local result = sm:Change(TestState.TestState1)
   
@@ -34,12 +34,49 @@ local function Test_Change_OnceStateNotAdded_NoEventFired()
   TestAssert(not result, "Expected `Change` to return false")
 end
 
-testOnly = Test_Change_CalledTwice_EventFiresOnce
+local function Test_TriggerOnce_TriggerFalse_NoActionFired()
+  local sm = StateMachine:New()
+  
+  local fired = false
+  local trigger = false
+  
+  sm:TriggerOnce(
+    TestState.TestState1,
+    function() return trigger end,
+    function() fired = true end
+  )
+  
+  sm:CheckTriggers()
+  
+  TestAssert(not fired, "Expected no events to be fired")
+end
+
+local function Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce()
+  local sm = StateMachine:New()
+  
+  local calls = 0
+  local trigger = false
+  
+  sm:TriggerOnce(
+    TestState.TestState1,
+    function() return trigger end,
+    function() calls = calls + 1 end
+  )
+  
+  sm:CheckTriggers()
+  trigger = true
+  sm:CheckTriggers()
+  sm:CheckTriggers()
+  
+  TestAssert(calls == 1, "Expected TestState1 to fire once, but called " .. calls .. " time(s)")
+end
 
 function Test_StateMachine()
   return RunTests {
     "StateMachine",
-    Test_Change_OnceStateCalledTwice_EventFiresOnce,
-    Test_Change_OnceStateNotAdded_NoEventFired
+    Test_ActionOnce_ChangeCalledTwice_ActionFiresOnce,
+    Test_Change_OnceStateNotAdded_NoEventFired,
+    Test_TriggerOnce_TriggerFalse_NoActionFired,
+    Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce
   }
 end
