@@ -9,7 +9,8 @@ dofile(baseDir .. "KD/Events.lua")
 StateMachine = {
   className = "StateMachine",
   
-  current = nil
+  current = nil,
+  finalState = nil
 }
 
 --- 
@@ -34,6 +35,9 @@ function StateMachine:StateMachine()
   
   --- @field #table<#State, #State> depends
   self.depends = {}
+  
+  --- @field #table<#State, ?> finals
+  self.finals = {}
   
 end
 
@@ -85,11 +89,21 @@ function StateMachine:Change(state)
 
   self:Assert(state, "Arg `state` was nil")
   
+  if (self.finalState) then
+    self:Trace(3, "Already at final state: " .. self.finalState)
+    return
+  end
+    
   if (self.onceStates[state] ~= nil) then
     if (self.onceStates[state] == false) then
       self.current = state
       self:FireEvent(state)
       self.onceStates[state] = true
+      
+      if self.finals[state] then
+        self.finalState = state
+      end
+      
       return true
     else
       self:Trace(3, "Once state already called, state=" .. state)
@@ -100,6 +114,8 @@ function StateMachine:Change(state)
   
 end
 
+--- 
+-- @param #StateMachine self
 function StateMachine:CheckTriggers()
 
   for state, trigger in pairs(self.triggers) do
@@ -124,6 +140,15 @@ function StateMachine:CheckTriggers()
     end
     
   end
+  
+end
+
+--- Sets a state as final, once this state is reached, no going back.
+-- @param #StateMachine self
+function StateMachine:SetFinal(state)
+
+  self:Assert(state, "Arg `state` was nil")
+  self.finals[state] = true
   
 end
 
