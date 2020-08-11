@@ -71,12 +71,33 @@ local function Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce()
   TestAssert(calls == 1, "Expected TestState1 to fire once, but called " .. calls .. " time(s)")
 end
 
+local function Test_TriggerOnceAfter_TriggerAfterEvent_ActionFiresOnce()
+  local sm = StateMachine:New()
+  
+  local calls = 0
+  
+  sm:TriggerOnceAfter(
+    TestState.TestState2,
+    TestState.TestState1,
+    function() return true end,
+    function() calls = calls + 1 end
+  )
+  
+  sm:CheckTriggers()
+  sm:Change(TestState.TestState1)
+  sm:CheckTriggers()
+  sm:CheckTriggers()
+  
+  TestAssert(calls == 1, "Expected TestState1 to fire once, but called " .. calls .. " time(s)")
+end
+
 function Test_StateMachine()
   return RunTests {
     "StateMachine",
     Test_ActionOnce_ChangeCalledTwice_ActionFiresOnce,
     Test_Change_OnceStateNotAdded_NoEventFired,
     Test_TriggerOnce_TriggerFalse_NoActionFired,
-    Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce
+    Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce,
+    Test_TriggerOnceAfter_TriggerAfterEvent_ActionFiresOnce
   }
 end
