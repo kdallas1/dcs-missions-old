@@ -44,6 +44,19 @@ function Mission03:Mission03()
   self.transportSpawn = SPAWN:New("Transport")
   self.playerGroup = GROUP:FindByName(self.playerGroupName)
   
+  self.state:ActionOnce(
+    Mission.State.MissionAccomplished,
+    function() self:AnnounceWin(2) end
+  )
+  
+  self.state:ActionOnce(
+    Mission.State.MissionFailed,
+    function() self:AnnounceLose(2) end
+  )
+  
+  self.state:SetFinal(Mission.State.MissionAccomplished)
+  self.state:SetFinal(Mission.State.MissionFailed)
+  
 end
 
 ---
@@ -157,9 +170,7 @@ function Mission03:OnTransportDead(unit)
   MESSAGE:New("Transport destroyed!", self.messageTimeLong):ToAll()
   self:PlaySound(Sound.UnitLost)
   
-  if (not self.winLoseDone) then
-    self:AnnounceLose(2)
-  end
+  self.state:Change(Mission.State.MissionFailed)
 end
 
 ---
@@ -174,7 +185,7 @@ function Mission03:OnEnemyDead(unit)
   self.migsDestroyed = self.migsDestroyed + 1
   local remain = self:GetMaxMigs() - self.migsDestroyed
   
-  if (self.winLoseDone) then
+  if (self.state.finalState) then
     return
   end
   
@@ -205,7 +216,7 @@ function Mission03:OnGameLoop()
   self:Trace(2, "Transport count: " .. self.transportSpawnCount)
   self:Trace(2, "Transports exist: " .. (transportsExist and "true" or "false")) 
   
-  if (self.winLoseDone) then
+  if (self.state.finalState) then
     return
   end
 
@@ -220,7 +231,7 @@ function Mission03:OnGameLoop()
   self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
   if (everyoneParked) then
-    self:AnnounceWin()
+    self.state:Change(Mission.State.MissionAccomplished)
   end
   
   self:KeepAliveSpawnGroupsIfParked(self.nalchikParkZone, self.transportSpawn)

@@ -18,6 +18,15 @@ StateMachine = {
 -- @extends KD.Event#Event
 State = { }
 
+-- Keep track of state IDs
+local _stateCount = 0
+
+function State:NextState()
+  local state = _stateCount 
+  _stateCount = _stateCount +1
+  return state
+end
+
 ---
 -- @function [parent=#StateMachine] New
 -- @param #StateMachine self

@@ -14,14 +14,12 @@ Mission04 = {
 
 ---
 -- @type Mission04.State
--- @extends KD.StateMachine#State
+-- @extends KD.Mission#Mission.State
 Mission04.State = {
-  MissionAccomplished       = 0,
-  MissionFailed             = 1,
-  HeloRendezvousDone        = 2,
-  FriendlyHelosSignalled    = 3,
-  EnemyHelosActivated       = 4,
-  ExtractionComplete        = 5
+  HeloRendezvousDone        = State:NextState(),
+  FriendlyHelosSignalled    = State:NextState(),
+  EnemyHelosActivated       = State:NextState(),
+  ExtractionComplete        = State:NextState()
 }
 
 ---
@@ -55,8 +53,7 @@ function Mission04:Mission04()
   
   self:AddGroup(self.friendlyHeloGroup)
   self:AddGroup(self.enemyHeloGroup)
-  
-  self.state = StateMachine:New()
+  self:AddGroup(self.enemyGroundGroup)
   
   -- TODO: test how reliable `playerGroup:IsAnyInZone` is on MP server
   self.state:TriggerOnce(
@@ -85,22 +82,47 @@ function Mission04:Mission04()
   )
   
   self.state:TriggerOnceAfter(
-    Mission04.State.MissionAccomplished,
+    Mission.State.MissionAccomplished,
     Mission04.State.ExtractionComplete,
     function() return self:UnitsAreParked(self.nalchikPark, self.players) end,
     function() self:AnnounceWin(2) end
   )
   
   self.state:ActionOnce(
-    Mission04.State.MissionFailed,
+    Mission.State.MissionFailed,
     function() self:AnnounceLose(2) end
   )
   
-  self.state:SetFinal(Mission04.State.MissionAccomplished)
-  self.state:SetFinal(Mission04.State.MissionFailed)
+  self.state:SetFinal(Mission.State.MissionAccomplished)
+  self.state:SetFinal(Mission.State.MissionFailed)
+  
+  self:SetupMenu()
   
 end
 
+---
+-- @param #Mission04 self
+function Mission04:SetupMenu()
+
+  local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
+  
+  MENU_COALITION_COMMAND:New(
+    coalition.side.BLUE, "Kill players", menu,
+    function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
+    
+  MENU_COALITION_COMMAND:New(
+    coalition.side.BLUE, "Kill friendly helos", menu,
+    function() self:SelfDestructGroup(self.friendlyHeloGroup, 100, 1, 1) end)
+    
+  MENU_COALITION_COMMAND:New(
+    coalition.side.BLUE, "Kill enemy helos", menu,
+    function() self:SelfDestructGroup(self.enemyHeloGroup, 100, 1, 1) end)
+    
+  MENU_COALITION_COMMAND:New(
+    coalition.side.BLUE, "Kill enemy ground", menu,
+    function() self:SelfDestructGroup(self.enemyGroundGroup, 100, 1, 1) end)
+    
+end
 ---
 -- @param #Mission04 self
 function Mission04:OnStart()
@@ -136,14 +158,14 @@ function Mission04:OnUnitDead(unit)
     self:Trace(1, "Friendly helo destroyed: " .. unit:GetName())
     self:MessageAll(MessageLength.Long, "Friendly helo destroyed!")
     self:PlaySound(Sound.UnitLost)
-    self.state:Change(Mission04.State.MissionFailed)
+    self.state:Change(Mission.State.MissionFailed)
     
   end
   
   if (string.match(unit:GetName(), "Enemy Helo")) then
     
     self:Trace(1, "Enemy helo destroyed: " .. unit:GetName())
-    self:MessageAll(MessageLength.Long, "Enemy helo destroyed!")
+    self:MessageAll(MessageLength.Short, "Enemy helo destroyed!")
     self:PlayEnemyDeadSound()
     
   end
@@ -151,7 +173,7 @@ function Mission04:OnUnitDead(unit)
   if (string.match(unit:GetName(), "Enemy Ground")) then
     
     self:Trace(1, "Enemy ground unit destroyed: " .. unit:GetName())
-    self:MessageAll(MessageLength.Long, "Enemy ground unit destroyed!")
+    self:MessageAll(MessageLength.Short, "Enemy ground unit destroyed!")
     self:PlayEnemyDeadSound()
     
   end
