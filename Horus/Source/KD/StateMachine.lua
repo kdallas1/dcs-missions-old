@@ -108,7 +108,8 @@ function StateMachine:CheckTriggers()
     if ((self.onceStates[state] ~= nil) and (self.onceStates[state] == false)) then
       local canTrigger = true
       
-      if (self.depends[state]) then
+      local dependsOnState = self.depends[state] 
+      if (dependsOnState) then
         canTrigger = (self.current == dependsOnState)
       end
       
