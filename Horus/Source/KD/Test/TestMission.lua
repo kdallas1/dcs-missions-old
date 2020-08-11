@@ -15,6 +15,7 @@ TestMission = {
 ---
 -- @param #self #TestMission
 function TestMission:TestMission()
+  self:SetTraceOn(false)
   self.mooseZone = { ClassName = "MockZone" }
   self.mooseSpawn = { ClassName =  "MockSpawn" }
   self.mooseGroup = { ClassName =  "MockGroup" }
