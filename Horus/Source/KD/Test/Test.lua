@@ -12,8 +12,8 @@ testTrace = {
   _assert = true
 }
 
-local testErrors = {}
-local testError = false
+local allErrors = {}
+local errorCount = 0
 local passCount = 0
 local failCount = 0
 
@@ -36,8 +36,9 @@ function Test()
   env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))
   
   if (failCount > 0) then
-    for i = 1, #testErrors do
-      env.info(testErrors[i])
+    env.info("Test: Error summary...")
+    for i = 1, #allErrors do
+      env.info(allErrors[i])
     end
     env.error("Unit tests failed: " .. failCount, true)
     return false
@@ -50,13 +51,16 @@ function RunSingleTest(test, suite, position)
   env.info("Test: [" ..suite .. "] Start " .. position)
   test()
   
-  if testError then
+  if (errorCount > 0) then
     env.info("Test: [" ..suite .. "] Failed")
     failCount = failCount + 1
   else
     env.info("Test: [" ..suite .. "] Passed")
     passCount = passCount + 1
   end
+  
+  -- reset for next test
+  errorCount = 0
 end
 
 function RunTests(tests)
@@ -76,9 +80,6 @@ function RunTests(tests)
 end
 
 function TestAssert(condition, errorString)
-
-  -- TODO: consider making this thread safe
-  testError = not condition
   
   if not condition then
     
@@ -91,7 +92,8 @@ function TestAssert(condition, errorString)
     env.info(error)
     env.info("Test: Debug " .. debug.traceback())
     
-    testErrors[#testErrors + 1] = error 
+    errorCount = errorCount + 1 
+    allErrors[#allErrors + 1] = error 
     
   end
 end
