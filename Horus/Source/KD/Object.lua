@@ -8,7 +8,7 @@ Object = {
   
   _traceOn = false,
   _traceLevel = 1,
-  _assert = false
+  _assert = true
 }
 
 local _tracePrefix = "Horus"
