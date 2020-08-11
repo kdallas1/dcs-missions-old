@@ -38,7 +38,6 @@ Mission = {
   playerMax = 4,
   
   gameLoopInterval = 1,
-  winLoseDone = false,
   messageTimeShort = 20,
   messageTimeLong = 200,
   soundCounter = 1,
@@ -84,6 +83,14 @@ MessageLength = {
 }
 
 ---
+-- @type Mission.State
+-- @extends KD.State#State
+Mission.State = {
+  MissionAccomplished       = State:NextState(),
+  MissionFailed             = State:NextState()
+}
+
+---
 -- @param #Mission self
 function Mission:Mission()
   
@@ -100,6 +107,8 @@ function Mission:Mission()
   self.spawners = {}
   self.groups = {}
   self.players = {}
+  
+  self.state = StateMachine:New()
   
   self.events = MissionEvents:New()
   self.events:CopyTrace(self)
@@ -203,9 +212,7 @@ function Mission:_OnPlayerDead(unit)
     self:OnPlayerDead(unit)
   end
   
-  if (not self.winLoseDone) then
-    self:AnnounceLose(2)
-  end
+  self.state:Change(Mission.State.MissionFailed)
   
 end
 
@@ -545,7 +552,6 @@ end
 ---
 -- @param #Mission self
 function Mission:AnnounceWin(soundDelay)
-  self:Assert(not self.winLoseDone, "Win/lose already announced")
 
   if not soundDelay then
     soundDelay = 0
@@ -555,13 +561,12 @@ function Mission:AnnounceWin(soundDelay)
   self:MessageAll(MessageLength.Long, "Mission accomplished!")
   self:PlaySound(Sound.MissionAccomplished, soundDelay)
   self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
-  self.winLoseDone = true
+
 end
 
 ---
 -- @param #Mission self
 function Mission:AnnounceLose(soundDelay)
-  self:Assert(not self.winLoseDone, "Win/lose already announced")
   
   if not soundDelay then
     soundDelay = 0
@@ -571,7 +576,7 @@ function Mission:AnnounceLose(soundDelay)
   self:MessageAll(MessageLength.Long, "Mission failed!")
   self:PlaySound(Sound.MissionFailed, soundDelay)
   self:PlaySound(Sound.BattleControlTerminated, soundDelay + 2)
-  self.winLoseDone = true
+
 end
 
 ---
@@ -590,8 +595,23 @@ end
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
-function Mission:SelfDestructGroupsInSpawn(spawn, power, delay)
+function Mission:SelfDestructGroupsInSpawn(spawn, power, delay, separation)
   self:Trace(1, "Self-destructing groups in spawner")
+
+  for i = 1, spawn.SpawnCount do
+    local group = spawn:GetGroupFromIndex(i)
+    
+    if group then
+      self:SelfDestructGroup(group, power, delay)
+    end
+  end
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Group#GROUP group
+function Mission:SelfDestructGroup(group, power, delay, separation)
+  self:Trace(1, "Self-destructing group: " .. group:GetName())
   
   if not power then
     power = 100
@@ -600,18 +620,16 @@ function Mission:SelfDestructGroupsInSpawn(spawn, power, delay)
   if not delay then
     delay = 0
   end
-
-  for i = 1, spawn.SpawnCount do
-    local group = spawn:GetGroupFromIndex(i)
-    
-    if group then
-      local units = group:GetUnits()
-      for j = 1, #units do
-        local unit = units[j]
-        unit:Explode(power, delay)
-        unit.selfDestructDone = true
-      end
-    end
+  
+  if not separation then
+    separation = 0
+  end
+  
+  local units = group:GetUnits()
+  for j = 1, #units do
+    local unit = units[j]
+    unit:Explode(power, delay + ((j - 1) * separation))
+    unit.selfDestructDone = true
   end
 end
 
