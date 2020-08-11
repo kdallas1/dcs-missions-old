@@ -44,6 +44,8 @@ function Mission03:Mission03()
   self.transportSpawn = SPAWN:New("Transport")
   self.playerGroup = GROUP:FindByName(self.playerGroupName)
   
+  self:Assert(self.playerGroup, "Player group is nil")
+  
   self.state:ActionOnce(
     Mission.State.MissionAccomplished,
     function() self:AnnounceWin(2) end
