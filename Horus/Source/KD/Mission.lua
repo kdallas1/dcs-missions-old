@@ -4,7 +4,7 @@ end
 
 dofile(baseDir .. "KD/Object.lua")
 dofile(baseDir .. "KD/Spawn.lua")
-dofile(baseDir .. "KD/Events.lua")
+dofile(baseDir .. "KD/MissionEvents.lua")
 
 ---
 -- @module KD.Mission
@@ -29,7 +29,7 @@ Mission = {
   ---@field #list<Wrapper.Units#UNIT> players
   players = nil,
   
-  --- @field KD.Events#Events events
+  --- @field KD.MissionEvents#MissionEvents events
   events = nil,
   
   playerGroupName = "Dodge Squadron",
@@ -101,12 +101,12 @@ function Mission:Mission()
   self.groups = {}
   self.players = {}
   
-  self.events = Events:New()
+  self.events = MissionEvents:New()
   self.events:CopyTrace(self)
   
-  self:HandleEvent(Event.Spawn, function(unit) self:_OnUnitSpawn(unit) end)
-  self:HandleEvent(Event.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
-  self:HandleEvent(Event.Dead, function(unit) self:_OnUnitDead(unit) end)
+  self:HandleEvent(MissionEvent.Spawn, function(unit) self:_OnUnitSpawn(unit) end)
+  self:HandleEvent(MissionEvent.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
+  self:HandleEvent(MissionEvent.Dead, function(unit) self:_OnUnitDead(unit) end)
   
 end
 
