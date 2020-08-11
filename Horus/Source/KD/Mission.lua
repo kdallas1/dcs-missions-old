@@ -701,4 +701,15 @@ function Mission:MessageAll(length, message)
   self.mooseMessage:New(message, duration):ToAll()
 end
 
+--- 
+-- @param #Mission self
+function Mission:SetFlag(flag, value)
+  self:AssertType(flag, "number")
+  self:AssertType(value, "boolean")
+  
+  self:Trace(2, "Setting flag " .. flag .. " to " .. Boolean:ToString(value))
+  trigger.action.setUserFlag(flag, value)
+  
+end
+
 Mission = createClass(Mission, Object)
