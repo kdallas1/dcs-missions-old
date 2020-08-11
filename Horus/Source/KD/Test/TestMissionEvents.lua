@@ -1,9 +1,9 @@
-dofile(baseDir .. "KD/Events.lua")
+dofile(baseDir .. "KD/MissionEvents.lua")
 
 local function Test_UpdateFromUnitList_SpawnEventFires()
   
   local spawnEventFired = false
-  local events = Events:New()
+  local events = MissionEvents:New()
   
   local units = 
   {
@@ -13,7 +13,7 @@ local function Test_UpdateFromUnitList_SpawnEventFires()
     }
   }
   
-  events:HandleEvent(Event.Spawn, function() spawnEventFired = true end)
+  events:HandleEvent(MissionEvent.Spawn, function() spawnEventFired = true end)
   
   events:UpdateFromUnitList(units)
   
@@ -23,7 +23,7 @@ end
 
 local function Test_UpdateFromGroupList_SpawnEventFires()
   
-  local events = Events:New()
+  local events = MissionEvents:New()
   
   local groups =
   {
@@ -42,7 +42,7 @@ local function Test_UpdateFromGroupList_SpawnEventFires()
   }
   local spawnEventFired = false
   
-  events:HandleEvent(Event.Spawn, function() spawnEventFired = true end)
+  events:HandleEvent(MissionEvent.Spawn, function() spawnEventFired = true end)
   
   events:UpdateFromGroupList(groups)
   
@@ -52,7 +52,7 @@ end
 
 local function Test_UpdateFromSpawnerList_SpawnEventFires()
   
-  local events = Events:New()
+  local events = MissionEvents:New()
   
   local spawners =
   {
@@ -77,7 +77,7 @@ local function Test_UpdateFromSpawnerList_SpawnEventFires()
   }
   local spawnEventFired = false
   
-  events:HandleEvent(Event.Spawn, function() spawnEventFired = true end)
+  events:HandleEvent(MissionEvent.Spawn, function() spawnEventFired = true end)
   
   events:UpdateFromSpawnerList(spawners)
   
@@ -88,7 +88,7 @@ end
 local function Test_CheckUnitList_UnitLifeEmpty_DeadEventFires()
   
   local deadEventFired = false
-  local events = Events:New()
+  local events = MissionEvents:New()
   
   local units = 
   {
@@ -99,7 +99,7 @@ local function Test_CheckUnitList_UnitLifeEmpty_DeadEventFires()
     }
   }
   
-  events:HandleEvent(Event.Dead, function() deadEventFired = true end)
+  events:HandleEvent(MissionEvent.Dead, function() deadEventFired = true end)
   
   events:UpdateFromUnitList(units)
   events:CheckUnitList()
@@ -111,9 +111,9 @@ local function Test_CheckUnitList_UnitDecrease_DamagedEventFires()
   TestAssert(true, "Test")
 end
 
-function Test_Events()
+function Test_MissionEvents()
   return RunTests {
-    "Events",
+    "MissionEvents",
     Test_UpdateFromUnitList_SpawnEventFires,
     Test_UpdateFromGroupList_SpawnEventFires,
     Test_UpdateFromSpawnerList_SpawnEventFires,

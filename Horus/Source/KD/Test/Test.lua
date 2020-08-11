@@ -1,8 +1,8 @@
 testOnly = nil
 
-dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestObject.lua")
-dofile(baseDir .. "KD/Test/TestEvents.lua")
+dofile(baseDir .. "KD/Test/TestSpawn.lua")
+dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
 dofile(baseDir .. "KD/Test/TestMission.lua")
 
 testTrace = {
@@ -25,9 +25,9 @@ function Test()
     RunTests {
       "*",
       Test_Object,
-      Test_Events,
       Test_Spawn,
-      Test_Mission
+      Test_MissionEvents,
+      Test_Mission,
     }
   end
 
