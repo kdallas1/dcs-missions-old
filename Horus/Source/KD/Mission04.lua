@@ -144,11 +144,21 @@ end
 
 ---
 -- @param #Mission04 self
-function Mission04:FriendlyHelosSignalled()
+function Mission04:OnFriendlyHelosSignalled()
 
   self.friendlyHeloGroup:SmokeRed()
   self:MessageAll(MessageLength.Short, "Friendly helos landed Fahrn, extraction T-1 minute")
   self:Trace(1, "Friendly helos landed")
+  
+end
+
+---
+-- @param #Mission04 self
+function Mission04:OnExtractionComplete()
+
+  self:PlaySound(Sound.FirstObjectiveMet)
+  self:MessageAll(MessageLength.Short, "Extraction complete, RTB to Nalchik")
+  self:Trace(1, "Friendly helos out of extraction zone")
   
 end
 
