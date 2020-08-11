@@ -69,7 +69,7 @@ function Spawn:StartSpawnEnemies()
     
   end
   
-  List:Shuffle(self.spawners)
+  Table:Shuffle(self.spawners)
   
   self.mooseScheduler:New(
     nil, function() self:SpawnTick() end, {},
