@@ -148,6 +148,14 @@ function Mission04:OnUnitDead(unit)
     
   end
   
+  if (string.match(unit:GetName(), "Enemy Ground")) then
+    
+    self:Trace(1, "Enemy ground unit destroyed: " .. unit:GetName())
+    self:MessageAll(MessageLength.Long, "Enemy ground unit destroyed!")
+    self:PlayEnemyDeadSound()
+    
+  end
+  
 end
 
 ---
