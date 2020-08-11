@@ -46,9 +46,9 @@ end
 -- @param #Event event
 function Events:FireEvent(event, arg)
   self:Assert(event, "Arg `event` was nil")
-  local f = self.eventHandlers[event]
-  if f then
-    f(arg)
+  local eventHandler = self.eventHandlers[event]
+  if eventHandler then
+    eventHandler(arg)
   end
 end
 
