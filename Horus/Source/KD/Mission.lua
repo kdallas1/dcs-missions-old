@@ -179,7 +179,7 @@ function Mission:_OnUnitDead(unit)
   self:AssertType(unit, self.mooseUnit)
   self:Trace(2, "Unit dead: " .. unit:GetName())
   
-  if (string.match(unit:GetName(), self.playerGroupName)) then
+  if (string.match(unit:GetName(), self.playerPrefix)) then
     self:_OnPlayerDead(unit)
   end
   
