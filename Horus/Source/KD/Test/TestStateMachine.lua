@@ -133,6 +133,23 @@ local function Test_TriggerOnceAfter_NotOnDependEvent_NoActionFired()
   TestAssert(calls == 0, "Expected TestState2 to never fire, but called " .. calls .. " time(s)")
 end
 
+local function Test_SetFinal_FinalStateReached_NoChangesPossible()
+  local sm = StateMachine:New()
+  
+  local calls = 0
+  
+  sm:ActionOnce(TestState.TestState1, function() calls = calls + 1 end)
+  sm:ActionOnce(TestState.TestState2, function() calls = calls + 1 end)
+  sm:SetFinal(TestState.TestState1)
+  
+  local result1 = sm:Change(TestState.TestState1)
+  local result2 = sm:Change(TestState.TestState2)
+  
+  TestAssert(calls == 1, "Expected TestState1 to fire once, but called " .. calls .. " time(s)")
+  TestAssert(result1, "Expected `Change` to return true on 1st call")
+  TestAssert(not result2, "Expected `Change` to return false on 2nd call")
+end
+
 function Test_StateMachine()
   return RunTests {
     "StateMachine",
@@ -142,6 +159,7 @@ function Test_StateMachine()
     Test_TriggerOnce_TriggerFalse_NoActionFired,
     Test_TriggerOnce_TriggeredOnCheckTriggers_ActionFiresOnce,
     Test_TriggerOnceAfter_TriggerAfterEvent_ActionFiresOnce,
-    Test_TriggerOnceAfter_NotOnDependEvent_NoActionFired
+    Test_TriggerOnceAfter_NotOnDependEvent_NoActionFired,
+    Test_SetFinal_FinalStateReached_NoChangesPossible
   }
 end
