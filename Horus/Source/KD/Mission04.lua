@@ -17,7 +17,7 @@ Mission04 = {
 -- @extends KD.Mission#Mission.State
 Mission04.State = {
   HeloRendezvousDone        = State:NextState(),
-  FriendlyHelosSignalled    = State:NextState(),
+  FriendlyHelosLanded       = State:NextState(),
   EnemyHelosActivated       = State:NextState(),
   ExtractionComplete        = State:NextState()
 }
@@ -69,14 +69,14 @@ function Mission04:Mission04()
   )
   
   self.state:TriggerOnce(
-    Mission04.State.FriendlyHelosSignalled,
+    Mission04.State.FriendlyHelosLanded,
     function() return self:GroupIsParked(self.extractionLandZone, self.friendlyHeloGroup) end,
-    function() self:OnFriendlyHelosSignalled() end
+    function() self:OnFriendlyHelosLanded() end
   )
   
   self.state:TriggerOnceAfter(
     Mission04.State.ExtractionComplete,
-    Mission04.State.FriendlyHelosSignalled,
+    Mission04.State.FriendlyHelosLanded,
     function() return self.friendlyHeloGroup:IsNotInZone(self.extractionZone) end,
     function() self:OnExtractionComplete() end
   )
@@ -192,6 +192,7 @@ function Mission04:OnEnemyHelosActivated()
   
   -- TODO: maybe move ground units to another trigger
   self.enemyGroundGroup:Activate(0)
+  self.enemyGroundGroup:SmokeRed()
   self:MessageAll(MessageLength.Short, "Enemy light ground units heading through Fahrn (WP2), ETA 5 minutes")
   self:Trace(1, "Enemy ground activated")
   
@@ -199,9 +200,9 @@ end
 
 ---
 -- @param #Mission04 self
-function Mission04:OnFriendlyHelosSignalled()
+function Mission04:OnFriendlyHelosLanded()
 
-  self.friendlyHeloGroup:SmokeRed()
+  self.friendlyHeloGroup:SmokeWhite()
   self:MessageAll(MessageLength.Short, "Friendly helos landed Fahrn (WP2), extraction T-1 minute")
   self:Trace(1, "Friendly helos landed")
   
