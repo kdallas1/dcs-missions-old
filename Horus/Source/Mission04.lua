@@ -223,7 +223,6 @@ end
 -- @param #Mission04 self
 function Mission04:OnGameLoop()
   
-  self.state:CheckTriggers()
   self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
   
 end
