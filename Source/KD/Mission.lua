@@ -32,8 +32,11 @@ Mission = {
   --- @field KD.MissionEvents#MissionEvents events
   events = nil,
   
-  playerGroupName = "Dodge Squadron",
-  playerPrefix = "Dodge",
+  _playerGroupName = "Dodge Squadron",
+  _playerPrefix = "Dodge",
+  
+  playerGroupName = nil,
+  playerPrefix = nil,
   playerCountMax = 0,
   playerMax = 4,
   
@@ -441,6 +444,8 @@ function Mission:GameLoop()
   self.events:UpdateFromUnitList(self.players)
   self.events:CheckUnitList()
   
+  self.state:CheckTriggers()
+  
   if self.OnGameLoop then
     self:OnGameLoop()
   end
@@ -728,6 +733,28 @@ function Mission:SetFlag(flag, value)
   self:Trace(2, "Setting flag " .. flag .. " to " .. Boolean:ToString(value))
   trigger.action.setUserFlag(flag, value)
   
+end
+
+---
+-- @param #Mission self
+function Mission:LoadPlayer()
+
+  self.playerGroup = GROUP:FindByName(self._playerGroupName)
+  
+  -- if player didn't use slot on load, assume test mode 
+  if self.playerGroup then
+  
+    self.playerGroupName = self._playerGroupName
+    self.playerPrefix = self._playerPrefix
+    
+  else
+  
+    self.playerGroupName = "Test Squadron"
+    self.playerPrefix = "Test"
+    self.playerGroup = GROUP:FindByName(self.playerGroupName)
+    self.playerGroup:Activate()
+    
+  end
 end
 
 Mission = createClass(KDObject, Mission)
