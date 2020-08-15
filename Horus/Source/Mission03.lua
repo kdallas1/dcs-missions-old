@@ -1,7 +1,7 @@
 dofile(baseDir .. "KD/Mission.lua")
 
 ---
--- @module KD.Mission03
+-- @module Horus.Mission03
 
 --- 
 -- @type Mission03
