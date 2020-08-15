@@ -2,7 +2,7 @@ if not skipMoose then
   dofile(baseDir .. "../Moose/Moose.lua")
 end
 
-dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/KDObject.lua")
 dofile(baseDir .. "KD/Spawn.lua")
 dofile(baseDir .. "KD/MissionEvents.lua")
 
@@ -11,7 +11,7 @@ dofile(baseDir .. "KD/MissionEvents.lua")
 
 --- 
 -- @type Mission
--- @extends KD.Object#Object
+-- @extends KD.KDObject#Object
 Mission = {
   className = "Mission",
 
@@ -730,4 +730,4 @@ function Mission:SetFlag(flag, value)
   
 end
 
-Mission = createClass(Mission, Object)
+Mission = createClass(KDObject, Mission)
