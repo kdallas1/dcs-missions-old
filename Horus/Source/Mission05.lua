@@ -41,12 +41,30 @@ function Mission05:SetupMenu()
     function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
     
 end
+
 ---
 -- @param #Mission05 self
 function Mission05:OnStart()
   
   self:MessageAll(MessageLength.Long, "Mission 5: Sneak-attack on Beslan")
   self:MessageAll(MessageLength.Long, "Read the mission brief before takeoff")
+  
+  self:ExplodeC4()
+  
+end
+
+---
+-- @param #Mission05 self
+function Mission05:ExplodeC4()
+  
+  self:MessageAll(MessageLength.Short, "[Commandos] Light 'er up!")
+  for i = 1, 40 do
+    local name = string.format("C4 #%03d", i)
+    local c4 = STATIC:FindByName(name)
+    if c4 then
+      SCHEDULER:New(nil, function() c4:GetCoordinate():Explosion(100) end, {}, math.random(1, 20))
+    end
+  end
   
 end
 
