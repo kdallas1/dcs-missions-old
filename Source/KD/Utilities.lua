@@ -5,7 +5,7 @@ Boolean = {}
 --- 
 -- @param #list list
 function Table:Shuffle(table)
-  Object:AssertType(table, "table")
+  KDObject:AssertType(table, "table")
   for i = #table, 2, -1 do
     local j = math.random(i)
     table[i], table[j] = table[j], table[i]
@@ -22,6 +22,6 @@ end
 --- 
 -- @param #boolean value
 function Boolean:ToString(value)
-  Object:AssertType(value, "boolean")
+  KDObject:AssertType(value, "boolean")
   if value then return "True" else return "False" end 
 end

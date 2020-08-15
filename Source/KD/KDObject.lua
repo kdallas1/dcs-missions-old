@@ -1,10 +1,10 @@
 ---
--- @module KD.Object
+-- @module KD.KDObject
 
 ---
--- @type Object
-Object = {
-  className = "Object",
+-- @type KDObject
+KDObject = {
+  className = "KDObject",
   
   _traceOn = false,
   _traceLevel = 1,
@@ -123,40 +123,40 @@ function createClass(...)
 end
 
 --- Turn on trace (logging)
--- @param #Object self
+-- @param #KDObject self
 -- @param #boolean traceOn True to enable trace.
-function Object:SetTraceOn(traceOn)
+function KDObject:SetTraceOn(traceOn)
   self._traceOn = traceOn
 end
 
 --- Trace level (logging).
--- @param #Object self
+-- @param #KDObject self
 -- @param #number traceLevel 1 = low, 2 = med, 3 = high
-function Object:SetTraceLevel(traceLevel)
+function KDObject:SetTraceLevel(traceLevel)
   self._traceLevel = traceLevel
 end
 
 --- Enable assert (a type of error reporting).
--- @param #Object self
+-- @param #KDObject self
 -- @param #boolean assert True to enable assert. 
-function Object:SetAssert(assert)
+function KDObject:SetAssert(assert)
   self._assert = assert
 end
 
 --- Copies trace options from an object.
--- @param #Object self
--- @param #Object object Object to copy from. 
-function Object:CopyTrace(object)
+-- @param #KDObject self
+-- @param #KDObject object Object to copy from. 
+function KDObject:CopyTrace(object)
   self._traceOn = object._traceOn
   self._traceLevel = object._traceLevel
   self._assert = object._assert
 end
 
 --- Horus log function. Short hand for: env.info("Horus: " .. line)
--- @param #Object self
+-- @param #KDObject self
 -- @param #number level Level to trace at.
 -- @param #string line Log line to output to env.info 
-function Object:Trace(level, line)
+function KDObject:Trace(level, line)
 
   if (self._assert) then
     assert(type(level) == type(0), "level arg must be a number")
@@ -173,11 +173,11 @@ function Object:Trace(level, line)
 end
 
 --- Assert wrapper which can be turned off
--- @param #Object self
+-- @param #KDObject self
 -- @param #boolean case If false, assert fails
 -- @param #string message Assert message if fail
 -- @param #number stackPosition Adjust stack position of debug info
-function Object:Assert(case, message, stackPosition)
+function KDObject:Assert(case, message, stackPosition)
   if (not self._assert) then
     return
   end
@@ -202,10 +202,10 @@ function Object:Assert(case, message, stackPosition)
 end
 
 --- Asserts the correct type (Lua is loosely typed, so this is helpful)
--- @param #Object self
+-- @param #KDObject self
 -- @param Core.Base#BASE object Object to check
 -- @param #table _type Either Moose class or type string name to assert
-function Object:AssertType(object, _type)
+function KDObject:AssertType(object, _type)
   if (not self._assert) then
     return
   end

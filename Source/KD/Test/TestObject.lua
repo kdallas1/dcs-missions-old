@@ -1,10 +1,10 @@
-dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/KDObject.lua")
 
 local function Test_CreateClass_ObjectsAreUnique()
 
   local TestChild1 = { className = "TestChild1" }
   local TestChild2 = { className = "TestChild2" }
-  local TestChild3 = createClass(TestChild2, TestChild1, Object)
+  local TestChild3 = createClass(TestChild2, TestChild1, KDObject)
   local c1 = TestChild3:New()
   local c2 = TestChild3:New()
   
@@ -18,7 +18,7 @@ end
 local function Test_CreateClass_ObjectsInherit()
 
   local TestChild1 = { className = "TestChild1", foo = "test" }
-  local TestChild1 = createClass(TestChild1, Object)
+  local TestChild1 = createClass(TestChild1, KDObject)
   local c = TestChild1:New()
   
   TestAssert(c.foo, "Expected field from Child1")
@@ -31,7 +31,7 @@ local function Test_CreateClass_ObjectsInheritWidely()
   local TestChild1 = { className = "TestChild1", foo = "test" }
   local TestChild2 = { className = "TestChild2", bar = "test" }
   local TestChild3 = { className = "TestChild3", baz = "test" }
-  local TestChild3 = createClass(TestChild3, TestChild2, TestChild1, Object)
+  local TestChild3 = createClass(TestChild3, TestChild2, TestChild1, KDObject)
   local c = TestChild3:New()
   
   TestAssert(c.foo == "test", "Expected string from Child1")
@@ -43,7 +43,7 @@ end
 local function Test_CreateClass_ObjectsInheritDeeply()
 
   local TestChild1 = { className = "TestChild1", foo = "test" }
-  local TestChild1 = createClass(TestChild1, Object)
+  local TestChild1 = createClass(TestChild1, KDObject)
   
   local TestChild2 = { className = "TestChild2", bar = "test" }
   local TestChild2 = createClass(TestChild2, TestChild1)
@@ -75,7 +75,7 @@ local function Test_New_ConstructorsCalled()
     className = "TestChild1",
     TestChild1 = function() calledCtor1 = true end
   }
-  local TestChild1 = createClass(TestChild1, Object)
+  local TestChild1 = createClass(TestChild1, KDObject)
   
   local calledCtor2 = false
   local TestChild2 = {
@@ -109,7 +109,7 @@ local function Test_CreateClass_CtorCallOrder()
   
   local callOrder = {}
   
-  function Object:Object()
+  function KDObject:KDObject()
     callOrder[#callOrder + 1] = "Object"
   end
   
@@ -121,7 +121,7 @@ local function Test_CreateClass_CtorCallOrder()
     callOrder[#callOrder + 1] = "TestChild2"
   end
   
-  TestChild1 = createClass(Object, TestChild1)
+  TestChild1 = createClass(KDObject, TestChild1)
   TestChild2 = createClass(TestChild1, TestChild2)
   
   TestChild2:New()
@@ -138,11 +138,11 @@ local function Test_CreateClass_ClassDeclaredBeforeFunctions_ChildFunctionOverri
   local TestChild1 = { className = "TestChild1" }
   
   -- if createClass called before functions, child function will override
-  TestChild1 = createClass(Object, TestChild1)
+  TestChild1 = createClass(KDObject, TestChild1)
   
   local called = nil
   
-  function Object:Foo()
+  function KDObject:Foo()
     called = "Object"
   end
   
@@ -163,7 +163,7 @@ local function Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNot
   
   local called = nil
   
-  function Object:Foo()
+  function KDObject:Foo()
     called = "Object"
   end
   
@@ -172,7 +172,7 @@ local function Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNot
   end
   
   -- if createClass called after functions, child will not override
-  TestChild1 = createClass(Object, TestChild1)
+  TestChild1 = createClass(KDObject, TestChild1)
   
   local test = TestChild1:New()
   test:Foo()

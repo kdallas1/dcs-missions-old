@@ -1,4 +1,4 @@
-dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/KDObject.lua")
 dofile(baseDir .. "KD/Utilities.lua")
 
 ---
@@ -6,7 +6,7 @@ dofile(baseDir .. "KD/Utilities.lua")
 
 --- 
 -- @type Spawn
--- @extends KD.Object#Object
+-- @extends KD.KDObject#Object
 Spawn = {
   className = "Spawn",
   
@@ -102,4 +102,4 @@ function Spawn:SpawnTick()
   end
 end
 
-Spawn = createClass(Object, Spawn)
+Spawn = createClass(KDObject, Spawn)

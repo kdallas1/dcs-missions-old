@@ -1,11 +1,11 @@
-dofile(baseDir .. "KD/Object.lua")
+dofile(baseDir .. "KD/KDObject.lua")
 
 ---
 -- @module KD.Events
 
 --- 
 -- @type Events
--- @extends KD.Object#Object
+-- @extends KD.KDObject#Object
 Events = {
   className = "Events",
   
@@ -52,4 +52,4 @@ function Events:FireEvent(event, arg)
   end
 end
 
-Events = createClass(Object, Events)
+Events = createClass(KDObject, Events)
