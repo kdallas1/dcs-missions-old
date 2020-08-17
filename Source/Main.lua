@@ -3,8 +3,14 @@ env = {
   info = function(s) print(s) end
 }
 
--- TODO: get current path
-baseDir = [[C:\Projects\kdallas1\dcs-missions\Source\]]
+local function scriptPath()
+  local str = debug.getinfo(2, "S").source:sub(2)
+  return str:match("(.*/)")
+end
+
+baseDir = scriptPath()
+
+assert(tostring(_VERSION) == "Lua 5.1", "Requires Lua 5.1, but was " .. _VERSION)
 
 dofile(baseDir .. "KD/Test/Test.lua")
 Test()
