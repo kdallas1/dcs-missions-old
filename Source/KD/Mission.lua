@@ -20,18 +20,6 @@ Mission = {
   assert = true,
   mooseTrace = false,
   
-  ---@field #list<Core.Spawn#SPAWN> spawners
-  spawners = nil,
-  
-  ---@field #list<Wrapper.Group#GROUP> groups
-  groups = nil,
-  
-  ---@field #list<Wrapper.Units#UNIT> players
-  players = nil,
-  
-  --- @field KD.MissionEvents#MissionEvents events
-  events = nil,
-  
   _playerGroupName = "Dodge Squadron",
   _playerPrefix = "Dodge",
   
