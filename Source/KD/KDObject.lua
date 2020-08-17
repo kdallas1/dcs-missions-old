@@ -41,7 +41,7 @@ function createClass(...)
     local class = classList[i]
     
     if type(class) ~= "table" then
-      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      local fileName = Debug:GetInfo().fileName
       if not fileName then fileName = "Unknown file" end
       
       error(
@@ -72,7 +72,7 @@ function createClass(...)
   for i = 1, classList.n do
     local class = classList[i]
     if not class.className then
-      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      local fileName = Debug:GetInfo().fileName
       if not fileName then fileName = "Unknown file" end
       env.info("Error: Debug " .. debug.traceback())
       error("Error: The `className` field cannot be nil. Called from: " .. fileName)
@@ -182,16 +182,10 @@ function KDObject:Assert(case, message, stackPosition)
     return
   end
   
-  if (not stackPosition) then
-    stackPosition = 0
-  end
-  
-  local funcName = debug.getinfo(2 + stackPosition, "n").name
-  local lineNum = debug.getinfo(2 + stackPosition, "S").linedefined
-  local fileName = debug.getinfo(2 + stackPosition, "S").source:match("^.+[\\\/](.+)\"?.?$")
-  
-  if not fileName then fileName = "Unknown" end
-  if not funcName then funcName = "Unknown" end
+  local info = Debug:GetInfo(stackPosition)
+  local funcName = info.funcName
+  local lineNum = info.lineNum
+  local fileName = info.fileName
   
   if (not case) then
     env.info(_tracePrefix .. " Assert: " .. message .. " [" .. fileName .. ":" .. funcName .. "@" .. lineNum .. "]")
