@@ -33,15 +33,20 @@ Mission = {
   messageTimeLong = 200,
   soundCounter = 1,
   
-  mooseScheduler = SCHEDULER,
-  mooseMessage = MESSAGE,
-  mooseDatabase = _DATABASE,
-  mooseUserSound = USERSOUND,
-  mooseUnit = UNIT,
-  mooseZone = ZONE,
-  mooseSpawn = SPAWN,
-  mooseGroup = GROUP,
-  dcsUnit = Unit,
+  moose = {
+    scheduler = SCHEDULER,
+    message = MESSAGE,
+    database = _DATABASE,
+    userSound = USERSOUND,
+    unit = UNIT,
+    zone = ZONE,
+    spawn = SPAWN,
+    group = GROUP,
+  },
+
+  dcs = {
+    unit = Unit
+  },
 }
 
 ---
@@ -120,7 +125,7 @@ function Mission:Start()
     self:OnStart()
   end
   
-  self.mooseScheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
+  self.moose.scheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
   self:PlaySound(Sound.MissionLoaded)
   self:Trace(1, "Mission started")
   
@@ -131,7 +136,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitSpawn(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit spawned: " .. unit:GetName())
 
   if self.OnUnitSpawn then
@@ -163,7 +168,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitDamaged(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit damaged: " .. unit:GetName())
 
   if self.OnUnitDamaged then
@@ -176,7 +181,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitDead(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit dead: " .. unit:GetName())
   
   if (string.match(unit:GetName(), self.playerPrefix)) then
@@ -193,7 +198,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnPlayerDead(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(1, "Player is dead: " .. unit:GetName())
   
   self:MessageAll(MessageLength.Long, "Player is dead!")
@@ -214,8 +219,8 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:GroupIsParked(zone, group)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(group, self.mooseGroup)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(group, self.moose.group)
   
   self:Trace(4, "group: " .. group:GetName())
   
@@ -257,7 +262,7 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:UnitsAreParked(zone, units)
   
-  self:AssertType(zone, self.mooseZone)
+  self:AssertType(zone, self.moose.zone)
 
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -288,8 +293,8 @@ end
 -- @return true If all units within all groups are parked in the zone. 
 function Mission:SpawnGroupsAreParked(zone, spawn)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(spawn, self.mooseSpawn)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(spawn, self.moose.spawn)
   
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -312,8 +317,8 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 function Mission:KeepAliveGroupIfParked(zone, group)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(group, self.mooseGroup)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(group, self.moose.group)
   
   local parked = self:GroupIsParked(zone, group)
   if (parked and not group.keepAliveDone) then
@@ -334,8 +339,8 @@ end
 -- @param #number spawnCount Number of groups in spawner to check.
 function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(spawn, self.mooseSpawn)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(spawn, self.moose.spawn)
   
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
@@ -404,8 +409,8 @@ function Mission:PlaySound(soundType, delay)
   for soundName, v in pairs(Sound) do
     if v == soundType then
       self:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
-      local sound = self.mooseUserSound:New(soundName .. ".ogg")
-      self.mooseScheduler:New(nil, function() sound:ToAll() end, {}, delay)
+      local sound = self.moose.userSound:New(soundName .. ".ogg")
+      self.moose.scheduler:New(nil, function() sound:ToAll() end, {}, delay)
       found = true
     end
   end
@@ -493,18 +498,18 @@ function Mission:FindUnitsByPrefix(prefix, max)
     local name = prefix .. string.format(" #%03d", i)
     self:Trace(4, "Finding unit in Moose: " .. name)
     
-    local unit = self.mooseUnit:FindByName(name)
+    local unit = self.moose.unit:FindByName(name)
     if unit then
       self:Trace(4, "Found unit in Moose: " .. unit:GetName())
     else
       self:Trace(4, "Did not find unit in Moose: " .. name)
       
       self:Trace(4, "Finding unit in DCS: " .. name)
-      local dcsUnit = self.dcsUnit.getByName(name)
+      local dcsUnit = self.dcs.unit.getByName(name)
       if dcsUnit then
         self:Trace(4, "Found unit in DCS, adding to Moose database: " .. name)
-        self.mooseDatabase:AddUnit(name)
-        unit = self.mooseUnit:FindByName(name)
+        self.moose.database:AddUnit(name)
+        unit = self.moose.unit:FindByName(name)
       else
         self:Trace(4, "Did not find unit in DCS: " .. name)
       end
@@ -709,7 +714,7 @@ function Mission:MessageAll(length, message)
   end
   
   self:Assert(duration, "Unknown message length")
-  self.mooseMessage:New(message, duration):ToAll()
+  self.moose.message:New(message, duration):ToAll()
 end
 
 --- 
@@ -727,7 +732,7 @@ end
 -- @param #Mission self
 function Mission:LoadPlayer()
 
-  self.playerGroup = GROUP:FindByName(self._playerGroupName)
+  self.playerGroup = self.moose.group:FindByName(self._playerGroupName)
   
   -- if player didn't use slot on load, assume test mode 
   if self.playerGroup then
