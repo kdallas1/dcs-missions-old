@@ -11,15 +11,6 @@ Mission03 = {
 
   traceLevel = 1,
   
-  --- @field Wrapper.Group#GROUP playerGroup
-  playerGroup = nil,
-  
-  --- @field Core.Spawn#SPAWN transportSpawn
-  transportSpawn = nil,
-  
-  --- @field KD.Spawn#Spawn migsSpawn
-  migsSpawn = nil,
-  
   transportMaxCount = 3, -- easy to run out of fuel with >3
   transportSeparation = 300,
   transportMinLife = 30,

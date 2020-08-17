@@ -36,16 +36,9 @@ end
 -- @param #StateMachine self
 function StateMachine:StateMachine()
 
-  --- @field #table<#State, #boolean> onceStates
   self.onceStates = {}
-  
-  --- @field #table<#State, #function> triggers
   self.triggers = {}
-  
-  --- @field #table<#State, #State> depends
   self.depends = {}
-  
-  --- @field #table<#State, ?> finals
   self.finals = {}
   
 end

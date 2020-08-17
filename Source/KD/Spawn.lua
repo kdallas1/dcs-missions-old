@@ -10,7 +10,6 @@ dofile(baseDir .. "KD/Utilities.lua")
 Spawn = {
   className = "Spawn",
   
-  spawners = nil,
   mission = nil,
   spawnerCount = 3,
   nextSpawner = 1,
@@ -19,18 +18,15 @@ Spawn = {
   spawnVariation = .5,
   spawnStart = 60,
   spawnSeparation = 300,
-  
-  --- @field Core.Spawn#SPAWN mooseSpawn
-  mooseSpawn = SPAWN,
-  
-  --- @field Core.Scheduler#SCHEDULER mooseScheduler
-  mooseScheduler = SCHEDULER
 }
 
 ---
 -- @param #Spawn self
 function Spawn:Spawn()
   self.spawners = {}
+  
+  self.mooseSpawn = SPAWN
+  self.mooseScheduler = SCHEDULER
 end
 
 ---
