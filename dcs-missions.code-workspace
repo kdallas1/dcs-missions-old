@@ -12,14 +12,7 @@
 				"request": "launch",
 				"name": "Debug",
 				"luaVersion": "5.1",
-				"program": "${workspaceFolder}/Horus/Source/Main.lua"
-			},
-			{
-				"type": "lua",
-				"request": "launch",
-				"name": "Debug",
-				"luaVersion": "5.1",
-				"program": "${workspaceFolder}/Source/Main.lua"
+				"program": "${workspaceFolder}/TestMain.lua"
 			}
 		]
 	},
