@@ -95,7 +95,7 @@ function createClass(...)
   end
 
   -- define a new function for returned class
-  function c:New()
+  function c:New(args)
   
     -- new object
     local o = {}
@@ -110,7 +110,7 @@ function createClass(...)
       local ctor = class[class.className]
       
       if ctor then
-        ctor(o)
+        ctor(o, args)
       end
     end
     

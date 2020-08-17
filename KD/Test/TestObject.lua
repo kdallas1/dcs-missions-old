@@ -181,6 +181,27 @@ local function Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNot
   
 end
 
+local function Test_New_ConstructorArgsPassed()
+
+  local gotArg1 = nil
+  local gotArg2 = nil
+
+  local TestChild1 = { className = "TestChild1" }
+  
+  function TestChild1:TestChild1(args)
+    gotArg1 = args[1]
+    gotArg2 = args[2]
+  end
+
+  TestChild1 = createClass(KDObject, TestChild1)
+
+  TestChild1:New({"foo", "bar"})
+
+  TestAssert(gotArg1 == "foo", "Expected ctor arg 1 to be 'foo', but was: " .. gotArg1)
+  TestAssert(gotArg2 == "bar", "Expected ctor arg 2 to be 'bar', but was: " .. gotArg2)
+
+end
+
 function Test_Object()
   return RunTests {
     "Object",
@@ -193,5 +214,6 @@ function Test_Object()
     Test_CreateClass_ClassDeclaredBeforeFunctions_ChildFunctionOverrides,
     Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNotOverride,
     Test_New_ConstructorsCalled,
+    Test_New_ConstructorArgsPassed
   }
 end
