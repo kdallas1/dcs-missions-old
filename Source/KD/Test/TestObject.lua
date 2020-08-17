@@ -62,7 +62,7 @@ end
 local function Test_CreateClass_ArgTypeError()
 
   local TestClass = { className = "TestClass", foo = "test" }
-  ok, result = pcall(function() createClass(TestClass, "foo", TestClass) end)
+  local ok, _ = pcall(function() createClass(TestClass, "foo", TestClass) end)
   
   TestAssert(not ok, "Non-table args for createClass shouldn't work")
   

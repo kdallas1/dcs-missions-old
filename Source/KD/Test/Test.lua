@@ -1,6 +1,7 @@
 testOnly = nil
 
 dofile(baseDir .. "KD/Test/TestObject.lua")
+dofile(baseDir .. "KD/Test/TestUtilities.lua")
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestStateMachine.lua")
 dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
@@ -26,6 +27,7 @@ function Test()
     RunTests {
       "*",
       Test_Object,
+      Test_Utilities,
       Test_Spawn,
       Test_StateMachine,
       Test_MissionEvents,
@@ -83,9 +85,8 @@ function TestAssert(condition, errorString)
   
   if not condition then
     
-    local lineNum = debug.getinfo(2, "S").linedefined
-    local fileName = debug.getinfo(2, "S").source:match("^.+[\\\/](.+)\"?.?$")
-    if not fileName then fileName = "Unknown" end
+    local lineNum = Debug:GetInfo().lineNum
+    local fileName = Debug:GetInfo().fileName
 
     local error = "Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString
     
