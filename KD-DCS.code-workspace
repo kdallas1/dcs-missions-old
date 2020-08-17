@@ -15,5 +15,12 @@
 				"program": "${workspaceFolder}/Source/Main.lua"
 			}
 		]
+	},
+	"settings": {
+		"Lua.diagnostics.disable": [
+			"undefined-global",
+			"emmy-lua",
+			"lowercase-global"
+		]
 	}
 }
