@@ -4,7 +4,11 @@ Based on the [MOOSE library for DCS](https://github.com/FlightControl-Master/MOO
 
 ## Unit tests
 
-Use Eclipse to run [Main.lua](https://github.com/kdallas1/dcs-missions/blob/master/Source/Main.lua). Set `baseDir` to where the `Source` dir is located.
+Use Eclipse to run [Main.lua](https://github.com/kdallas1/dcs-missions/blob/master/Source/Main.lua).
+
+## Use in DCS
+
+Inherit from [Mission.lua](https://github.com/kdallas1/dcs-missions/blob/master/Source/KD/Mission.lua). Examples: [Horus/Source](https://github.com/kdallas1/dcs-missions/tree/master/Horus/Source)
 
 ## Lua IDEs
 
