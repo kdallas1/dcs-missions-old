@@ -47,3 +47,13 @@ function Debug:GetInfo(stackPosition)
   return _debug
 
 end
+
+function Table:Concat(t1, t2)
+  if not t2 then
+    return t1
+  end
+  for i = 1, #t2 do
+      t1[#t1 + i] = t2[i]
+  end
+  return t1
+end
