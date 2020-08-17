@@ -1,6 +1,6 @@
 env = {
-  error = function(s) error(s) end,
-  info = function(s) print(s) end
+  error = function(s) io.stderr:write(s) end,
+  info = print
 }
 
 local function scriptPath()
@@ -13,4 +13,8 @@ baseDir = scriptPath()
 assert(tostring(_VERSION) == "Lua 5.1", "Requires Lua 5.1, but was " .. _VERSION)
 
 dofile(baseDir .. "KD/Test/Test.lua")
-Test()
+dofile(baseDir .. "Horus/Source/Test/Test.lua")
+
+Test {
+  Test_Horus
+}
