@@ -7,6 +7,16 @@ dofile(baseDir .. "KD/Test/TestStateMachine.lua")
 dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
 dofile(baseDir .. "KD/Test/TestMission.lua")
 
+local tests = {
+  "*",
+  Test_Object,
+  Test_Utilities,
+  Test_Spawn,
+  Test_StateMachine,
+  Test_MissionEvents,
+  Test_Mission
+}
+
 testTrace = {
   _traceOn = true,
   _traceLevel = 3,
@@ -18,21 +28,13 @@ local errorCount = 0
 local passCount = 0
 local failCount = 0
 
-function Test()
+function Test(extraTests)
   env.info("Test: Running, Lua " .. _VERSION)
   
   if testOnly then
     RunSingleTest(testOnly, "*", 1)
   else
-    RunTests {
-      "*",
-      Test_Object,
-      Test_Utilities,
-      Test_Spawn,
-      Test_StateMachine,
-      Test_MissionEvents,
-      Test_Mission,
-    }
+    RunTests(Table:Concat(tests, extraTests))
   end
 
   env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))
