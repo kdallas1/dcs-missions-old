@@ -4,26 +4,19 @@ skipMoose = false
 
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 
-local function NewMockMission(moose, dcs)
-  return Mission05:New {
-    --trace = { _traceOn = false },
-    trace = { _traceOn = true, _traceLevel = 4 },
-    moose = moose or MockMoose:New(),
-    dcs = dcs or MockDCS:New()
-  }
-end
-
-local function Test_FriendlyHelosAlive_MissionNotFailed()
+local function NewMock()
+  local mock = {}
 
   local moose = MockMoose:New()
+  mock.moose = moose
 
-  local friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
-  local friendlyHelo2 = moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
+  mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
+  mock.friendlyHelo2 = moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
   
   moose:MockGroup(
     {
       name = "Friendly Helos", 
-      units = { friendlyHelo1, friendlyHelo2 },
+      units = { mock.friendlyHelo1, mock.friendlyHelo2 },
       aliveCount = 2
     }
   )
@@ -38,9 +31,24 @@ local function Test_FriendlyHelosAlive_MissionNotFailed()
   end
 
   local dcs = MockDCS:New()
+  mock.dcs = dcs
+
   dcs.unit.getByName = function() end
 
-  local mission = NewMockMission(moose, dcs)
+  mock.mission = Mission05:New {
+    --trace = { _traceOn = false },
+    trace = { _traceOn = true, _traceLevel = 4 },
+    moose = moose,
+    dcs = dcs
+  }
+
+  return mock
+end
+
+local function Test_FriendlyHelosAlive_MissionNotFailed()
+
+  local mock = NewMock()
+  local mission = mock.mission
 
   mission:Start()
   mission:GameLoop()
