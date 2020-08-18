@@ -17,18 +17,19 @@ local function Test_FriendlyHelosAlive_MissionNotFailed()
 
   local moose = MockMoose:New()
 
-  local friendlyHelo1 = moose:MockUnit("Friendly Helo #001", 10)
-  local friendlyHelo2 = moose:MockUnit("Friendly Helo #002", 10)
+  local friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
+  local friendlyHelo2 = moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
   
-  local friendlyHeloGroup = moose:MockGroup(
-    "Friendly Helos", 
-    { friendlyHelo1, friendlyHelo2 })
-  friendlyHeloGroup.aliveCount = 2
+  moose:MockGroup(
+    {
+      name = "Friendly Helos", 
+      units = { friendlyHelo1, friendlyHelo2 },
+      aliveCount = 2
+    }
+  )
 
-  local enemySamGroup = moose:MockGroup("Enemy SAMs")
-  enemySamGroup.aliveCount = 2
-
-  moose:MockZone("Landing")
+  moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
+  moose:MockZone({ name = "Landing" })
 
   moose.message.New = function()
     return {
