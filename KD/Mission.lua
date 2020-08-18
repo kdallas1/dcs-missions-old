@@ -1,10 +1,8 @@
-if not skipMoose then
-  dofile(baseDir .. "../Moose/Moose.lua")
-end
-
 dofile(baseDir .. "KD/KDObject.lua")
 dofile(baseDir .. "KD/Spawn.lua")
 dofile(baseDir .. "KD/MissionEvents.lua")
+dofile(baseDir .. "KD/Moose.lua")
+dofile(baseDir .. "KD/DCS.lua")
 
 ---
 -- @module KD.Mission
@@ -32,21 +30,6 @@ Mission = {
   messageTimeShort = 20,
   messageTimeLong = 200,
   soundCounter = 1,
-  
-  moose = {
-    scheduler = SCHEDULER,
-    message = MESSAGE,
-    database = _DATABASE,
-    userSound = USERSOUND,
-    unit = UNIT,
-    zone = ZONE,
-    spawn = SPAWN,
-    group = GROUP,
-  },
-
-  dcs = {
-    unit = Unit
-  },
 }
 
 ---
@@ -88,17 +71,31 @@ Mission.State = {
 
 ---
 -- @param #Mission self
-function Mission:Mission()
+function Mission:Mission(args)
   
+  if args.moose then
+    self.moose = args.moose
+  else
+    self.moose = Moose:New()
+  end
+  
+  if args.dcs then
+    self.dcs = args.dcs
+  else
+    self.dcs = DCS:New()
+  end
+
   if self.mooseTrace then  
     BASE:TraceOnOff(true)
     BASE:TraceAll(true)
     BASE:TraceLevel(3)
   end
   
-  self:SetTraceOn(self.traceOn)
-  self:SetTraceLevel(self.traceLevel)
-  self:SetAssert(self.assert)
+  if not args.trace then
+    self:SetTraceOn(self.traceOn)
+    self:SetTraceLevel(self.traceLevel)
+    self:SetAssert(self.assert)
+  end
 
   self.spawners = {}
   self.groups = {}
@@ -506,7 +503,7 @@ function Mission:FindUnitsByPrefix(prefix, max)
       
       self:Trace(4, "Finding unit in DCS: " .. name)
       local dcsUnit = self.dcs.unit.getByName(name)
-      if dcsUnit then
+      if self.dcs.unit then
         self:Trace(4, "Found unit in DCS, adding to Moose database: " .. name)
         self.moose.database:AddUnit(name)
         unit = self.moose.unit:FindByName(name)

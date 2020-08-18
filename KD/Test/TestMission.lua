@@ -3,29 +3,19 @@ dofile(baseDir .. "KD/Mission.lua")
 skipMoose = false
 
 dofile(baseDir .. "KD/Test/MockMoose.lua")
+dofile(baseDir .. "KD/Test/MockDCS.lua")
 
----
--- @module KD.Test.MockMission
-
---- 
--- @type MockMission
--- @extends KD.Mission#Mission
-local MockMission = {
-  className = "MockMission"
-}
-
----
--- @param #self #MockMission
-function MockMission:MockMission()
-  self:SetTraceOn(false)
-  self.moose = MockMoose:New()
+local function NewMockMission()
+  return Mission:New {
+    trace = { _traceOn = false },
+    moose = MockMoose:New(),
+    dcs = MockDCS:New()
+  }
 end
-
-MockMission = createClass(Mission, MockMission)
 
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
 
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local zone = {
     ClassName = mission.moose.zone.ClassName,
@@ -47,7 +37,7 @@ end
 
 local function Test_UnitsAreParked_SomeVehiclesMoving_ReturnsFalse()
 
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   local zone = {
     ClassName = mission.moose.zone.ClassName,
     GetName = function() return "Test" end,
@@ -73,7 +63,7 @@ end
 
 local function Test_UnitsAreParked_SomeNotInZone_ReturnsFalse()
 
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local callCount = 0
   
@@ -106,7 +96,7 @@ local function Test_UnitsAreParked_SomeNotInZone_ReturnsFalse()
 end
 
 local function Test_SpawnGroupsAreParked_AllGroupsParked_ReturnsTrue()
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   function mission:UnitsAreParked() return true end
   
   local zone = {
@@ -135,7 +125,7 @@ local function Test_SpawnGroupsAreParked_AllGroupsParked_ReturnsTrue()
 end
 
 local function Test_SpawnGroupsAreParked_SomeGroupsParked_ReturnsFalse()
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local callCount = 0
   function mission:UnitsAreParked()
@@ -172,7 +162,7 @@ end
 
 local function Test_KeepAliveSpawnGroupsIfParked_GroupIsParked_RespawnedAtAirbase()
   local respawnCalled = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   function mission:UnitsAreParked() return true end
   
   local zone = {
@@ -207,7 +197,7 @@ end
 
 local function Test_KeepAliveSpawnGroupsIfParked_GroupNotParked_NotRespawned()
   local respawnCalled = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   function mission:UnitsAreParked() return false end
   
   local zone = {
@@ -242,7 +232,7 @@ end
 
 local function Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce()
   local explodeCallCount = 0
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local units = {
     {
@@ -274,7 +264,7 @@ end
 
 local function Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct()
   local selfDestructCalled = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local spawn = {
     ClassName = mission.moose.spawn.ClassName,
@@ -306,7 +296,7 @@ end
 
 local function Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
   
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   local spawn = {
     ClassName = mission.moose.spawn.ClassName,
     SpawnCount = 1,
@@ -343,7 +333,7 @@ end
 local function Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase()
   
   local addedToMooseDatabase = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   mission.moose.unit = {
     FindByName = function(self, name)
@@ -374,7 +364,7 @@ end
 local function Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase()
   
   local addedToMooseDatabase = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   mission.moose.unit = {
     FindByName = function() end
@@ -398,7 +388,7 @@ end
 local function Test_Start_OnStartCalled()
   
   local onStartCalled = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   function mission:OnStart()
     onStartCalled = true
   end
@@ -416,7 +406,7 @@ end
 local function Test_GameLoop_OnGameLoop()
   
   local onGameLoopCalled = false
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   function mission:OnGameLoop()
     onGameLoopCalled = true
   end
@@ -430,7 +420,7 @@ local function Test_GameLoop_OnGameLoop()
 end
 
 local function Test_MessageAllLong_MessageSent()
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local sent = false
   function mission.moose.message:New()
@@ -445,7 +435,7 @@ local function Test_MessageAllLong_MessageSent()
 end
 
 local function Test_MessageAllShort_MessageSent()
-  local mission = MockMission:New()
+  local mission = NewMockMission()
   
   local sent = false
   function mission.moose.message:New()

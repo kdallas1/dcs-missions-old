@@ -1,11 +1,13 @@
+skipMoose = true
 dofile(baseDir .. "KD/Moose.lua")
+skipMoose = false
 
 ---
 -- @module KD.Test.MockMoose
 
---- 
+---
 -- @type MockMoose
--- @extends KD.Mission#Mission
+-- @extends KD.Moose#Moose
 MockMoose = {
   className = "MockMoose"
 }
