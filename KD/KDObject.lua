@@ -64,9 +64,16 @@ function createClass(...)
   -- prepare `c' to be the metatable of its instances
   c.__index = c
   
-  if not c.classes then
-    c.classes = {}
+  local classes = {}
+
+  -- shallow copy from existing parent as not to change it's parent class list
+  if c.classes then
+    for i = 1, #c.classes do
+      classes[#classes + 1] = c.classes[i]
+    end
   end
+
+  c.classes = classes
   
   -- save parents
   for i = 1, classList.n do

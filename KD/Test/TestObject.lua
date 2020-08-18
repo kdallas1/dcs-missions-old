@@ -202,6 +202,22 @@ local function Test_New_ConstructorArgsPassed()
 
 end
 
+local function Test_CreateClass_ChildClassDeclaration_ChildCtorNotCalledOnParentNew()
+
+  local TestChild1 = { className = "TestChild1" }
+  function TestChild1:TestChild1() ctor1 = true end
+  TestChild1 = createClass(KDObject, TestChild1)
+
+  local TestChild2 = { className = "TestChild2" }
+  function TestChild2:TestChild2() ctor2 = true end
+  TestChild2 = createClass(TestChild1, TestChild2)
+
+  TestChild1:New()
+
+  TestAssert(ctor1, "Parent ctor should be called")
+  TestAssert(not ctor2, "Child ctor should not be called")
+end
+
 function Test_Object()
   return RunTests {
     "Object",
@@ -213,6 +229,7 @@ function Test_Object()
     Test_CreateClass_CtorCallOrder,
     Test_CreateClass_ClassDeclaredBeforeFunctions_ChildFunctionOverrides,
     Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNotOverride,
+    Test_CreateClass_ChildClassDeclaration_ChildCtorNotCalledOnParentNew,
     Test_New_ConstructorsCalled,
     Test_New_ConstructorArgsPassed
   }
