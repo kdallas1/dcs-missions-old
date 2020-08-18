@@ -81,9 +81,9 @@ function createClass(...)
     -- search for the existing class, and replace if exists.
     -- we're using a list instead of a table to maintain the ctor call order.
     local replaced = false
-    for i = 1, #c.classes do
-      if c.classes[i].className == class.className then
-        c.classes[i] = class
+    for j = 1, #c.classes do
+      if c.classes[j].className == class.className then
+        c.classes[j] = class
         replaced = true
       end
     end
