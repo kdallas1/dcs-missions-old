@@ -96,6 +96,11 @@ function createClass(...)
 
   -- define a new function for returned class
   function c:New(args)
+
+    -- so we don't need to keep checking if args is nil
+    if not args then
+      args = {}
+    end
   
     -- new object
     local o = {}
@@ -120,6 +125,14 @@ function createClass(...)
   
   -- class
   return c
+end
+
+---
+-- @param #KDObject self
+function KDObject:KDObject(args)
+  if args.trace then
+    self:CopyTrace(args.trace)
+  end
 end
 
 --- Turn on trace (logging)

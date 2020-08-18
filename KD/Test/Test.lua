@@ -8,7 +8,7 @@ dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
 dofile(baseDir .. "KD/Test/TestMission.lua")
 
 local tests = {
-  "*",
+  "KD",
   Test_Object,
   Test_Utilities,
   Test_Spawn,
