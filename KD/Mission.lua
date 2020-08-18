@@ -116,7 +116,7 @@ end
 -- @param #Mission self
 function Mission:Start()
   
-  self:Trace(1, "Starting mission, Lua " .. _VERSION)
+  self:Trace(1, "Starting mission, " .. _VERSION)
   
   if self.OnStart then
     self:OnStart()

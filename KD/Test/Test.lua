@@ -29,7 +29,7 @@ local passCount = 0
 local failCount = 0
 
 function Test(extraTests)
-  env.info("Test: Running, Lua " .. _VERSION)
+  env.info("Test: Running, " .. _VERSION)
   
   if testOnly then
     RunSingleTest(testOnly, "*", 1)
