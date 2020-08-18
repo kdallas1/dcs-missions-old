@@ -72,7 +72,7 @@ end
 local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
 
   local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 4 },
+    --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
   local mission = mock.mission
@@ -80,8 +80,6 @@ local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
   mission:Start()
   mission:GameLoop()
 
-  mock.friendlyHelo2.isAlive = false
-  mock.friendlyHelo2.life = 1
   mock.friendlyHeloGroup.aliveCount = 1
 
   mission:GameLoop()
@@ -92,10 +90,32 @@ local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
 
 end
 
+local function Test_AllFriendlyHelosDead_MissionFailed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  local mission = mock.mission
+
+  mission:Start()
+  mission:GameLoop()
+
+  mock.friendlyHeloGroup.aliveCount = 0
+  
+  mission:GameLoop()
+
+  TestAssert(
+    mission.state.current == MissionState.MissionFailed,
+    "Mission state should be failed")
+
+end
+
 function Test_Mission05()
   return RunTests {
     "Mission05",
     Test_FriendlyHelosAlive_MissionNotFailed,
-    Test_OneFriendlyHeloStillAlive_MissionNotFailed
+    Test_OneFriendlyHeloStillAlive_MissionNotFailed,
+    Test_AllFriendlyHelosDead_MissionFailed
   }
 end
