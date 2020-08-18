@@ -14,7 +14,7 @@ Mission04 = {
 
 ---
 -- @type Mission04.State
--- @extends KD.Mission#Mission.State
+-- @extends KD.Mission#MissionState
 Mission04.State = {
   HeloRendezvousDone        = State:NextState(),
   FriendlyHelosLanded       = State:NextState(),
@@ -82,19 +82,19 @@ function Mission04:Mission04()
   )
   
   self.state:TriggerOnceAfter(
-    Mission.State.MissionAccomplished,
+    MissionState.MissionAccomplished,
     Mission04.State.ExtractionComplete,
     function() return self:UnitsAreParked(self.nalchikPark, self.players) end,
     function() self:AnnounceWin(2) end
   )
   
   self.state:ActionOnce(
-    Mission.State.MissionFailed,
+    MissionState.MissionFailed,
     function() self:AnnounceLose(2) end
   )
   
-  self.state:SetFinal(Mission.State.MissionAccomplished)
-  self.state:SetFinal(Mission.State.MissionFailed)
+  self.state:SetFinal(MissionState.MissionAccomplished)
+  self.state:SetFinal(MissionState.MissionFailed)
   
   self:SetupMenu()
   
@@ -158,7 +158,7 @@ function Mission04:OnUnitDead(unit)
     self:Trace(1, "Friendly helo destroyed: " .. unit:GetName())
     self:MessageAll(MessageLength.Long, "Friendly helo destroyed!")
     self:PlaySound(Sound.UnitLost)
-    self.state:Change(Mission.State.MissionFailed)
+    self.state:Change(MissionState.MissionFailed)
     
   end
   
@@ -227,4 +227,4 @@ function Mission04:OnGameLoop()
   
 end
 
-Mission04 = createClass(Mission04, Mission)
+Mission04 = createClass(Mission, Mission04)

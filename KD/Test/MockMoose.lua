@@ -23,6 +23,11 @@ function MockMoose:MockMoose()
   self.scheduler = { ClassName = "MockScheduler" }
   self.userSound = { ClassName = "MockUserSound" }
   self.message = { ClassName = "MockMessage" }
+  self.menu = {
+    ClassName = "MockMenu",
+    coalition = { ClassName = "MockMenuCoalition" },
+    coalitionCommand = { ClassName = "MockMenuCoalitionCommand" }
+  }
 end
 
 MockMoose = createClass(Moose, MockMoose)

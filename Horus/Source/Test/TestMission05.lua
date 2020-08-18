@@ -4,30 +4,24 @@ skipMoose = false
 
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 
----
--- @module KD.Test.MockMission05
-
---- 
--- @type MockMission05
--- @extends KD.Mission#Mission
-local MockMission05 = {
-  className = "MockMission05"
-}
-
----
--- @param #self #MockMission05
-function MockMission05:MockMission05()
-  self:SetTraceOn(false)
+local function NewMockMission(moose, dcs)
+  return Mission05:New {
+    trace = { _traceOn = false },
+    moose = moose or MockMoose:New(),
+    dcs = dcs or MockDCS:New()
+  }
 end
 
-MockMission05 = createClass(Mission05, MockMission05)
-
 local function Test_New()
-  
-  local moose = MockMoose:New()
-  function moose.group:FindByName() end
 
-  local misson = MockMission05:New(moose)
+  local moose = MockMoose:New()
+  moose.group.FindByName = function() return {} end
+  moose.zone.FindByName = function() return {} end
+  moose.menu.coalition.New = function() end
+  moose.menu.coalitionCommand.New = function() end
+
+  NewMockMission(moose)
+
 end
 
 function Test_Mission05()
