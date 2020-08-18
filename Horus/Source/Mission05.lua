@@ -14,7 +14,7 @@ Mission05 = {
 
 ---
 -- @type Mission05.State
--- @extends KD.Mission#Mission.State
+-- @extends KD.Mission#MissionState
 Mission05.State = {
   EnemySamsDestroyed        = State:NextState(),
   FriendlyHeloProceed       = State:NextState(),
@@ -28,9 +28,9 @@ function Mission05:Mission05()
 
   self:LoadPlayer()
   
-  self.friendlyHeloGroup = GROUP:FindByName("Friendly Helos")
-  self.enemySamGroup = GROUP:FindByName("Enemy SAMs")
-  self.landingZone = ZONE:FindByName("Landing")
+  self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
+  self.enemySamGroup = self.moose.group:FindByName("Enemy SAMs")
+  self.landingZone = self.moose.zone:FindByName("Landing")
   
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemySamGroup, "Enemy SAM group not found")
@@ -52,20 +52,20 @@ function Mission05:Mission05()
   )
   
   self.state:TriggerOnceAfter(
-    Mission.State.MissionAccomplished,
+    MissionState.MissionAccomplished,
     Mission05.State.EnemyBaseDestroyed,
     function() return self:UnitsAreParked(self.nalchikPark, self.players) end,
     function() self:AnnounceWin(2) end
   )
   
   self.state:TriggerOnce(
-    Mission.State.MissionFailed,
+    MissionState.MissionFailed,
     function() return (self.friendlyHeloGroup:CountAliveUnits() == 0) end,
     function() self:AnnounceLose(2) end
   )
   
-  self.state:SetFinal(Mission.State.MissionAccomplished)
-  self.state:SetFinal(Mission.State.MissionFailed)
+  self.state:SetFinal(MissionState.MissionAccomplished)
+  self.state:SetFinal(MissionState.MissionFailed)
   
   self:SetupMenu()
   
@@ -118,18 +118,18 @@ end
 -- @param #Mission05 self
 function Mission05:SetupMenu()
 
-  local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
   
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill players", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill players", menu,
     function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
   
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill friendly helos", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill friendly helos", menu,
     function() self:SelfDestructGroup(self.friendlyHeloGroup, 100, 1, 1) end)
   
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill enemy SAMs", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy SAMs", menu,
     function() self:SelfDestructGroup(self.enemySamGroup, 100, 1, 1) end)
     
 end
@@ -169,4 +169,4 @@ function Mission05:OnGameLoop()
   
 end
 
-Mission05 = createClass(Mission05, Mission)
+Mission05 = createClass(Mission, Mission05)

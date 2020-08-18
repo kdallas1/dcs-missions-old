@@ -38,17 +38,17 @@ function Mission03:Mission03()
   self:Assert(self.playerGroup, "Player group is nil")
   
   self.state:ActionOnce(
-    Mission.State.MissionAccomplished,
+    MissionState.MissionAccomplished,
     function() self:AnnounceWin(2) end
   )
   
   self.state:ActionOnce(
-    Mission.State.MissionFailed,
+    MissionState.MissionFailed,
     function() self:AnnounceLose(2) end
   )
   
-  self.state:SetFinal(Mission.State.MissionAccomplished)
-  self.state:SetFinal(Mission.State.MissionFailed)
+  self.state:SetFinal(MissionState.MissionAccomplished)
+  self.state:SetFinal(MissionState.MissionFailed)
   
 end
 
@@ -163,7 +163,7 @@ function Mission03:OnTransportDead(unit)
   MESSAGE:New("Transport destroyed!", self.messageTimeLong):ToAll()
   self:PlaySound(Sound.UnitLost)
   
-  self.state:Change(Mission.State.MissionFailed)
+  self.state:Change(MissionState.MissionFailed)
 end
 
 ---
@@ -224,7 +224,7 @@ function Mission03:OnGameLoop()
   self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
   
   if (everyoneParked) then
-    self.state:Change(Mission.State.MissionAccomplished)
+    self.state:Change(MissionState.MissionAccomplished)
   end
   
   self:KeepAliveSpawnGroupsIfParked(self.nalchikParkZone, self.transportSpawn)

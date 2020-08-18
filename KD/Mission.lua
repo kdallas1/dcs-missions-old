@@ -62,9 +62,9 @@ MessageLength = {
 }
 
 ---
--- @type Mission.State
+-- @type MissionState
 -- @extends KD.State#State
-Mission.State = {
+MissionState = {
   MissionAccomplished       = State:NextState(),
   MissionFailed             = State:NextState()
 }
@@ -205,7 +205,7 @@ function Mission:_OnPlayerDead(unit)
     self:OnPlayerDead(unit)
   end
   
-  self.state:Change(Mission.State.MissionFailed)
+  self.state:Change(MissionState.MissionFailed)
   
 end
 
@@ -741,8 +741,13 @@ function Mission:LoadPlayer()
   
     self.playerGroupName = "Test Squadron"
     self.playerPrefix = "Test"
-    self.playerGroup = GROUP:FindByName(self.playerGroupName)
-    self.playerGroup:Activate()
+    self.playerGroup = self.moose.group:FindByName(self.playerGroupName)
+    
+    if self.playerGroup then
+      self.playerGroup:Activate()
+    else
+      self:Trace(1, "Test group not found")
+    end
     
   end
 end
