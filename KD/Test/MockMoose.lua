@@ -42,62 +42,73 @@ function MockMoose:MockMoose()
 
 end
 
-function MockMoose:Mock(className, fields)
+function MockMoose:Mock(className, fields1, fields2)
   local mock = {
     ClassName =  className,
     New = function() end
   }
-  if fields then
-    for k, v in pairs(fields) do
+  if fields1 then
+    for k, v in pairs(fields1) do
+      mock[k] = v
+    end
+  end
+  if fields2 then
+    for k, v in pairs(fields2) do
       mock[k] = v
     end
   end
   return mock
 end
 
-function MockMoose:MockUnit(name, life)
-  local unit = {
-    ClassName = self.unit.ClassName,
+function MockMoose:MockUnit(fields)
+  local unit = self:Mock(
+    self.unit.ClassName,
+    {
+      name = "Mock",
+      life = 0,
 
-    name = name,
-    life = life,
-
-    GetName = function(self) return self.name end,
-    GetLife = function(self) return self.life end,
-    GetVelocityKNOTS = function() return 0 end,
-    GetVec3 = function() end,
-    IsAlive = function() return true end,
-  }
-  self.data.units[name] = unit
+      GetName = function(self) return self.name end,
+      GetLife = function(self) return self.life end,
+      GetVelocityKNOTS = function() return 0 end,
+      GetVec3 = function() end,
+      IsAlive = function() return true end,
+    },
+    fields
+  )
+  self.data.units[unit.name] = unit
   return unit
 end
 
-function MockMoose:MockGroup(name, units)
-  local group = {
-    ClassName = self.group.ClassName,
+function MockMoose:MockGroup(fields)
+  local group = self:Mock(
+    self.group.ClassName,
+    {
+      name = "Mock",
+      units = {},
+      aliveCount = 0,
 
-    name = name,
-    units = units,
-    aliveCount = 0,
-
-    GetName = function(self) return self.name end,
-    GetUnits = function(self) return self.units end,
-    CountAliveUnits = function(self) return self.aliveCount end,
-  }
-  self.data.groups[name] = group
+      GetName = function(self) return self.name end,
+      GetUnits = function(self) return self.units end,
+      CountAliveUnits = function(self) return self.aliveCount end,
+    },
+    fields
+  )
+  self.data.groups[group.name] = group
   return group
 end
 
-function MockMoose:MockZone(name)
-  local zone = {
-    ClassName = self.zone.ClassName,
+function MockMoose:MockZone(fields)
+  local zone = self:Mock(
+    self.zone.ClassName,
+    {
+      name = "Mock",
 
-    name = name,
-
-    GetName = function(self) return self.name end,
-    IsVec3InZone = function() end
-  }
-  self.data.zones[name] = zone
+      GetName = function(self) return self.name end,
+      IsVec3InZone = function() end
+    },
+    fields
+  )
+  self.data.zones[zone.name] = zone
   return zone
 end
 
