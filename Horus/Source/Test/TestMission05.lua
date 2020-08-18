@@ -4,7 +4,7 @@ skipMoose = false
 
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 
-local function NewMock()
+local function NewMock(fields)
   local mock = {}
 
   local moose = MockMoose:New()
@@ -13,7 +13,7 @@ local function NewMock()
   mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
   mock.friendlyHelo2 = moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
   
-  moose:MockGroup(
+  mock.friendlyHeloGroup = moose:MockGroup(
     {
       name = "Friendly Helos", 
       units = { mock.friendlyHelo1, mock.friendlyHelo2 },
@@ -35,19 +35,29 @@ local function NewMock()
 
   dcs.unit.getByName = function() end
 
-  mock.mission = Mission05:New {
-    --trace = { _traceOn = false },
-    trace = { _traceOn = true, _traceLevel = 4 },
+  local args = {
+    trace = { _traceOn = false },
     moose = moose,
     dcs = dcs
   }
+
+  if fields then
+    for k, v in pairs(fields) do
+      args[k] = v
+    end
+  end
+
+  mock.mission = Mission05:New(args)
 
   return mock
 end
 
 local function Test_FriendlyHelosAlive_MissionNotFailed()
 
-  local mock = NewMock()
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
   local mission = mock.mission
 
   mission:Start()
@@ -59,9 +69,33 @@ local function Test_FriendlyHelosAlive_MissionNotFailed()
 
 end
 
+local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
+
+  local mock = NewMock({
+    trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  local mission = mock.mission
+
+  mission:Start()
+  mission:GameLoop()
+
+  mock.friendlyHelo2.isAlive = false
+  mock.friendlyHelo2.life = 1
+  mock.friendlyHeloGroup.aliveCount = 1
+
+  mission:GameLoop()
+
+  TestAssert(
+    mission.state.current ~= MissionState.MissionFailed,
+    "Mission state should not be failed")
+
+end
+
 function Test_Mission05()
   return RunTests {
     "Mission05",
-    Test_FriendlyHelosAlive_MissionNotFailed
+    Test_FriendlyHelosAlive_MissionNotFailed,
+    Test_OneFriendlyHeloStillAlive_MissionNotFailed
   }
 end

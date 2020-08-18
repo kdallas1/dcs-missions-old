@@ -66,12 +66,13 @@ function MockMoose:MockUnit(fields)
     {
       name = "Mock",
       life = 0,
+      isAlive = true,
 
       GetName = function(self) return self.name end,
       GetLife = function(self) return self.life end,
       GetVelocityKNOTS = function() return 0 end,
       GetVec3 = function() end,
-      IsAlive = function() return true end,
+      IsAlive = function() return self.isAlive end,
     },
     fields
   )
