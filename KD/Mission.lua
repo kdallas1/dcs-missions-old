@@ -503,7 +503,7 @@ function Mission:FindUnitsByPrefix(prefix, max)
       
       self:Trace(4, "Finding unit in DCS: " .. name)
       local dcsUnit = self.dcs.unit.getByName(name)
-      if self.dcs.unit then
+      if dcsUnit then
         self:Trace(4, "Found unit in DCS, adding to Moose database: " .. name)
         self.moose.database:AddUnit(name)
         unit = self.moose.unit:FindByName(name)
