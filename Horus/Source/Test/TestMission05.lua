@@ -62,7 +62,6 @@ local function Test_FriendlyHelosAlive_MissionNotFailed()
   local mission = mock.mission
 
   mission:Start()
-  mission:GameLoop()
 
   TestAssert(
     mission.state.current ~= MissionState.MissionFailed,
@@ -79,7 +78,6 @@ local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
   local mission = mock.mission
 
   mission:Start()
-  mission:GameLoop()
 
   mock.friendlyHeloGroup.aliveCount = 1
 
@@ -100,7 +98,6 @@ local function Test_AllFriendlyHelosDead_MissionFailed()
   local mission = mock.mission
 
   mission:Start()
-  mission:GameLoop()
 
   mock.friendlyHeloGroup.aliveCount = 0
   
@@ -121,7 +118,6 @@ local function Test_FriendlyHelosLanded_C4Explodes()
   local mission = mock.mission
 
   mission:Start()
-  mission:GameLoop()
 
   mock.landingZone.IsVec3InZone = function() return true end
 
