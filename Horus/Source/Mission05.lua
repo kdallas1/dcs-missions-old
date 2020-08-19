@@ -150,9 +150,10 @@ function Mission05:ExplodeC4(delay)
   self:MessageAll(MessageLength.Short, "[Commandos] Light 'er up!")
   for i = 1, 40 do
     local name = string.format("C4 #%03d", i)
-    local c4 = STATIC:FindByName(name)
+    local c4 = self.moose.static:FindByName(name)
     if c4 then
-      SCHEDULER:New(nil, function() c4:GetCoordinate():Explosion(100) end, {}, delay + math.random(1, 20))
+      self.moose.scheduler:New(
+        nil, function() c4:GetCoordinate():Explosion(100) end, {}, delay + math.random(1, 20))
     end
   end
   

@@ -21,12 +21,22 @@ local function NewMock(fields)
     }
   )
 
-  moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
-  moose:MockZone({ name = "Landing" })
+  mock.enemySams = moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
+  mock.landingZone = moose:MockZone({ name = "Landing" })
 
-  moose.message.New = function()
+  mock.c4 = {}
+  mock.c4[1] = moose:MockStatic({ name = "C4 #001" })
+  mock.c4[2] = moose:MockStatic({ name = "C4 #002" })
+
+  mock.c4[1].GetCoordinate = function() 
     return {
-      ToAll = function() end
+      Explosion = function() mock.c4[1].exploded = true end 
+    }
+  end
+
+  mock.c4[2].GetCoordinate = function() 
+    return {
+      Explosion = function() mock.c4[2].exploded = true end 
     }
   end
 
@@ -111,11 +121,32 @@ local function Test_AllFriendlyHelosDead_MissionFailed()
 
 end
 
+local function Test_FriendlyHelosLanded_C4Explodes()
+
+  local mock = NewMock({
+    trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  local mission = mock.mission
+
+  mission:Start()
+  mission:GameLoop()
+
+  mock.landingZone.IsVec3InZone = function() return true end
+  
+  mission:GameLoop()
+
+  TestAssert(mock.c4[1].exploded, "First C4 should have exploded")
+  TestAssert(mock.c4[2].exploded, "Second C4 should have exploded")
+
+end
+
 function Test_Mission05()
   return RunTests {
     "Mission05",
     Test_FriendlyHelosAlive_MissionNotFailed,
     Test_OneFriendlyHeloStillAlive_MissionNotFailed,
-    Test_AllFriendlyHelosDead_MissionFailed
+    Test_AllFriendlyHelosDead_MissionFailed,
+    Test_FriendlyHelosLanded_C4Explodes,
   }
 end

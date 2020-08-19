@@ -407,8 +407,10 @@ function Mission:PlaySound(soundType, delay)
     if v == soundType then
       self:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
       local sound = self.moose.userSound:New(soundName .. ".ogg")
-      self.moose.scheduler:New(nil, function() sound:ToAll() end, {}, delay)
-      found = true
+      if sound then
+        self.moose.scheduler:New(nil, function() sound:ToAll() end, {}, delay)
+        found = true
+      end
     end
   end
   

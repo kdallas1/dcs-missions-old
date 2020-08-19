@@ -393,9 +393,7 @@ local function Test_Start_OnStartCalled()
     onStartCalled = true
   end
   
-  function mission.moose.scheduler:New() end
-  function mission.moose.userSound:New() end
-  function mission.moose.unit:FindByName() end
+  function mission:FindUnitsByPrefix() return {} end
   
   mission:Start()
   

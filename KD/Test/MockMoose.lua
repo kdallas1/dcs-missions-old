@@ -21,28 +21,51 @@ function MockMoose:MockMoose()
   self.data = {
     groups = {},
     units = {},
-    zones = {}
+    zones = {},
+    statics = {}
   }
 
-  self.spawn = self:Mock("MockSpawn")
-  self.group = self:Mock("MockGroup", { data = self.data })
-  self.unit = self:Mock("MockUnit", { data = self.data })
-  self.zone = self:Mock("MockZone", { data = self.data })
-  self.scheduler = self:Mock("MockScheduler")
-  self.userSound = self:Mock("MockUserSound")
-  self.message = self:Mock("MockMessage")
-  self.menu = self:Mock("MockMenu", {
-    coalition = self:Mock("MockMenuCoalition"),
-    coalitionCommand = self:Mock("MockMenuCoalitionCommand")
+  self.spawn = self:MockObject("MockSpawn")
+  self.group = self:MockObject("MockGroup", { data = self.data })
+  self.unit = self:MockObject("MockUnit", { data = self.data })
+  self.zone = self:MockObject("MockZone", { data = self.data })
+  self.static = self:MockObject("MockStatic", { data = self.data })
+  self.scheduler = self:MockObject("MockScheduler")
+  self.userSound = self:MockObject("MockUserSound")
+  self.message = self:MockObject("MockMessage")
+  self.menu = self:MockObject("MockMenu", {
+    coalition = self:MockObject("MockMenuCoalition"),
+    coalitionCommand = self:MockObject("MockMenuCoalitionCommand")
   })
 
   self.group.FindByName = function(self, name) return self.data.groups[name] end
   self.unit.FindByName = function(self, name) return self.data.units[name] end
   self.zone.FindByName = function(self, name) return self.data.zones[name] end
+  self.static.FindByName = function(self, name) return self.data.statics[name] end
+
+  -- run scheduled function immediately by default
+  self.scheduler.run = true
+  self.scheduler.New = function(self, object, function_, args, start)
+    if self.run then
+      function_()
+    end
+  end
+
+  self.message.New = function()
+    return {
+      ToAll = function() end
+    }
+  end
+
+  self.userSound.New = function()
+    return {
+      ToAll = function() end
+    }
+  end
 
 end
 
-function MockMoose:Mock(className, fields1, fields2)
+function MockMoose:MockObject(className, fields1, fields2)
   local mock = {
     ClassName =  className,
     New = function() end
@@ -61,10 +84,10 @@ function MockMoose:Mock(className, fields1, fields2)
 end
 
 function MockMoose:MockUnit(fields)
-  local unit = self:Mock(
+  local unit = self:MockObject(
     self.unit.ClassName,
     {
-      name = "Mock",
+      name = "Mock Unit",
       life = 0,
       isAlive = true,
 
@@ -81,10 +104,10 @@ function MockMoose:MockUnit(fields)
 end
 
 function MockMoose:MockGroup(fields)
-  local group = self:Mock(
+  local group = self:MockObject(
     self.group.ClassName,
     {
-      name = "Mock",
+      name = "Mock Group",
       units = {},
       aliveCount = 0,
 
@@ -99,10 +122,10 @@ function MockMoose:MockGroup(fields)
 end
 
 function MockMoose:MockZone(fields)
-  local zone = self:Mock(
+  local zone = self:MockObject(
     self.zone.ClassName,
     {
-      name = "Mock",
+      name = "Mock Zone",
 
       GetName = function(self) return self.name end,
       IsVec3InZone = function() end
@@ -111,6 +134,21 @@ function MockMoose:MockZone(fields)
   )
   self.data.zones[zone.name] = zone
   return zone
+end
+
+function MockMoose:MockStatic(fields)
+  local static = self:MockObject(
+    self.static.ClassName,
+    {
+      name = "Mock Static",
+
+      GetName = function(self) return self.name end,
+      IsVec3InZone = function() end
+    },
+    fields
+  )
+  self.data.statics[static.name] = static
+  return static
 end
 
 MockMoose = createClass(Moose, MockMoose)
