@@ -38,7 +38,7 @@ function MockMoose:MockMoose()
 
   self.group.FindByName = function(self, name) return self.data.groups[name] end
   self.unit.FindByName = function(self, name) return self.data.units[name] end
-  self.zone.FindByName = function(self, name) return self.data.zones[name] end
+  self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
 
   -- run scheduled function immediately by default
