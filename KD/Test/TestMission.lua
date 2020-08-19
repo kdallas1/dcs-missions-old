@@ -6,9 +6,10 @@ dofile(baseDir .. "KD/Test/MockMoose.lua")
 dofile(baseDir .. "KD/Test/MockDCS.lua")
 
 local function NewMockMission()
+  local trace = false
   return Mission:New {
-    trace = { _traceOn = false },
-    moose = MockMoose:New(),
+    trace = { _traceOn = trace },
+    moose = MockMoose:New({ trace = trace }),
     dcs = MockDCS:New()
   }
 end

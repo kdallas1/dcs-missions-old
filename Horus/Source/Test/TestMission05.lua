@@ -10,7 +10,7 @@ local function NewMock(fields)
 
   local mock = {}
 
-  local moose = MockMoose:New(trace)
+  local moose = MockMoose:New({ trace = trace })
   mock.moose = moose
 
   mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })

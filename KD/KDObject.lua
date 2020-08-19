@@ -104,8 +104,11 @@ function createClass(...)
   -- define a new function for returned class
   function c:New(args)
 
-    -- so we don't need to keep checking if args is nil
-    if not args then
+    if args then
+      -- it's easy to forget as it's not very intuitive (maybe we should switch to .../arg)
+      assert(type(args) == "table", "Constructor args must be a table, but was " .. type(args))
+    else
+      -- so we don't need to keep checking if args is nil
       args = {}
     end
   
