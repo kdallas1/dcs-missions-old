@@ -227,8 +227,8 @@ function KDObject:AssertType(object, _type)
     return
   end
   
-  self:Assert(object, "Cannot check type, object is nil", 1)
-  self:Assert(_type, "Cannot check type, _type is nil", 1)
+  self:Assert(object ~= nil, "Cannot check type, object is nil", 1)
+  self:Assert(_type ~= nil, "Cannot check type, _type is nil", 1)
   
   if (type(_type) == "string") then
     self:Assert(type(object) == _type,
