@@ -11,7 +11,8 @@ Mission05 = {
 
   traceLevel = 2,
   c4MaxCount = 40,
-  c4ExplodeDelay = 60
+  c4ExplodeDelay = 60,
+  c4MaxTime = 40
 }
 
 ---
@@ -19,16 +20,19 @@ Mission05 = {
 -- @extends KD.Mission#MissionState
 Mission05.State = {
   EnemySamsDestroyed        = State:NextState(),
-  FriendlyHeloProceed       = State:NextState(),
-  FriendlyHeloLanded        = State:NextState(),
+  FriendlyHelosAdvancing    = State:NextState(),
+  FriendlyHelosLanded       = State:NextState(),
   EnemyBaseDestroyed        = State:NextState(),
+  EnemyAaaDestroyed         = State:NextState(),
+  FriendlyHelosEscaped      = State:NextState(),
 }
 
 ---
 -- @type Mission05.Flags
 Mission05.Flags = {
   FriendlyHelosAdvance      = 10,
-  TestPlayerRTB             = 11
+  FriendlyHelosRTB          = 11,
+  TestPlayerRTB             = 12
 }
 
 ---
@@ -39,14 +43,25 @@ function Mission05:Mission05()
   
   self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
   self.enemySamGroup = self.moose.group:FindByName("Enemy SAMs")
+  self.enemyAAAGroup1 = self.moose.group:FindByName("Enemy AAA #001")
+  self.enemyAAAGroup2 = self.moose.group:FindByName("Enemy AAA #002")
+  self.enemyAAAGroup3 = self.moose.group:FindByName("Enemy AAA #003")
   self.landingZone = self.moose.zone:FindByName("Landing")
+  self.beslanZone = self.moose.zone:FindByName("Beslan")
   
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemySamGroup, "Enemy SAM group not found")
+  self:Assert(self.enemyAAAGroup1, "Enemy AAA group 1 not found")
+  self:Assert(self.enemyAAAGroup2, "Enemy AAA group 2 not found")
+  self:Assert(self.enemyAAAGroup3, "Enemy AAA group 3 not found")
   self:Assert(self.landingZone, "Landing zone not found")
+  self:Assert(self.beslanZone, "Beslan zone not found")
   
   self:AddGroup(self.friendlyHeloGroup)
   self:AddGroup(self.enemySamGroup)
+  self:AddGroup(self.enemyAAAGroup1)
+  self:AddGroup(self.enemyAAAGroup2)
+  self:AddGroup(self.enemyAAAGroup3)
   
   self.state:TriggerOnce(
     Mission05.State.EnemySamsDestroyed,
@@ -55,14 +70,33 @@ function Mission05:Mission05()
   )
   
   self.state:TriggerOnce(
-    Mission05.State.FriendlyHeloLanded,
+    Mission05.State.FriendlyHelosLanded,
     function() return self:GroupIsParked(self.landingZone, self.friendlyHeloGroup) end,
-    function() self:OnFriendlyHeloLanded() end
+    function() self:OnFriendlyHelosLanded() end
+  )
+  
+  self.state:ActionOnce(
+    Mission05.State.EnemyBaseDestroyed,
+    function() self:OnEnemyBaseDestroyed() end
+  )
+
+  self.state:TriggerOnceAfter(
+    Mission05.State.EnemyAaaDestroyed,
+    Mission05.State.EnemyBaseDestroyed,
+    function() return self:IsEnemyAaaDestroyed() end,
+    function() self:OnEnemyAaaDestroyed() end
+  )
+
+  self.state:TriggerOnceAfter(
+    Mission05.State.FriendlyHelosEscaped,
+    Mission05.State.EnemyAaaDestroyed,
+    function() return self.friendlyHeloGroup:IsNotInZone(self.beslanZone) end,
+    function() self:OnFriendlyHelosEscaped() end
   )
   
   self.state:TriggerOnceAfter(
     MissionState.MissionAccomplished,
-    Mission05.State.EnemyBaseDestroyed,
+    Mission05.State.FriendlyHelosEscaped,
     function() return self:UnitsAreParked(self.nalchikPark, self.players) end,
     function() self:AnnounceWin(2) end
   )
@@ -77,6 +111,35 @@ function Mission05:Mission05()
   self.state:SetFinal(MissionState.MissionFailed)
   
   self:SetupMenu()
+  
+end
+
+---
+-- @param #Mission05 self
+function Mission05:SetupMenu()
+
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill players", menu,
+    function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill friendly helos", menu,
+    function() self:SelfDestructGroup(self.friendlyHeloGroup, 100, 1, 1) end)
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy SAMs", menu,
+    function() self:SelfDestructGroup(self.enemySamGroup, 100, 1, 1) end)
+    
+end
+
+---
+-- @param #Mission05 self
+function Mission05:OnGameLoop()
+  
+  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
+  self:SelfDestructDamagedUnitsInList(self.enemySamGroup:GetUnits(), 2)
   
 end
 
@@ -119,30 +182,11 @@ end
 
 ---
 -- @param #Mission05 self
-function Mission05:OnFriendlyHeloLanded()
+function Mission05:OnFriendlyHelosLanded()
   
-  self:ExplodeC4(self.c4ExplodeDelay)
+  self:MessageAll(MessageLength.Short, "Friendly helos have landed outside Beslan airbase.")
+  self:ScheduleExplodeC4(self.c4ExplodeDelay)
   
-end
-
----
--- @param #Mission05 self
-function Mission05:SetupMenu()
-
-  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
-  
-  self.moose.menu.coalitionCommand:New(
-    self.dcs.coalition.side.BLUE, "Kill players", menu,
-    function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
-  
-  self.moose.menu.coalitionCommand:New(
-    self.dcs.coalition.side.BLUE, "Kill friendly helos", menu,
-    function() self:SelfDestructGroup(self.friendlyHeloGroup, 100, 1, 1) end)
-  
-  self.moose.menu.coalitionCommand:New(
-    self.dcs.coalition.side.BLUE, "Kill enemy SAMs", menu,
-    function() self:SelfDestructGroup(self.enemySamGroup, 100, 1, 1) end)
-    
 end
 
 ---
@@ -156,9 +200,8 @@ end
 
 ---
 -- @param #Mission05 self
-function Mission05:ExplodeC4(delay)
+function Mission05:ScheduleExplodeC4(delay)
   
-  self:MessageAll(MessageLength.Short, "Friendly helos have landed outside Beslan airbase.")
   self:MessageAll(MessageLength.Short, "[Commandos] Planting C4. Detonating in T-" .. delay .. " seconds.")
 
   self:Trace(1, "Exploding C4, delay: " .. delay)
@@ -174,21 +217,47 @@ function Mission05:ExplodeC4(delay)
     local c4 = self.moose.static:FindByName(name)
     if c4 then
       self.moose.scheduler:New(
-        nil, function() c4:GetCoordinate():Explosion(100) end, {}, delay + math.random(1, 20))
+        nil, function() c4:GetCoordinate():Explosion(100) end, {}, delay + math.random(1, self.c4MaxTime))
     end
   end
-  
-  self.state:Change(Mission05.State.EnemyBaseDestroyed)
+
+  self.moose.scheduler:New(
+    nil, function()
+      self.state:Change(Mission05.State.EnemyBaseDestroyed)
+    end, {}, delay + self.c4MaxTime)
   
 end
 
----
--- @param #Mission05 self
-function Mission05:OnGameLoop()
-  
-  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
-  self:SelfDestructDamagedUnitsInList(self.enemySamGroup:GetUnits(), 2)
-  
+function Mission05:OnEnemyBaseDestroyed()
+
+  self:MessageAll(MessageLength.Short, "Enemy base destroyed.")
+  self:MessageAll(MessageLength.Short, "Enemy AAAs have been deployed, destroy them to ensure our helos can escape.")
+
+  self.enemyAAAGroup1:Activate()
+  self.enemyAAAGroup2:Activate()
+  self.enemyAAAGroup3:Activate()
+
+end
+
+function Mission05:IsEnemyAaaDestroyed()
+  local aaa1 = self.enemyAAAGroup1:CountAliveUnits()
+  local aaa2 = self.enemyAAAGroup2:CountAliveUnits()
+  local aaa3 = self.enemyAAAGroup3:CountAliveUnits()
+  return (aaa1 + aaa2 + aaa3) == 0
+end
+
+function Mission05:OnEnemyAaaDestroyed()
+
+  self:MessageAll(MessageLength.Short, "Enemy AAA destroyed.")
+  self:MessageAll(MessageLength.Short, "Friendly helos are leaving the extraction zone.")
+  self:SetFlag(Mission05.Flags.FriendlyHelosRTB, true)
+
+end
+
+function Mission05:OnFriendlyHelosEscaped()
+
+  self:MessageAll(MessageLength.Short, "Friendly helos have escape and are RTB.")
+
 end
 
 Mission05 = createClass(Mission, Mission05)
