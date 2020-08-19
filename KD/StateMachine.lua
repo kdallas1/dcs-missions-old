@@ -131,12 +131,21 @@ function StateMachine:CheckTriggers()
         canTrigger = (self.current == dependsOnState)
       end
       
-      if (canTrigger and trigger()) then
-        
-        local changed = self:Change(state)
-        if not changed then
-          self:Trace(3, "Change could not be triggered, state=" .. state)
+      if canTrigger then
+
+        local triggerResult = trigger()
+        self:Assert(triggerResult ~= nil, "Trigger return value must not be nil")
+        self:AssertType(triggerResult, "boolean")
+
+        if triggerResult then
+
+          local changed = self:Change(state)
+          if not changed then
+            self:Trace(3, "Change could not be triggered, state=" .. state)
+          end
+
         end
+
       end
       
     end
