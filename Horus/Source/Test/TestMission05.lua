@@ -159,7 +159,7 @@ local function Test_OnSamsDestroyed_HelosProceedFlagSet()
 
 end
 
-local function Test_FriendlyHelosLanded_C4Explodes()
+local function Test_FriendlyHelosLanded_C4ExplodesAndStateIsBaseDestroyed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
@@ -187,10 +187,14 @@ local function Test_FriendlyHelosLanded_C4Explodes()
 
   TestAssert(mock.c4[1].exploded, "First C4 should have exploded")
   TestAssert(mock.c4[2].exploded, "Second C4 should have exploded")
+  TestAssert(
+    mock.mission.state.current == Mission05.State.EnemyBaseDestroyed,
+    "State should be: Enemy base destroyed"
+  )
 
 end
 
-local function Test_C4Exploded_EnemyAAAActivates()
+local function Test_EnemyBaseDestroyed_EnemyAaaActivates()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
@@ -200,11 +204,11 @@ local function Test_C4Exploded_EnemyAAAActivates()
 
   mission:Start()
 
-  mock.landingZone.IsVec3InZone = function() return true end
-
   mock.enemyAAA1.Activate = function() aaa1 = true end
   mock.enemyAAA2.Activate = function() aaa2 = true end
   mock.enemyAAA3.Activate = function() aaa3 = true end
+
+  mock.mission.state:Change(Mission05.State.EnemyBaseDestroyed)
 
   mission:GameLoop()
 
@@ -299,8 +303,8 @@ function Test_Mission05()
     Test_OneFriendlyHeloStillAlive_MissionNotFailed,
     Test_AllFriendlyHelosDead_MissionFailed,
     Test_OnSamsDestroyed_HelosProceedFlagSet,
-    Test_FriendlyHelosLanded_C4Explodes,
-    Test_C4Exploded_EnemyAAAActivates,
+    Test_FriendlyHelosLanded_C4ExplodesAndStateIsBaseDestroyed,
+    Test_EnemyBaseDestroyed_EnemyAaaActivates,
     Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed,
     Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState,
     Test_FriendlyHelosEscapedAndPlayersRTB_MissionAccomplished
