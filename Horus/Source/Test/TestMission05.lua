@@ -23,6 +23,8 @@ local function NewMock(fields)
   )
 
   mock.enemySams = moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
+
+  mock.nalchikParkZone = moose:MockZone({ name = "Nalchik Park" })
   mock.landingZone = moose:MockZone({ name = "Landing" })
   mock.beslanZone = moose:MockZone({ name = "Beslan" })
 
@@ -212,7 +214,7 @@ local function Test_C4Exploded_EnemyAAAActivates()
 
 end
 
-local function Test_EnemyAAADead_FriendlyHelosBeginEscape()
+local function Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
@@ -237,15 +239,56 @@ local function Test_EnemyAAADead_FriendlyHelosBeginEscape()
 
   mock.mission:GameLoop()
 
-  TestAssert(mock.mission.state.current == Mission05.State.EnemyAaaDestroyed, "State should be AAA destroyed")
-  TestAssert(flagSet == Mission05.Flags.FriendlyHelosRTB, "Friendly helos flag should be RTB")
+  TestAssert(
+    mock.mission.state.current == Mission05.State.EnemyAaaDestroyed, 
+    "State should be: Enemy AAA destroyed")
+
+  TestAssert(
+    flagSet == Mission05.Flags.FriendlyHelosRTB,
+    "Flag should be: Friendly helos RTB")
+
   TestAssert(flagValue, "Flag should be true")
 
 end
 
---testOnly = Test_EnemyAAADead_FriendlyHelosBeginEscape
+local function Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission05.State.EnemyAaaDestroyed
+  mock.friendlyHeloGroup.IsNotInZone = function() return true end
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == Mission05.State.FriendlyHelosEscaped,
+    "State should be: Friendly helos escaped")
+
+end
 
 local function Test_FriendlyHelosEscapedAndPlayersRTB_MissionAccomplished()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission05.State.FriendlyHelosEscaped
+  mock.mission.UnitsAreParked = function(self, zone, units)
+    return (zone == mock.nalchikParkZone)
+  end
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == MissionState.MissionAccomplished,
+    "State should be: Mission accomplished")
+
 end
 
 function Test_Mission05()
@@ -258,7 +301,8 @@ function Test_Mission05()
     Test_OnSamsDestroyed_HelosProceedFlagSet,
     Test_FriendlyHelosLanded_C4Explodes,
     Test_C4Exploded_EnemyAAAActivates,
-    Test_EnemyAAADead_FriendlyHelosBeginEscape,
+    Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed,
+    Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState,
     Test_FriendlyHelosEscapedAndPlayersRTB_MissionAccomplished
   }
 end

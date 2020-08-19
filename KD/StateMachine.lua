@@ -98,7 +98,10 @@ function StateMachine:Change(state)
     
   if (self.onceStates[state] ~= nil) then
     if (self.onceStates[state] == false) then
+
+      self:Trace(3, "Current state changed to: " .. state)
       self.current = state
+      
       self:FireEvent(state)
       self.onceStates[state] = true
       

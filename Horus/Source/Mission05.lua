@@ -46,17 +46,20 @@ function Mission05:Mission05()
   self.enemyAAAGroup1 = self.moose.group:FindByName("Enemy AAA #001")
   self.enemyAAAGroup2 = self.moose.group:FindByName("Enemy AAA #002")
   self.enemyAAAGroup3 = self.moose.group:FindByName("Enemy AAA #003")
-  self.landingZone = self.moose.zone:FindByName("Landing")
-  self.beslanZone = self.moose.zone:FindByName("Beslan")
+  self.nalchikParkZone = self.moose.zone:New("Nalchik Park")
+  self.landingZone = self.moose.zone:New("Landing")
+  self.beslanZone = self.moose.zone:New("Beslan")
   
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemySamGroup, "Enemy SAM group not found")
   self:Assert(self.enemyAAAGroup1, "Enemy AAA group 1 not found")
   self:Assert(self.enemyAAAGroup2, "Enemy AAA group 2 not found")
   self:Assert(self.enemyAAAGroup3, "Enemy AAA group 3 not found")
+  self:Assert(self.nalchikParkZone, "Nalchik park zone not found")
   self:Assert(self.landingZone, "Landing zone not found")
   self:Assert(self.beslanZone, "Beslan zone not found")
   
+  self:AddGroup(self.nalchikPark)
   self:AddGroup(self.friendlyHeloGroup)
   self:AddGroup(self.enemySamGroup)
   self:AddGroup(self.enemyAAAGroup1)
@@ -97,7 +100,7 @@ function Mission05:Mission05()
   self.state:TriggerOnceAfter(
     MissionState.MissionAccomplished,
     Mission05.State.FriendlyHelosEscaped,
-    function() return self:UnitsAreParked(self.nalchikPark, self.players) end,
+    function() return self:UnitsAreParked(self.nalchikParkZone, self.players) end,
     function() self:AnnounceWin(2) end
   )
   
