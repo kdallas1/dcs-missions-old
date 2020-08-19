@@ -9,7 +9,9 @@ dofile(baseDir .. "KD/Mission.lua")
 Mission05 = {
   className = "Mission05",
 
-  traceLevel = 2
+  traceLevel = 2,
+  c4MaxCount = 40,
+  c4ExplodeDelay = 60
 }
 
 ---
@@ -109,8 +111,7 @@ end
 -- @param #Mission05 self
 function Mission05:OnFriendlyHeloLanded()
   
-  self:MessageAll(MessageLength.Short, "Friendly helos have landed, planting C4")
-  self:ExplodeC4(1)
+  self:ExplodeC4(self.c4ExplodeDelay)
   
 end
 
@@ -147,8 +148,18 @@ end
 -- @param #Mission05 self
 function Mission05:ExplodeC4(delay)
   
-  self:MessageAll(MessageLength.Short, "[Commandos] Light 'er up!")
-  for i = 1, 40 do
+  self:MessageAll(MessageLength.Short, "Friendly helos have landed outside Beslan airbase.")
+  self:MessageAll(MessageLength.Short, "[Commandos] Planting C4. Detonating in T-" .. delay .. " seconds.")
+
+  self:Trace(1, "Exploding C4, delay: " .. delay)
+  self:PlaySound(Sound.KissItByeBye, delay)
+
+  self.moose.scheduler:New(
+    nil, function()
+      self:MessageAll(MessageLength.Short, "[Commandos] Light 'er up!") 
+    end, {}, delay)
+
+  for i = 1, self.c4MaxCount do
     local name = string.format("C4 #%03d", i)
     local c4 = self.moose.static:FindByName(name)
     if c4 then

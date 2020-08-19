@@ -5,9 +5,12 @@ skipMoose = false
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 
 local function NewMock(fields)
+  local trace = false
+  if fields and fields.trace then trace = fields.trace._traceOn end
+
   local mock = {}
 
-  local moose = MockMoose:New()
+  local moose = MockMoose:New(trace)
   mock.moose = moose
 
   mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
@@ -27,18 +30,6 @@ local function NewMock(fields)
   mock.c4 = {}
   mock.c4[1] = moose:MockStatic({ name = "C4 #001" })
   mock.c4[2] = moose:MockStatic({ name = "C4 #002" })
-
-  mock.c4[1].GetCoordinate = function() 
-    return {
-      Explosion = function() mock.c4[1].exploded = true end 
-    }
-  end
-
-  mock.c4[2].GetCoordinate = function() 
-    return {
-      Explosion = function() mock.c4[2].exploded = true end 
-    }
-  end
 
   local dcs = MockDCS:New()
   mock.dcs = dcs
@@ -124,7 +115,7 @@ end
 local function Test_FriendlyHelosLanded_C4Explodes()
 
   local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 4 },
+    --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
   local mission = mock.mission
@@ -133,7 +124,19 @@ local function Test_FriendlyHelosLanded_C4Explodes()
   mission:GameLoop()
 
   mock.landingZone.IsVec3InZone = function() return true end
-  
+
+  mock.c4[1].GetCoordinate = function()
+    return {
+      Explosion = function() mock.c4[1].exploded = true end
+    }
+  end
+
+  mock.c4[2].GetCoordinate = function()
+    return {
+      Explosion = function() mock.c4[2].exploded = true end
+    }
+  end
+
   mission:GameLoop()
 
   TestAssert(mock.c4[1].exploded, "First C4 should have exploded")
