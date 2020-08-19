@@ -5,12 +5,10 @@ skipMoose = false
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 
 local function NewMock(fields)
-  local trace = false
-  if fields and fields.trace then trace = fields.trace._traceOn end
 
   local mock = {}
 
-  local moose = MockMoose:New({ trace = trace })
+  local moose = MockMoose:New(fields)
   mock.moose = moose
 
   mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
@@ -51,6 +49,17 @@ local function NewMock(fields)
   mock.mission = Mission05:New(args)
 
   return mock
+end
+
+-- TODO: move to mock Moose test (not specific to M5) 
+local function Test_TraceOn_MockSchedulerTraceOn()
+
+  local mock = NewMock({
+    trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  TestAssert(mock.moose.scheduler.trace, "Mock Moose scheduler trace should be on")
+
 end
 
 local function Test_FriendlyHelosAlive_MissionNotFailed()
@@ -109,6 +118,33 @@ local function Test_AllFriendlyHelosDead_MissionFailed()
 
 end
 
+local function Test_OnSamsDestroyed_HelosProceedFlagSet()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  local flagSet = nil
+  local flagValue = nil
+  mock.mission.SetFlag = function(self, flag, value)
+    flagSet = flag
+    flagValue = value
+  end
+
+  mock.mission:Start()
+
+  mock.enemySams.aliveCount = 0
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    flagSet == Mission05.Flags.FriendlyHelosAdvance,
+    "Expected helo advance flag to be called")
+
+  TestAssert(flagValue, "Expected helo advance flag to be set to true")
+
+end
+
 local function Test_FriendlyHelosLanded_C4Explodes()
 
   local mock = NewMock({
@@ -143,9 +179,13 @@ end
 function Test_Mission05()
   return RunTests {
     "Mission05",
+    Test_TraceOn_MockSchedulerTraceOn,
     Test_FriendlyHelosAlive_MissionNotFailed,
     Test_OneFriendlyHeloStillAlive_MissionNotFailed,
     Test_AllFriendlyHelosDead_MissionFailed,
-    Test_FriendlyHelosLanded_C4Explodes,
+    Test_OnSamsDestroyed_HelosProceedFlagSet,
+    Test_FriendlyHelosLanded_C4Explodes
   }
 end
+
+--testOnly = Test_Mission05
