@@ -25,6 +25,13 @@ Mission05.State = {
 }
 
 ---
+-- @type Mission05.Flags
+Mission05.Flags = {
+  FriendlyHelosAdvance      = 10,
+  TestPlayerRTB             = 11
+}
+
+---
 -- @param #Mission05 self
 function Mission05:Mission05()
 
@@ -103,7 +110,10 @@ end
 function Mission05:OnEnemySamsDestroyed()
   
   self:MessageAll(MessageLength.Short, "All SAMs have been destroyed")
+  self:MessageAll(MessageLength.Short, "Friendly helos advancing Beslan")
+  
   self:PlaySound(Sound.FirstObjectiveMet, 3)
+  self:SetFlag(Mission05.Flags.FriendlyHelosAdvance, true)
   
 end
 

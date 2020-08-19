@@ -14,10 +14,7 @@ MockMoose = {
 
 ---
 -- @param self #MockMoose
-function MockMoose:MockMoose(args)
-  local trace = args.trace
-
-  self:SetTraceOn(trace)
+function MockMoose:MockMoose()
 
   self.data = {
     groups = {},
@@ -31,7 +28,7 @@ function MockMoose:MockMoose(args)
   self.unit = self:MockObject("MockUnit", { data = self.data })
   self.zone = self:MockObject("MockZone", { data = self.data })
   self.static = self:MockObject("MockStatic", { data = self.data })
-  self.scheduler = self:MockObject("MockScheduler")
+  self.scheduler = self:MockObject("MockScheduler", { trace = self._traceOn })
   self.userSound = self:MockObject("MockUserSound")
   self.message = self:MockObject("MockMessage")
   self.menu = self:MockObject("MockMenu", {
@@ -48,7 +45,7 @@ function MockMoose:MockMoose(args)
   self.scheduler.run = true
   self.scheduler.New = function(self, object, function_, args, start)
     if self.run then
-      if trace then
+      if self.trace then
         env.info("Test: Scheduler mock, running function now, real start: " .. start)
       end
       function_()
