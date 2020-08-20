@@ -43,11 +43,7 @@ local function NewMock(fields)
     dcs = mock.dcs
   }
 
-  if fields then
-    for k, v in pairs(fields) do
-      args[k] = v
-    end
-  end
+  Table:Concat(args, fields)
 
   mock.mission = Mission05:New(args)
 
