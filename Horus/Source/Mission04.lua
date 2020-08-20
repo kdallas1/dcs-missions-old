@@ -88,14 +88,6 @@ function Mission04:Mission04()
     function() self:AnnounceWin(2) end
   )
   
-  self.state:ActionOnce(
-    MissionState.MissionFailed,
-    function() self:AnnounceLose(2) end
-  )
-  
-  self.state:SetFinal(MissionState.MissionAccomplished)
-  self.state:SetFinal(MissionState.MissionFailed)
-  
   self:SetupMenu()
   
 end

@@ -36,7 +36,7 @@ function Test(extraTests)
   if testOnly then
     RunSingleTest(testOnly, "*", 1)
   else
-    RunTests(Table:Concat(tests, extraTests))
+    RunTests(List:Concat(tests, extraTests))
   end
 
   env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))

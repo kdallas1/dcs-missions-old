@@ -37,26 +37,12 @@ function Mission03:Mission03()
   
   self:Assert(self.playerGroup, "Player group is nil")
   
-  self.state:ActionOnce(
-    MissionState.MissionAccomplished,
-    function() self:AnnounceWin(2) end
-  )
-  
-  self.state:ActionOnce(
-    MissionState.MissionFailed,
-    function() self:AnnounceLose(2) end
-  )
-  
-  self.state:SetFinal(MissionState.MissionAccomplished)
-  self.state:SetFinal(MissionState.MissionFailed)
-  
 end
 
 ---
 -- @param #Mission03 self
 function Mission03:OnStart()
   
-  self:AddGroup(self.playerGroup)
   self:SetupMenu(self.transportSpawn)
   
   MESSAGE:New("Mission 3: Protect inbound transports to Nalchik", self.messageTimeShort):ToAll()

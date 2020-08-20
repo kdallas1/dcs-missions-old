@@ -5,13 +5,70 @@ skipMoose = false
 dofile(baseDir .. "KD/Test/MockMoose.lua")
 dofile(baseDir .. "KD/Test/MockDCS.lua")
 
-local function NewMockMission()
-  local trace = false
-  return Mission:New {
-    trace = { _traceOn = trace },
-    moose = MockMoose:New({ trace = trace }),
-    dcs = MockDCS:New()
+local function NewMock(fields)
+
+  local mock = {}
+
+  mock.moose = MockMoose:New(fields)
+  mock.dcs = MockDCS:New(fields)
+
+  local args = {
+    trace = { _traceOn = false },
+    moose = mock.moose,
+    dcs = mock.dcs
   }
+
+  Table:Concat(args, fields)
+
+  mock.mission = Mission:New(args)
+
+  return mock
+
+end
+
+local function NewMockMission(fields)
+  return NewMock(fields).mission
+end
+
+local function Test_PlayerIsDead_StateIsMissionFailed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  local player = mock.moose:MockUnit({
+    name = "Dodge #001"
+  })
+
+  mock.moose:MockGroup({
+    name = "Dodge Squadron",
+    units = { player }
+  })
+
+  local announceLoseCalled = false
+  local loseFunction = mock.mission.AnnounceLose
+  mock.mission.AnnounceLose = function(self)
+    loseFunction(self)
+    announceLoseCalled = true
+  end
+
+  player.life = 40
+  player.alive = true
+
+  mock.mission:Start()
+
+  player.life = 1
+  player.alive = false
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == MissionState.MissionFailed,
+    "When player dead, mission state should be: Mission failed"
+  )
+
+  TestAssert(announceLoseCalled, "AnnounceLose should be called on fail")
+
 end
 
 local function Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue()
@@ -451,6 +508,7 @@ end
 function Test_Mission()
   return RunTests {
     "Mission",
+    Test_PlayerIsDead_StateIsMissionFailed,
     Test_UnitsAreParked_AllVehiclesStopped_ReturnsTrue,
     Test_UnitsAreParked_SomeVehiclesMoving_ReturnsFalse,
     Test_UnitsAreParked_SomeNotInZone_ReturnsFalse,

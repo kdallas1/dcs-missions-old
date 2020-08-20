@@ -38,8 +38,6 @@ Mission05.Flags = {
 ---
 -- @param #Mission05 self
 function Mission05:Mission05()
-
-  self:LoadPlayer()
   
   self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
   self.enemySamGroup = self.moose.group:FindByName("Enemy SAMs")
@@ -59,7 +57,6 @@ function Mission05:Mission05()
   self:Assert(self.landingZone, "Landing zone not found")
   self:Assert(self.beslanZone, "Beslan zone not found")
   
-  self:AddGroup(self.nalchikPark)
   self:AddGroup(self.friendlyHeloGroup)
   self:AddGroup(self.enemySamGroup)
   self:AddGroup(self.enemyAAAGroup1)
@@ -109,9 +106,6 @@ function Mission05:Mission05()
     function() return (self.friendlyHeloGroup:CountAliveUnits() == 0) end,
     function() self:AnnounceLose(2) end
   )
-  
-  self.state:SetFinal(MissionState.MissionAccomplished)
-  self.state:SetFinal(MissionState.MissionFailed)
   
   self:SetupMenu()
   
