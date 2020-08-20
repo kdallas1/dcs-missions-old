@@ -126,6 +126,14 @@ function Mission04:OnStart()
   
 end
 
+---
+-- @param #Mission04 self
+function Mission04:OnGameLoop()
+  
+  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
+  
+end
+
 --- 
 -- @param #Mission04 self
 function Mission04:OnHeloRendezvousDone()
@@ -208,14 +216,6 @@ function Mission04:OnExtractionComplete()
   self:MessageAll(MessageLength.Short, "Extraction complete, RTB to Nalchik")
   self:Trace(1, "Friendly helos out of extraction zone")
   self:SetFlag(Mission04.Flags.TestPlayerRTB, true)
-  
-end
-
----
--- @param #Mission04 self
-function Mission04:OnGameLoop()
-  
-  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
   
 end
 

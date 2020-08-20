@@ -52,6 +52,44 @@ end
 
 ---
 -- @param #Mission03 self
+function Mission03:OnGameLoop()
+
+  self:AssertType(self.nalchikParkZone, ZONE)
+  self:AssertType(self.transportSpawn, SPAWN)
+  
+  local playersExist = (#self.players > 0)
+  self:Trace(2, "Player count: " .. #self.players)
+  self:Trace(2, "Players exist: " .. (playersExist and "true" or "false")) 
+  
+  local transportsExist = (self.transportSpawnCount > 0)
+  self:Trace(2, "Transport count: " .. self.transportSpawnCount)
+  self:Trace(2, "Transports exist: " .. (transportsExist and "true" or "false")) 
+  
+  if (self.state.finalState) then
+    return
+  end
+
+  -- if no players, then say all players are parked (not sure if this makes sense).
+  local playersAreParked = ((not playersExist) or self:UnitsAreParked(self.nalchikParkZone, self.players))
+  local transportsAreParked = (transportsExist and self:SpawnGroupsAreParked(self.nalchikParkZone, self.transportSpawn))
+  local everyoneParked = (playersAreParked and transportsAreParked)
+  
+  self:Trace(2, "Transports alive: " .. self:GetAliveUnitsFromSpawn(self.transportSpawn))
+  self:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
+  self:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
+  self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
+  
+  if (everyoneParked) then
+    self.state:Change(MissionState.MissionAccomplished)
+  end
+  
+  self:KeepAliveSpawnGroupsIfParked(self.nalchikParkZone, self.transportSpawn)
+  self:SelfDestructDamagedUnits(self.transportSpawn, self.transportMinLife)
+  
+end
+
+---
+-- @param #Mission03 self
 function Mission03:GetMaxMigs()
   return (self.playerCountMax * self.migsPerPlayer)
 end
@@ -178,44 +216,6 @@ function Mission03:OnEnemyDead(unit)
     MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", self.messageTimeLong):ToAll()    
     self:LandTestPlayers(self.playerGroup, AIRBASE.Caucasus.Nalchik, 300)
   end
-end
-
----
--- @param #Mission03 self
-function Mission03:OnGameLoop()
-
-  self:AssertType(self.nalchikParkZone, ZONE)
-  self:AssertType(self.transportSpawn, SPAWN)
-  
-  local playersExist = (#self.players > 0)
-  self:Trace(2, "Player count: " .. #self.players)
-  self:Trace(2, "Players exist: " .. (playersExist and "true" or "false")) 
-  
-  local transportsExist = (self.transportSpawnCount > 0)
-  self:Trace(2, "Transport count: " .. self.transportSpawnCount)
-  self:Trace(2, "Transports exist: " .. (transportsExist and "true" or "false")) 
-  
-  if (self.state.finalState) then
-    return
-  end
-
-  -- if no players, then say all players are parked (not sure if this makes sense).
-  local playersAreParked = ((not playersExist) or self:UnitsAreParked(self.nalchikParkZone, self.players))
-  local transportsAreParked = (transportsExist and self:SpawnGroupsAreParked(self.nalchikParkZone, self.transportSpawn))
-  local everyoneParked = (playersAreParked and transportsAreParked)
-  
-  self:Trace(2, "Transports alive: " .. self:GetAliveUnitsFromSpawn(self.transportSpawn))
-  self:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
-  self:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
-  self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)
-  
-  if (everyoneParked) then
-    self.state:Change(MissionState.MissionAccomplished)
-  end
-  
-  self:KeepAliveSpawnGroupsIfParked(self.nalchikParkZone, self.transportSpawn)
-  self:SelfDestructDamagedUnits(self.transportSpawn, self.transportMinLife)
-  
 end
 
 Mission03 = createClass(Mission, Mission03)
