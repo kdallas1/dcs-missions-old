@@ -12,7 +12,10 @@ MockDCS = {
 -- @param self #MockDCS
 function MockDCS:MockDCS()
   self:SetTraceOn(false)
-  self.unit = { ClassName = "MockUnit" }
+  self.unit = { 
+    ClassName = "MockUnit",
+    getByName = function() end
+  }
   self.coalition = {
     side = {
       BLUE = 0

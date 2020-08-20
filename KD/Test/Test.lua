@@ -6,6 +6,7 @@ dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestStateMachine.lua")
 dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
 dofile(baseDir .. "KD/Test/TestMission.lua")
+dofile(baseDir .. "KD/Test/TestMocks.lua")
 
 local tests = {
   "KD",
@@ -14,7 +15,8 @@ local tests = {
   Test_Spawn,
   Test_StateMachine,
   Test_MissionEvents,
-  Test_Mission
+  Test_Mission,
+  Test_Mocks
 }
 
 testTrace = {

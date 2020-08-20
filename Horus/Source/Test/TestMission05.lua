@@ -8,13 +8,12 @@ local function NewMock(fields)
 
   local mock = {}
 
-  local moose = MockMoose:New(fields)
-  mock.moose = moose
+  mock.moose = MockMoose:New(fields)
 
-  mock.friendlyHelo1 = moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
-  mock.friendlyHelo2 = moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
+  mock.friendlyHelo1 = mock.moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
+  mock.friendlyHelo2 = mock.moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
   
-  mock.friendlyHeloGroup = moose:MockGroup(
+  mock.friendlyHeloGroup = mock.moose:MockGroup(
     {
       name = "Friendly Helos", 
       units = { mock.friendlyHelo1, mock.friendlyHelo2 },
@@ -22,36 +21,26 @@ local function NewMock(fields)
     }
   )
 
-  mock.enemySams = moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
+  mock.enemySams = mock.moose:MockGroup({ name = "Enemy SAMs", aliveCount = 2 })
 
-  mock.nalchikParkZone = moose:MockZone({ name = "Nalchik Park" })
-  mock.landingZone = moose:MockZone({ name = "Landing" })
-  mock.beslanZone = moose:MockZone({ name = "Beslan" })
+  mock.nalchikParkZone = mock.moose:MockZone({ name = "Nalchik Park" })
+  mock.landingZone = mock.moose:MockZone({ name = "Landing" })
+  mock.beslanZone = mock.moose:MockZone({ name = "Beslan" })
 
   mock.c4 = {}
-  mock.c4[1] = moose:MockStatic({ name = "C4 #001" })
-  mock.c4[2] = moose:MockStatic({ name = "C4 #002" })
+  mock.c4[1] = mock.moose:MockStatic({ name = "C4 #001" })
+  mock.c4[2] = mock.moose:MockStatic({ name = "C4 #002" })
 
-  mock.c4[1].GetCoordinate = function() return { Explosion = function() end } end
-  mock.c4[2].GetCoordinate = function() return { Explosion = function() end } end
+  mock.enemyAAA1 = mock.moose:MockGroup({ name = "Enemy AAA #001", aliveCount = 2 })
+  mock.enemyAAA2 = mock.moose:MockGroup({ name = "Enemy AAA #002", aliveCount = 2 })
+  mock.enemyAAA3 = mock.moose:MockGroup({ name = "Enemy AAA #003", aliveCount = 2 })
 
-  mock.enemyAAA1 = moose:MockGroup({ name = "Enemy AAA #001", aliveCount = 2 })
-  mock.enemyAAA2 = moose:MockGroup({ name = "Enemy AAA #002", aliveCount = 2 })
-  mock.enemyAAA3 = moose:MockGroup({ name = "Enemy AAA #003", aliveCount = 2 })
-
-  mock.enemyAAA1.Activate = function() end
-  mock.enemyAAA2.Activate = function() end
-  mock.enemyAAA3.Activate = function() end
-
-  local dcs = MockDCS:New()
-  mock.dcs = dcs
-
-  dcs.unit.getByName = function() end
+  mock.dcs = MockDCS:New()
 
   local args = {
     trace = { _traceOn = false },
-    moose = moose,
-    dcs = dcs
+    moose = mock.moose,
+    dcs = mock.dcs
   }
 
   if fields then
@@ -65,29 +54,16 @@ local function NewMock(fields)
   return mock
 end
 
--- TODO: move to mock Moose test (not specific to M5) 
-local function Test_TraceOn_MockSchedulerTraceOn()
-
-  local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 2 },
-  })
-
-  TestAssert(mock.moose.scheduler.trace, "Mock Moose scheduler trace should be on")
-
-end
-
 local function Test_FriendlyHelosAlive_MissionNotFailed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
-  local mission = mock.mission
-
-  mission:Start()
+  mock.mission:Start()
 
   TestAssert(
-    mission.state.current ~= MissionState.MissionFailed,
+    mock.mission.state.current ~= MissionState.MissionFailed,
     "Mission state should not be failed")
 
 end
@@ -98,16 +74,14 @@ local function Test_OneFriendlyHeloStillAlive_MissionNotFailed()
     --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
-  local mission = mock.mission
-
-  mission:Start()
+  mock.mission:Start()
 
   mock.friendlyHeloGroup.aliveCount = 1
 
-  mission:GameLoop()
+  mock.mission:GameLoop()
 
   TestAssert(
-    mission.state.current ~= MissionState.MissionFailed,
+    mock.mission.state.current ~= MissionState.MissionFailed,
     "Mission state should not be failed")
 
 end
@@ -118,16 +92,14 @@ local function Test_AllFriendlyHelosDead_MissionFailed()
     --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
-  local mission = mock.mission
-
-  mission:Start()
+  mock.mission:Start()
 
   mock.friendlyHeloGroup.aliveCount = 0
   
-  mission:GameLoop()
+  mock.mission:GameLoop()
 
   TestAssert(
-    mission.state.current == MissionState.MissionFailed,
+    mock.mission.state.current == MissionState.MissionFailed,
     "Mission state should be failed")
 
 end
@@ -165,9 +137,7 @@ local function Test_FriendlyHelosLanded_C4ExplodesAndStateIsBaseDestroyed()
     --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
-  local mission = mock.mission
-
-  mission:Start()
+  mock.mission:Start()
 
   mock.landingZone.IsVec3InZone = function() return true end
 
@@ -183,7 +153,7 @@ local function Test_FriendlyHelosLanded_C4ExplodesAndStateIsBaseDestroyed()
     }
   end
 
-  mission:GameLoop()
+  mock.mission:GameLoop()
 
   TestAssert(mock.c4[1].exploded, "First C4 should have exploded")
   TestAssert(mock.c4[2].exploded, "Second C4 should have exploded")
@@ -200,9 +170,7 @@ local function Test_EnemyBaseDestroyed_EnemyAaaActivates()
     --trace = { _traceOn = true, _traceLevel = 4 },
   })
 
-  local mission = mock.mission
-
-  mission:Start()
+  mock.mission:Start()
 
   mock.enemyAAA1.Activate = function() aaa1 = true end
   mock.enemyAAA2.Activate = function() aaa2 = true end
@@ -210,7 +178,7 @@ local function Test_EnemyBaseDestroyed_EnemyAaaActivates()
 
   mock.mission.state:Change(Mission05.State.EnemyBaseDestroyed)
 
-  mission:GameLoop()
+  mock.mission:GameLoop()
 
   TestAssert(aaa1, "AAA 1 should have activated")
   TestAssert(aaa2, "AAA 2 should have activated")
@@ -298,7 +266,6 @@ end
 function Test_Mission05()
   return RunTests {
     "Mission05",
-    Test_TraceOn_MockSchedulerTraceOn,
     Test_FriendlyHelosAlive_MissionNotFailed,
     Test_OneFriendlyHeloStillAlive_MissionNotFailed,
     Test_AllFriendlyHelosDead_MissionFailed,
