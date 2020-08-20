@@ -115,6 +115,7 @@ function MockMoose:MockGroup(fields)
       GetName = function(self) return self.name end,
       GetUnits = function(self) return self.units end,
       CountAliveUnits = function(self) return self.aliveCount end,
+      Activate = function() end
     },
     fields
   )
@@ -144,7 +145,8 @@ function MockMoose:MockStatic(fields)
       name = "Mock Static",
 
       GetName = function(self) return self.name end,
-      IsVec3InZone = function() end
+      IsVec3InZone = function() end,
+      GetCoordinate = function() return { Explosion = function() end } end
     },
     fields
   )
