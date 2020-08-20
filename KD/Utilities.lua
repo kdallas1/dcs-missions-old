@@ -48,12 +48,24 @@ function Debug:GetInfo(stackPosition)
 
 end
 
-function Table:Concat(t1, t2)
+--- Adds t2 to the end of t1
+function List:Concat(t1, t2)
   if not t2 then
     return t1
   end
   for i = 1, #t2 do
       t1[#t1 + i] = t2[i]
+  end
+  return t1
+end
+
+--- Replaces keys in t1 with keys in t2
+function Table:Concat(t1, t2)
+  if not t2 then
+    return t1
+  end
+  for k, v in pairs(t2) do
+      t1[k] = v
   end
   return t1
 end

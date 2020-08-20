@@ -110,6 +110,19 @@ function Mission:Mission(args)
   self:HandleEvent(MissionEvent.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
   self:HandleEvent(MissionEvent.Dead, function(unit) self:_OnUnitDead(unit) end)
   
+  self.state:ActionOnce(
+    MissionState.MissionAccomplished,
+    function() self:AnnounceWin(2) end
+  )
+  
+  self.state:ActionOnce(
+    MissionState.MissionFailed,
+    function() self:AnnounceLose(2) end
+  )
+  
+  self.state:SetFinal(MissionState.MissionAccomplished)
+  self.state:SetFinal(MissionState.MissionFailed)
+  
 end
 
 ---
@@ -117,6 +130,8 @@ end
 function Mission:Start()
   
   self:Trace(1, "Starting mission, " .. _VERSION)
+
+  self:LoadPlayer()
   
   if self.OnStart then
     self:OnStart()
@@ -126,6 +141,30 @@ function Mission:Start()
   self:PlaySound(Sound.MissionLoaded)
   self:Trace(1, "Mission started")
   
+end
+
+---
+-- @param #Mission self
+function Mission:GameLoop()
+
+  self:Trace(3, "*** Game loop start ***")
+  
+  -- player list can change at any moment on an MP server, and is often 
+  -- out of sync with the group. this is used by the events system
+  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  
+  self.events:UpdateFromGroupList(self.groups)
+  self.events:UpdateFromSpawnerList(self.spawners)
+  self.events:UpdateFromUnitList(self.players)
+  self.events:CheckUnitList()
+  
+  self.state:CheckTriggers()
+  
+  if self.OnGameLoop then
+    self:OnGameLoop()
+  end
+  
+  self:Trace(3, "*** Game loop end ***")
 end
 
 ---
@@ -423,32 +462,9 @@ end
 
 ---
 -- @param #Mission self
-function Mission:GameLoop()
-
-  self:Trace(3, "*** Game loop start ***")
-  
-  -- player list can change at any moment on an MP server, and is often 
-  -- out of sync with the group. this is used by the events system
-  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
-  
-  self.events:UpdateFromGroupList(self.groups)
-  self.events:UpdateFromSpawnerList(self.spawners)
-  self.events:UpdateFromUnitList(self.players)
-  self.events:CheckUnitList()
-  
-  self.state:CheckTriggers()
-  
-  if self.OnGameLoop then
-    self:OnGameLoop()
-  end
-  
-  self:Trace(3, "*** Game loop end ***")
-end
-
----
--- @param #Mission self
 -- @param Core.Spawn#SPAWN spawner
 function Mission:AddSpawner(spawner)
+  self:AssertType(group, self.moose.spawn)
   self.spawners[#self.spawners + 1] = spawner
   self:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
@@ -457,6 +473,7 @@ end
 -- @param #Mission self
 -- @param Wrapper.Group#GROUP group
 function Mission:AddGroup(group)
+  self:AssertType(group, self.moose.group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, total=" .. #self.groups)
 end
@@ -582,6 +599,7 @@ end
 -- @param Wrapper.Airbase#AIRBASE airbase
 -- @param #number speed
 function Mission:LandTestPlayers(playerGroup, airbase, speed)
+  self:AssertType(playerGroup, self.moose.group)
   self:Trace(1, "Landing test players")
   local airbase = AIRBASE:FindByName(airbase)
   local land = airbase:GetCoordinate():WaypointAirLanding(speed, airbase)
@@ -593,6 +611,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
 function Mission:SelfDestructGroupsInSpawn(spawn, power, delay, separation)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(1, "Self-destructing groups in spawner")
 
   for i = 1, spawn.SpawnCount do
@@ -608,6 +627,7 @@ end
 -- @param #Mission self
 -- @param Wrapper.Group#GROUP group
 function Mission:SelfDestructGroup(group, power, delay, separation)
+  self:AssertType(group, self.moose.group)
   self:Trace(1, "Self-destructing group: " .. group:GetName())
   
   if not power then
@@ -634,6 +654,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
 function Mission:GetAliveUnitsFromSpawn(spawn)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(3, "Checking spawn groups for alive count")
   
   local count = 0
@@ -663,6 +684,7 @@ end
 -- @param Core.Spawn#SPAWN spawn
 -- @param #number minLife
 function Mission:SelfDestructDamagedUnits(spawn, minLife)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(3, "Checking spawn groups for damage, count=" .. spawn.SpawnCount)
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
