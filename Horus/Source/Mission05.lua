@@ -133,6 +133,15 @@ end
 
 ---
 -- @param #Mission05 self
+function Mission05:OnStart()
+  
+  self:MessageAll(MessageLength.Long, "Mission 5: Sneak-attack on Beslan")
+  self:MessageAll(MessageLength.Long, "Read the mission brief before takeoff")
+  
+end
+
+---
+-- @param #Mission05 self
 function Mission05:OnGameLoop()
   
   self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
@@ -183,15 +192,6 @@ function Mission05:OnFriendlyHelosLanded()
   
   self:MessageAll(MessageLength.Short, "Friendly helos have landed outside Beslan airbase.")
   self:ScheduleExplodeC4(self.c4ExplodeDelay)
-  
-end
-
----
--- @param #Mission05 self
-function Mission05:OnStart()
-  
-  self:MessageAll(MessageLength.Long, "Mission 5: Sneak-attack on Beslan")
-  self:MessageAll(MessageLength.Long, "Read the mission brief before takeoff")
   
 end
 
