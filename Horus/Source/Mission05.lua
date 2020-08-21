@@ -10,9 +10,12 @@ Mission05 = {
   className = "Mission05",
 
   traceLevel = 2,
+
   c4MaxCount = 40,
   c4ExplodeDelay = 60,
-  c4MaxTime = 40
+  c4MaxTime = 40,
+
+  aaaEscapeCount = 4
 }
 
 ---
@@ -83,7 +86,7 @@ function Mission05:Mission05()
   self.state:TriggerOnceAfter(
     Mission05.State.EnemyAaaDestroyed,
     Mission05.State.EnemyBaseDestroyed,
-    function() return self:IsEnemyAaaDestroyed() end,
+    function() return self:IsFriendlyHeloPathClear() end,
     function() self:OnEnemyAaaDestroyed() end
   )
 
@@ -236,11 +239,11 @@ function Mission05:OnEnemyBaseDestroyed()
 
 end
 
-function Mission05:IsEnemyAaaDestroyed()
+function Mission05:IsFriendlyHeloPathClear()
   local aaa1 = self.enemyAAAGroup1:CountAliveUnits()
   local aaa2 = self.enemyAAAGroup2:CountAliveUnits()
   local aaa3 = self.enemyAAAGroup3:CountAliveUnits()
-  return (aaa1 + aaa2 + aaa3) == 0
+  return (aaa1 + aaa2 + aaa3) <= self.aaaEscapeCount
 end
 
 function Mission05:OnEnemyAaaDestroyed()
