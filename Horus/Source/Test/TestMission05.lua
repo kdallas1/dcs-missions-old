@@ -202,8 +202,8 @@ local function Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed()
   mock.mission.state.current = Mission05.State.EnemyBaseDestroyed
 
   mock.enemyAAA1.aliveCount = 0
-  mock.enemyAAA2.aliveCount = 0
-  mock.enemyAAA3.aliveCount = 0
+  mock.enemyAAA2.aliveCount = 1
+  mock.enemyAAA3.aliveCount = 2
 
   mock.mission:GameLoop()
 
