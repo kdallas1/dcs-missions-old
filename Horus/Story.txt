@@ -7,7 +7,7 @@
 * Mission 3: Protect inbound transports to Nalchik from enemy air units incoming from all directions.
 * Mission 4: Assist rescue of downed recon pilots near Beslan and protect against incoming enemy units.
 * Mission 5: Sneak-attack on Beslan; protect choppers carrying commandos who will plant explosives.
-* Mission 6: Protect Nalchik and Beslan from waves of incoming enemy tanks and helos.
+* Mission 6: Disrupt enemy attack on Nalchik and Beslan by destroying four enemy FOBs.
 * Mission 7: Capture Mozdok; destroy enemy aircraft before they can take off, then protect reinforcements.
 * Mission 8: Assist missile launcher assault on Mineralnye Vody, taking out SAMs.
 * Mission 9: Final assault on the Azmenistan Liberation Front, capture Mineralnye Vody.
