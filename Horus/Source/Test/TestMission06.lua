@@ -10,6 +10,14 @@ local function NewMock(fields)
 
   mock.moose = MockMoose:New(fields)
 
+  for i = 1, 4 do
+    local fobName = "FOB " .. i
+    mock.moose:MockGroup({ name = fobName .. " SAM" })
+    mock.moose:MockStatic({ name = fobName .. " Command" })
+    mock.moose:MockGroup({ name = fobName .. " Tanks" })
+    mock.moose:MockGroup({ name = fobName .. " Helos" })
+  end
+
   mock.dcs = MockDCS:New()
 
   local args = {
@@ -39,3 +47,5 @@ function Test_Mission06()
     Test_Start
   }
 end
+
+testOnly = Test_Mission06

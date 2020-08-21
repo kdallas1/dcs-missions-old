@@ -12,9 +12,14 @@ MockMoose = {
   className = "MockMoose"
 }
 
+local function stubFunction(self, ...)
+  assert(self, "Non-static function called as static function.")
+end
+
 ---
 -- @param self #MockMoose
 function MockMoose:MockMoose()
+  local moose = self
 
   self.data = {
     groups = {},
@@ -40,6 +45,7 @@ function MockMoose:MockMoose()
   self.unit.FindByName = function(self, name) return self.data.units[name] end
   self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
+  self.spawn.New = function(self, name) return moose:MockObject({ group = moose.data.groups[name] }) end
 
   -- run scheduled function immediately by default
   self.scheduler.run = true
@@ -52,15 +58,15 @@ function MockMoose:MockMoose()
     end
   end
 
-  self.message.New = function()
+  self.message.New = function(self)
     return {
-      ToAll = function() end
+      ToAll = stubFunction
     }
   end
 
-  self.userSound.New = function()
+  self.userSound.New = function(self)
     return {
-      ToAll = function() end
+      ToAll = stubFunction
     }
   end
 
@@ -69,7 +75,7 @@ end
 function MockMoose:MockObject(className, fields1, fields2)
   local mock = {
     ClassName =  className,
-    New = function() end
+    New = stubFunction
   }
   if fields1 then
     for k, v in pairs(fields1) do
@@ -91,12 +97,13 @@ function MockMoose:MockUnit(fields)
       name = "Mock Unit",
       life = 0,
       isAlive = true,
+      velocity = 0,
 
       GetName = function(self) return self.name end,
       GetLife = function(self) return self.life end,
-      GetVelocityKNOTS = function() return 0 end,
-      GetVec3 = function() end,
-      IsAlive = function() return self.isAlive end,
+      GetVelocityKNOTS = function(self) return self.velocity end,
+      IsAlive = function(self) return self.isAlive end,
+      GetVec3 = stubFunction,
     },
     fields
   )
@@ -115,7 +122,7 @@ function MockMoose:MockGroup(fields)
       GetName = function(self) return self.name end,
       GetUnits = function(self) return self.units end,
       CountAliveUnits = function(self) return self.aliveCount end,
-      Activate = function() end
+      Activate = stubFunction
     },
     fields
   )
@@ -130,7 +137,7 @@ function MockMoose:MockZone(fields)
       name = "Mock Zone",
 
       GetName = function(self) return self.name end,
-      IsVec3InZone = function() end
+      IsVec3InZone = stubFunction
     },
     fields
   )
@@ -145,8 +152,8 @@ function MockMoose:MockStatic(fields)
       name = "Mock Static",
 
       GetName = function(self) return self.name end,
-      IsVec3InZone = function() end,
-      GetCoordinate = function() return { Explosion = function() end } end
+      IsVec3InZone = stubFunction,
+      GetCoordinate = function() return { Explosion = stubFunction } end
     },
     fields
   )
