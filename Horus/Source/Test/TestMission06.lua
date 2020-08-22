@@ -11,11 +11,19 @@ local function NewMock(fields)
   mock.moose = MockMoose:New(fields)
 
   for i = 1, 4 do
-    local fobName = "FOB " .. i
+    local fobName = "Enemy FOB " .. i
     mock.moose:MockGroup({ name = fobName .. " SAM" })
-    mock.moose:MockStatic({ name = fobName .. " Command" })
+    mock.moose:MockUnit({ name = fobName .. " Command" })
     mock.moose:MockGroup({ name = fobName .. " Tanks" })
     mock.moose:MockGroup({ name = fobName .. " Helos" })
+  end
+
+  for i = 1, 4 do
+    local baseName = "Base " .. i
+    mock.moose:MockGroup({ name = baseName .. " SAM" })
+    mock.moose:MockUnit({ name = baseName .. " Command" })
+    mock.moose:MockGroup({ name = baseName .. " Tanks" })
+    mock.moose:MockGroup({ name = baseName .. " Helos" })
   end
 
   mock.dcs = MockDCS:New()
