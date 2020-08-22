@@ -28,12 +28,12 @@ function MockMoose:MockMoose()
     statics = {}
   }
 
-  self.spawn = self:MockObject("MockSpawn")
+  self.scheduler = self:MockScheduler({ trace = self._traceOn })
+  self.spawn = self:MockObject("MockSpawn", { moose = moose })
   self.group = self:MockObject("MockGroup", { data = self.data })
   self.unit = self:MockObject("MockUnit", { data = self.data })
   self.zone = self:MockObject("MockZone", { data = self.data })
   self.static = self:MockObject("MockStatic", { data = self.data })
-  self.scheduler = self:MockObject("MockScheduler", { trace = self._traceOn })
   self.userSound = self:MockObject("MockUserSound")
   self.message = self:MockObject("MockMessage")
   self.menu = self:MockObject("MockMenu", {
@@ -45,18 +45,7 @@ function MockMoose:MockMoose()
   self.unit.FindByName = function(self, name) return self.data.units[name] end
   self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
-  self.spawn.New = function(self, name) return moose:MockObject({ group = moose.data.groups[name] }) end
-
-  -- run scheduled function immediately by default
-  self.scheduler.run = true
-  self.scheduler.New = function(self, object, function_, args, start)
-    if self.run then
-      if self.trace then
-        env.info("Test: Scheduler mock, running function now, real start: " .. start)
-      end
-      function_()
-    end
-  end
+  self.spawn.New = function(self, name) return moose:MockSpawn({ group = moose.data.groups[name] }) end
 
   self.message.New = function(self)
     return {
@@ -88,6 +77,45 @@ function MockMoose:MockObject(className, fields1, fields2)
     end
   end
   return mock
+end
+
+function MockMoose:MockScheduler(fields)
+  local scheduler = self:MockObject(
+    "MockScheduler",
+    {
+      -- run scheduled function immediately by default
+      run = true
+    },
+    fields
+  )
+
+  scheduler.New = function(self, object, runFunction, args, start)
+
+    self.runFunction = runFunction
+    self.Run = function(self)
+      if self.trace then
+        env.info("Test: Scheduler mock, running function now, real start: " .. start)
+      end
+      self.runFunction()
+    end
+
+    if self.run then
+      self:Run()
+    end
+  end
+
+  return scheduler
+end
+
+function MockMoose:MockSpawn(fields)
+  local spawn = self:MockObject(
+    self.spawn.ClassName,
+    {
+      Spawn = stubFunction
+    },
+    fields
+  )
+  return spawn
 end
 
 function MockMoose:MockUnit(fields)
