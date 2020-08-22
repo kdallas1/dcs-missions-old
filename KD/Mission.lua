@@ -37,21 +37,31 @@ Mission = {
 -- @param #Mission self
 -- @return #Mission
 
+local nextSoundId_ = 1
+local function nextSoundId()
+  local r = nextSoundId_
+  nextSoundId_ = nextSoundId_ + 1
+  return r
+end
+
 ---
 -- @type Sound
 Sound = {
-  MissionLoaded                 = 0,
-  MissionAccomplished           = 1,
-  MissionFailed                 = 2,
-  EnemyApproching               = 3,
-  TargetDestoyed                = 4,
-  KissItByeBye                  = 5,
-  ShakeItBaby                   = 6,
-  ForKingAndCountry             = 7,
-  FirstObjectiveMet             = 8,
-  UnitLost                      = 9,
-  BattleControlTerminated       = 10,
-  ReinforcementsHaveArrived     = 11
+  MissionLoaded                 = nextSoundId(),
+  MissionAccomplished           = nextSoundId(),
+  MissionFailed                 = nextSoundId(),
+  EnemyApproching               = nextSoundId(),
+  TargetDestoyed                = nextSoundId(),
+  KissItByeBye                  = nextSoundId(),
+  ShakeItBaby                   = nextSoundId(),
+  ForKingAndCountry             = nextSoundId(),
+  FirstObjectiveMet             = nextSoundId(),
+  SecondObjectiveMet            = nextSoundId(),
+  ThirdObjectiveMet             = nextSoundId(),
+  UnitLost                      = nextSoundId(),
+  BattleControlTerminated       = nextSoundId(),
+  ReinforcementsHaveArrived     = nextSoundId(),
+  StructureDestoyed             = nextSoundId()
 }
 
 ---
