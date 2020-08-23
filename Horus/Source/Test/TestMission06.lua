@@ -10,6 +10,9 @@ local function NewMock(fields)
 
   mock.moose = MockMoose:New(fields)
 
+  local player = mock.moose:MockUnit({ name = "Dodge #001" })
+  mock.moose:MockGroup({ name = "Dodge Squadron", units = { player } })
+
   for i = 1, 4 do
     local fobName = "Enemy FOB " .. i
     mock.moose:MockGroup({ name = fobName .. " SAM" })
@@ -26,6 +29,8 @@ local function NewMock(fields)
     mock.moose:MockGroup({ name = baseName .. " Helos" })
   end
 
+  mock.moose:MockZone({ name = "Nalchik Park" })
+
   mock.dcs = MockDCS:New()
 
   local args = {
@@ -41,19 +46,71 @@ local function NewMock(fields)
   return mock
 end
 
-local function Test_Start()
+local function Test_AllEnemyFobsDead_StateIsEnemyFobsDead()
 
-  local mock = NewMock()
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
 
   mock.mission:Start()
+
+  mock.mission.enemyFob[1].command:MockKill()
+  mock.mission.enemyFob[2].command:MockKill()
+  mock.mission.enemyFob[3].command:MockKill()
+  mock.mission.enemyFob[4].command:MockKill()
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == Mission06.State.EnemyFobsDead,
+    "Expected state to be: Enemy FOBs dead")
+
+end
+
+local function Test_EnemyFobsDeadStateAndPlayersParked_StateIsMissionAccomplished()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission06.State.EnemyFobsDead
+  mock.mission.UnitsAreParked = function() return true end
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == MissionState.MissionAccomplished,
+    "Expected state to be: Mission accomplished")
+
+end
+
+local function Test_FriendlyBaseDestroyed_StateIsMissionFailed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.friendlyBase[1].command:MockKill()
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == MissionState.MissionFailed,
+    "Expected state to be: Mission failed")
 
 end
 
 function Test_Mission06()
   return RunTests {
     "Mission06",
-    Test_Start
+    Test_AllEnemyFobsDead_StateIsEnemyFobsDead,
+    Test_EnemyFobsDeadStateAndPlayersParked_StateIsMissionAccomplished,
+    Test_FriendlyBaseDestroyed_StateIsMissionFailed
   }
 end
 
-testOnly = Test_Mission06
+--testOnly = Test_Mission06

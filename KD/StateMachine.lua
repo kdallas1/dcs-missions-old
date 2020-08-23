@@ -49,11 +49,13 @@ function StateMachine:TriggerOnce(state, trigger, action)
 
   self:Assert(state, "Arg `state` was nil")
   self:Assert(trigger, "Arg `trigger` was nil")
-  self:Assert(action, "Arg `action` was nil")
   
   self.onceStates[state] = false
   self.triggers[state] = trigger
-  self:HandleEvent(state, action)
+
+  if (action) then
+    self:HandleEvent(state, action)
+  end
   
 end
 
@@ -65,7 +67,6 @@ function StateMachine:TriggerOnceAfter(state, after, trigger, action)
   self:Assert(state, "Arg `state` was nil")
   self:Assert(after, "Arg `state` was nil")
   self:Assert(trigger, "Arg `state` was nil")
-  self:Assert(action, "Arg `action` was nil")
   
   self:TriggerOnce(state, trigger, action)
   self.depends[state] = after

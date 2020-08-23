@@ -109,6 +109,7 @@ function Mission:Mission(args)
 
   self.spawners = {}
   self.groups = {}
+  self.units = {}
   self.players = {}
   
   self.state = StateMachine:New()
@@ -165,6 +166,7 @@ function Mission:GameLoop()
   
   self.events:UpdateFromGroupList(self.groups)
   self.events:UpdateFromSpawnerList(self.spawners)
+  self.events:UpdateFromUnitList(self.units)
   self.events:UpdateFromUnitList(self.players)
   self.events:CheckUnitList()
   
@@ -309,6 +311,7 @@ end
 function Mission:UnitsAreParked(zone, units)
   
   self:AssertType(zone, self.moose.zone)
+  self:Assert(#units > 0, "No units to check if parked")
 
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -474,7 +477,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawner
 function Mission:AddSpawner(spawner)
-  self:AssertType(group, self.moose.spawn)
+  self:AssertType(spawner, self.moose.spawn)
   self.spawners[#self.spawners + 1] = spawner
   self:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
@@ -486,6 +489,15 @@ function Mission:AddGroup(group)
   self:AssertType(group, self.moose.group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, total=" .. #self.groups)
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:AddUnit(unit)
+  self:AssertType(unit, self.moose.unit)
+  self.units[#self.units + 1] = unit
+  self:Trace(3, "Unit added, total=" .. #self.units)
 end
 
 ---

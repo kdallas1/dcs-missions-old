@@ -111,7 +111,8 @@ function MockMoose:MockSpawn(fields)
   local spawn = self:MockObject(
     self.spawn.ClassName,
     {
-      Spawn = stubFunction
+      Spawn = stubFunction,
+      SpawnCount = 0
     },
     fields
   )
@@ -123,7 +124,7 @@ function MockMoose:MockUnit(fields)
     self.unit.ClassName,
     {
       name = "Mock Unit",
-      life = 0,
+      life = 2,
       isAlive = true,
       velocity = 0,
 
@@ -132,6 +133,11 @@ function MockMoose:MockUnit(fields)
       GetVelocityKNOTS = function(self) return self.velocity end,
       IsAlive = function(self) return self.isAlive end,
       GetVec3 = stubFunction,
+
+      MockKill = function (self)
+        self.life = 1
+        self.isAlive = false
+      end
     },
     fields
   )
@@ -145,7 +151,7 @@ function MockMoose:MockGroup(fields)
     {
       name = "Mock Group",
       units = {},
-      aliveCount = 0,
+      aliveCount = 1,
 
       GetName = function(self) return self.name end,
       GetUnits = function(self) return self.units end,
