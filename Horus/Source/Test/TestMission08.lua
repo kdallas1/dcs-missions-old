@@ -30,6 +30,8 @@ local function NewMock(fields)
     mock.moose:MockGroup({ name = launcherSite .. " Tanks" })
   end
 
+  mock.moose:MockGroup({name = "Enemy Tanks" })
+
   mock.moose:MockZone({ name = "Nalchik Park" })
 
   mock.dcs = MockDCS:New()
@@ -73,10 +75,49 @@ local function Test_AllLaunchersDead_StateIsMissionFailed()
 
 end
 
+local function Test_AllEnemyTanksDead_StateIsEnemyBaseDestroyed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.enemyTanks.aliveCount = 0
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == Mission08.State.EnemyBaseDestroyed,
+    "Expected state to be: Enemy base destroyed")
+
+end
+
+local function Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission08.State.EnemyBaseDestroyed
+  mock.mission.UnitsAreParked = function() return true end
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == MissionState.MissionAccomplished,
+    "Expected state to be: Mission accomplished")
+
+end
+
 function Test_Mission08()
   return RunTests {
     "Mission08",
-    Test_AllLaunchersDead_StateIsMissionFailed
+    Test_AllLaunchersDead_StateIsMissionFailed,
+    Test_AllEnemyTanksDead_StateIsEnemyBaseDestroyed,
+    Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished
   }
 end
 

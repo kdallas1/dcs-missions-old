@@ -18,6 +18,7 @@ Mission08 = {
 -- @type Mission08.State
 -- @extends KD.Mission#MissionState
 Mission08.State = {
+  EnemyBaseDestroyed = State:NextState()
 }
 
 ---
@@ -31,6 +32,25 @@ function Mission08:Mission08()
   for i = 1, self.launcherSiteMax do
     self.launcherSiteList[#self.launcherSiteList + 1] = self:NewLauncherSite(i)
   end
+
+  self.enemyTanks = self.moose.group:FindByName("Enemy Tanks")
+  self:Assert(self.enemyTanks, "Enemy tanks not found")
+
+  self.state:TriggerOnce(
+    Mission08.State.EnemyBaseDestroyed,
+    function() return (self.enemyTanks:CountAliveUnits() == 0) end
+  )
+
+  self.state:TriggerOnceAfter(
+    MissionState.MissionAccomplished,
+    Mission08.State.EnemyBaseDestroyed,
+    function() return self:UnitsAreParked(self.nalchikParkZone, self.players) end
+  )
+
+  self.state:TriggerOnce(
+    MissionState.MissionFailed,
+    function() return (self:CountAliveLaunchers() == 0) end
+  )
 
 end
 
@@ -108,18 +128,17 @@ function Mission08:OnUnitDead(unit)
       self:MessageAll(MessageLength.Long, site.name .. " has been defeated!")
     end
 
-    local totalLaunchersAlive = 0
-    for i = 1, #self.launcherSiteList do
-      local checkSite = self.launcherSiteList[i]
-      totalLaunchersAlive = totalLaunchersAlive + checkSite.launchers:CountAliveUnits()
-    end
-
-    if totalLaunchersAlive == 0 then
-      self.state:Change(MissionState.MissionFailed)
-    end
-
   end
 
+end
+
+function Mission08:CountAliveLaunchers()
+  local totalLaunchersAlive = 0
+  for i = 1, #self.launcherSiteList do
+    local checkSite = self.launcherSiteList[i]
+    totalLaunchersAlive = totalLaunchersAlive + checkSite.launchers:CountAliveUnits()
+  end
+  return totalLaunchersAlive
 end
 
 Mission08 = createClass(Mission, Mission08)
