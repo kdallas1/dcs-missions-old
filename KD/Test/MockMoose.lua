@@ -127,11 +127,14 @@ function MockMoose:MockUnit(fields)
       life = 2,
       isAlive = true,
       velocity = 0,
+      group = nil,
 
       GetName = function(self) return self.name end,
       GetLife = function(self) return self.life end,
       GetVelocityKNOTS = function(self) return self.velocity end,
       IsAlive = function(self) return self.isAlive end,
+      GetGroup = function(self) return self.group end,
+
       GetVec3 = stubFunction,
 
       MockKill = function (self)
@@ -156,7 +159,8 @@ function MockMoose:MockGroup(fields)
       GetName = function(self) return self.name end,
       GetUnits = function(self) return self.units end,
       CountAliveUnits = function(self) return self.aliveCount end,
-      Activate = stubFunction
+
+      Activate = stubFunction,
     },
     fields
   )
