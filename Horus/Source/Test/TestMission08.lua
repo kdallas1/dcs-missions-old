@@ -50,7 +50,7 @@ end
 local function Test_AllLaunchersDead_StateIsMissionFailed()
 
   local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 2 },
+    --trace = { _traceOn = true, _traceLevel = 2 },
   })
 
   mock.mission:Start()
@@ -80,4 +80,4 @@ function Test_Mission08()
   }
 end
 
-testOnly = Test_Mission08
+--testOnly = Test_Mission08
