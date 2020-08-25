@@ -30,6 +30,12 @@ Mission = {
   messageTimeShort = 20,
   messageTimeLong = 200,
   soundCounter = 1,
+  
+  --- @field [parent=#Mission] KD.Moose#Moose moose
+  moose = nil,
+  
+  --- @field [parent=#Mission] KD.DCS#DCS dcs
+  dcs = nil,
 }
 
 ---
@@ -83,7 +89,7 @@ MissionState = {
 -- @param #Mission self
 function Mission:Mission(args)
   
-  if args.moose then
+  if not args.moose then
     self.moose = args.moose
   else
     self.moose = Moose:New()

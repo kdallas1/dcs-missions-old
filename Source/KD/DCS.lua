@@ -5,7 +5,7 @@ dofile(baseDir .. "KD/KDObject.lua")
 
 --- 
 -- @type DCS
--- @extends KD.KDObject#Object
+-- @extends KD.KDObject#KDObject
 DCS = {
   className = "DCS"
 }
