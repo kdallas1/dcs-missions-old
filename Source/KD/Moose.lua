@@ -1,7 +1,7 @@
 dofile(baseDir .. "KD/KDObject.lua")
 
 if not skipMoose then
-  dofile(baseDir .. "Moose/Moose.lua")
+  dofile(baseDir .. "../Moose/Moose.lua")
 end
 
 ---
