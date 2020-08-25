@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<buildpath>
-	<buildpathentry kind="src" path="Missions"/>
-	<buildpathentry kind="src" path="Source"/>
-	<buildpathentry kind="con" path="org.eclipse.ldt.ExecutionEnvironmentContainer/lua/5.1"/>
-	<buildpathentry combineaccessrules="false" kind="prj" path="/KD-DCS"/>
-	<buildpathentry combineaccessrules="false" kind="prj" path="/Moose Framework"/>
-</buildpath>
