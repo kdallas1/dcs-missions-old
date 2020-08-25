@@ -33,9 +33,6 @@ function Mission03:Mission03()
   
   self.nalchikParkZone = ZONE:FindByName("Nalchik Park")
   self.transportSpawn = SPAWN:New("Transport")
-  self.playerGroup = GROUP:FindByName(self.playerGroupName)
-  
-  self:Assert(self.playerGroup, "Player group is nil")
   
 end
 
