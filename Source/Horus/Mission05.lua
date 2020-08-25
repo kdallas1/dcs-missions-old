@@ -9,13 +9,13 @@ dofile(baseDir .. "KD/Mission.lua")
 Mission05 = {
   className = "Mission05",
 
-  traceLevel = 2,
-
   c4MaxCount = 40,
   c4ExplodeDelay = 60,
   c4MaxTime = 40,
 
-  aaaEscapeCount = 4
+  enemyAaaEscapeCount = 6,
+  enemyAaaGroupMax = 6,
+  enemyAaaGroups = nil
 }
 
 ---
@@ -35,36 +35,35 @@ Mission05.State = {
 Mission05.Flags = {
   FriendlyHelosAdvance      = 10,
   FriendlyHelosRTB          = 11,
-  TestPlayerRTB             = 12
 }
 
 ---
 -- @param #Mission05 self
 function Mission05:Mission05()
+
+  --self:SetTraceLevel(3)
   
   self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
   self.enemySamGroup = self.moose.group:FindByName("Enemy SAMs")
-  self.enemyAAAGroup1 = self.moose.group:FindByName("Enemy AAA #001")
-  self.enemyAAAGroup2 = self.moose.group:FindByName("Enemy AAA #002")
-  self.enemyAAAGroup3 = self.moose.group:FindByName("Enemy AAA #003")
   self.nalchikParkZone = self.moose.zone:New("Nalchik Park")
   self.landingZone = self.moose.zone:New("Landing")
   self.beslanZone = self.moose.zone:New("Beslan")
   
+  self.enemyAaaGroups = {}
+  for i = 1, self.enemyAaaGroupMax do
+    self.enemyAaaGroups[i] = self.moose.group:FindByName("Enemy AAA #00" .. i)
+    self:Assert(self.enemyAaaGroups[i], "Enemy AAA group " .. i .. " not found")
+    self:AddGroup(self.enemyAaaGroups[i])
+  end
+  
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemySamGroup, "Enemy SAM group not found")
-  self:Assert(self.enemyAAAGroup1, "Enemy AAA group 1 not found")
-  self:Assert(self.enemyAAAGroup2, "Enemy AAA group 2 not found")
-  self:Assert(self.enemyAAAGroup3, "Enemy AAA group 3 not found")
   self:Assert(self.nalchikParkZone, "Nalchik park zone not found")
   self:Assert(self.landingZone, "Landing zone not found")
   self:Assert(self.beslanZone, "Beslan zone not found")
   
   self:AddGroup(self.friendlyHeloGroup)
   self:AddGroup(self.enemySamGroup)
-  self:AddGroup(self.enemyAAAGroup1)
-  self:AddGroup(self.enemyAAAGroup2)
-  self:AddGroup(self.enemyAAAGroup3)
   
   self.state:TriggerOnce(
     Mission05.State.EnemySamsDestroyed,
@@ -131,7 +130,13 @@ function Mission05:SetupMenu()
   self.moose.menu.coalitionCommand:New(
     self.dcs.coalition.side.BLUE, "Kill enemy SAMs", menu,
     function() self:SelfDestructGroup(self.enemySamGroup, 100, 1, 1) end)
-    
+  
+  for i = 1, self.enemyAaaGroupMax do
+    self.moose.menu.coalitionCommand:New(
+      self.dcs.coalition.side.BLUE, "Kill enemy AAA " .. i, menu,
+      function() self:SelfDestructGroup(self.enemyAaaGroups[i], 100, 1, 1) end)
+  end
+  
 end
 
 ---
@@ -147,7 +152,7 @@ end
 -- @param #Mission05 self
 function Mission05:OnGameLoop()
   
-  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 10)
+  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 15)
   self:SelfDestructDamagedUnitsInList(self.enemySamGroup:GetUnits(), 2)
   
 end
@@ -232,22 +237,28 @@ end
 -- @param #Mission05 self
 function Mission05:OnEnemyBaseDestroyed()
 
-  self:MessageAll(MessageLength.Short, "Enemy base destroyed.")
-  self:MessageAll(MessageLength.Short, "Enemy AAAs have been deployed, destroy them to ensure our helos can escape.")
+  self:MessageAll(MessageLength.Short, "Enemy base has been destroyed.")
 
-  self.enemyAAAGroup1:Activate()
-  self.enemyAAAGroup2:Activate()
-  self.enemyAAAGroup3:Activate()
+  for i = 1, self.enemyAaaGroupMax do
+    self.enemyAaaGroups[i]:Activate()
+  end
+  
+  self.enemyAaaGroups[1]:SmokeRed()
+  self.enemyAaaGroups[2]:SmokeRed()
+  
+  self:MessageAll(MessageLength.Long,
+    "The enemy has deployeded AAAs. Destroy the AAAs marked with red smoke so our helos can escape.")
 
 end
 
 ---
 -- @param #Mission05 self
 function Mission05:IsFriendlyHeloPathClear()
-  local aaa1 = self.enemyAAAGroup1:CountAliveUnits()
-  local aaa2 = self.enemyAAAGroup2:CountAliveUnits()
-  local aaa3 = self.enemyAAAGroup3:CountAliveUnits()
-  return (aaa1 + aaa2 + aaa3) <= self.aaaEscapeCount
+
+  local aaa1 = self.enemyAaaGroups[1]:CountAliveUnits()
+  local aaa2 = self.enemyAaaGroups[2]:CountAliveUnits()
+  return (aaa1 + aaa2) == 0
+  
 end
 
 ---
@@ -256,6 +267,7 @@ function Mission05:OnEnemyAaaDestroyed()
 
   self:MessageAll(MessageLength.Short, "Enemy AAA destroyed.")
   self:MessageAll(MessageLength.Short, "Friendly helos are leaving the extraction zone.")
+  self:PlaySound(Sound.SecondObjectiveMet)
   self:SetFlag(Mission05.Flags.FriendlyHelosRTB, true)
 
 end
