@@ -152,7 +152,7 @@ end
 -- @param #Mission05 self
 function Mission05:OnGameLoop()
   
-  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 15)
+  self:SelfDestructDamagedUnitsInList(self.friendlyHeloGroup:GetUnits(), 5)
   self:SelfDestructDamagedUnitsInList(self.enemySamGroup:GetUnits(), 2)
   
 end
