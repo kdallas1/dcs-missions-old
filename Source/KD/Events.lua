@@ -5,12 +5,9 @@ dofile(baseDir .. "KD/KDObject.lua")
 
 --- 
 -- @type Events
--- @extends KD.KDObject#Object
+-- @extends KD.KDObject#KDObject
 Events = {
   className = "Events",
-  
-  ---@field #list<#function> eventHandlers
-  eventHandlers = nil,
 }
 
 ---

@@ -1,17 +1,15 @@
-if not skipMoose then
-  dofile(baseDir .. "../Moose/Moose.lua")
-end
-
 dofile(baseDir .. "KD/KDObject.lua")
 dofile(baseDir .. "KD/Spawn.lua")
 dofile(baseDir .. "KD/MissionEvents.lua")
+dofile(baseDir .. "KD/Moose.lua")
+dofile(baseDir .. "KD/DCS.lua")
 
 ---
 -- @module KD.Mission
 
 --- 
 -- @type Mission
--- @extends KD.KDObject#Object
+-- @extends KD.KDObject#KDObject
 Mission = {
   className = "Mission",
 
@@ -19,18 +17,6 @@ Mission = {
   traceLevel = 1,
   assert = true,
   mooseTrace = false,
-  
-  ---@field #list<Core.Spawn#SPAWN> spawners
-  spawners = nil,
-  
-  ---@field #list<Wrapper.Group#GROUP> groups
-  groups = nil,
-  
-  ---@field #list<Wrapper.Units#UNIT> players
-  players = nil,
-  
-  --- @field KD.MissionEvents#MissionEvents events
-  events = nil,
   
   _playerGroupName = "Dodge Squadron",
   _playerPrefix = "Dodge",
@@ -45,15 +31,11 @@ Mission = {
   messageTimeLong = 200,
   soundCounter = 1,
   
-  mooseScheduler = SCHEDULER,
-  mooseMessage = MESSAGE,
-  mooseDatabase = _DATABASE,
-  mooseUserSound = USERSOUND,
-  mooseUnit = UNIT,
-  mooseZone = ZONE,
-  mooseSpawn = SPAWN,
-  mooseGroup = GROUP,
-  dcsUnit = Unit,
+  --- @field [parent=#Mission] KD.Moose#Moose moose
+  moose = nil,
+  
+  --- @field [parent=#Mission] KD.DCS#DCS dcs
+  dcs = nil,
 }
 
 ---
@@ -61,21 +43,31 @@ Mission = {
 -- @param #Mission self
 -- @return #Mission
 
+local nextSoundId_ = 1
+local function nextSoundId()
+  local r = nextSoundId_
+  nextSoundId_ = nextSoundId_ + 1
+  return r
+end
+
 ---
 -- @type Sound
 Sound = {
-  MissionLoaded                 = 0,
-  MissionAccomplished           = 1,
-  MissionFailed                 = 2,
-  EnemyApproching               = 3,
-  TargetDestoyed                = 4,
-  KissItByeBye                  = 5,
-  ShakeItBaby                   = 6,
-  ForKingAndCountry             = 7,
-  FirstObjectiveMet             = 8,
-  UnitLost                      = 9,
-  BattleControlTerminated       = 10,
-  ReinforcementsHaveArrived     = 11
+  MissionLoaded                 = nextSoundId(),
+  MissionAccomplished           = nextSoundId(),
+  MissionFailed                 = nextSoundId(),
+  EnemyApproching               = nextSoundId(),
+  TargetDestoyed                = nextSoundId(),
+  KissItByeBye                  = nextSoundId(),
+  ShakeItBaby                   = nextSoundId(),
+  ForKingAndCountry             = nextSoundId(),
+  FirstObjectiveMet             = nextSoundId(),
+  SecondObjectiveMet            = nextSoundId(),
+  ThirdObjectiveMet             = nextSoundId(),
+  UnitLost                      = nextSoundId(),
+  BattleControlTerminated       = nextSoundId(),
+  ReinforcementsHaveArrived     = nextSoundId(),
+  StructureDestoyed             = nextSoundId()
 }
 
 ---
@@ -86,29 +78,44 @@ MessageLength = {
 }
 
 ---
--- @type Mission.State
+-- @type MissionState
 -- @extends KD.State#State
-Mission.State = {
+MissionState = {
   MissionAccomplished       = State:NextState(),
   MissionFailed             = State:NextState()
 }
 
 ---
 -- @param #Mission self
-function Mission:Mission()
+function Mission:Mission(args)
   
+  if args.moose then
+    self.moose = args.moose
+  else
+    self.moose = Moose:New()
+  end
+  
+  if args.dcs then
+    self.dcs = args.dcs
+  else
+    self.dcs = DCS:New()
+  end
+
   if self.mooseTrace then  
     BASE:TraceOnOff(true)
     BASE:TraceAll(true)
     BASE:TraceLevel(3)
   end
   
-  self:SetTraceOn(self.traceOn)
-  self:SetTraceLevel(self.traceLevel)
-  self:SetAssert(self.assert)
+  if not args.trace then
+    self:SetTraceOn(self.traceOn)
+    self:SetTraceLevel(self.traceLevel)
+    self:SetAssert(self.assert)
+  end
 
   self.spawners = {}
   self.groups = {}
+  self.units = {}
   self.players = {}
   
   self.state = StateMachine:New()
@@ -120,19 +127,34 @@ function Mission:Mission()
   self:HandleEvent(MissionEvent.Damaged, function(unit) self:_OnUnitDamaged(unit) end)
   self:HandleEvent(MissionEvent.Dead, function(unit) self:_OnUnitDead(unit) end)
   
+  self.state:ActionOnce(
+    MissionState.MissionAccomplished,
+    function() self:AnnounceWin(2) end
+  )
+  
+  self.state:ActionOnce(
+    MissionState.MissionFailed,
+    function() self:AnnounceLose(2) end
+  )
+  
+  self.state:SetFinal(MissionState.MissionAccomplished)
+  self.state:SetFinal(MissionState.MissionFailed)
+  
 end
 
 ---
 -- @param #Mission self
 function Mission:Start()
   
-  self:Trace(1, "Starting mission, Lua " .. _VERSION)
+  self:Trace(1, "Starting mission, " .. _VERSION)
+
+  self:LoadPlayer()
   
   if self.OnStart then
     self:OnStart()
   end
   
-  self.mooseScheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
+  self.moose.scheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
   self:PlaySound(Sound.MissionLoaded)
   self:Trace(1, "Mission started")
   
@@ -140,10 +162,35 @@ end
 
 ---
 -- @param #Mission self
+function Mission:GameLoop()
+
+  self:Trace(3, "*** Game loop start ***")
+  
+  -- player list can change at any moment on an MP server, and is often 
+  -- out of sync with the group. this is used by the events system
+  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  
+  self.events:UpdateFromGroupList(self.groups)
+  self.events:UpdateFromSpawnerList(self.spawners)
+  self.events:UpdateFromUnitList(self.units)
+  self.events:UpdateFromUnitList(self.players)
+  self.events:CheckUnitList()
+  
+  self.state:CheckTriggers()
+  
+  if self.OnGameLoop then
+    self:OnGameLoop()
+  end
+  
+  self:Trace(3, "*** Game loop end ***")
+end
+
+---
+-- @param #Mission self
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitSpawn(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit spawned: " .. unit:GetName())
 
   if self.OnUnitSpawn then
@@ -175,7 +222,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitDamaged(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit damaged: " .. unit:GetName())
 
   if self.OnUnitDamaged then
@@ -188,7 +235,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnUnitDead(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit dead: " .. unit:GetName())
   
   if (string.match(unit:GetName(), self.playerPrefix)) then
@@ -205,7 +252,7 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnPlayerDead(unit)
 
-  self:AssertType(unit, self.mooseUnit)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(1, "Player is dead: " .. unit:GetName())
   
   self:MessageAll(MessageLength.Long, "Player is dead!")
@@ -215,7 +262,7 @@ function Mission:_OnPlayerDead(unit)
     self:OnPlayerDead(unit)
   end
   
-  self.state:Change(Mission.State.MissionFailed)
+  self.state:Change(MissionState.MissionFailed)
   
 end
 
@@ -226,8 +273,8 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:GroupIsParked(zone, group)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(group, self.mooseGroup)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(group, self.moose.group)
   
   self:Trace(4, "group: " .. group:GetName())
   
@@ -269,7 +316,8 @@ end
 -- @return true If all units are parked in the zone.
 function Mission:UnitsAreParked(zone, units)
   
-  self:AssertType(zone, self.mooseZone)
+  self:AssertType(zone, self.moose.zone)
+  self:Assert(#units > 0, "No units to check if parked")
 
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -300,8 +348,8 @@ end
 -- @return true If all units within all groups are parked in the zone. 
 function Mission:SpawnGroupsAreParked(zone, spawn)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(spawn, self.mooseSpawn)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(spawn, self.moose.spawn)
   
   self:Trace(3, "zone: " .. zone:GetName())
   
@@ -324,8 +372,8 @@ end
 -- @param Wrapper.Group#GROUP group The group to check.
 function Mission:KeepAliveGroupIfParked(zone, group)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(group, self.mooseGroup)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(group, self.moose.group)
   
   local parked = self:GroupIsParked(zone, group)
   if (parked and not group.keepAliveDone) then
@@ -346,8 +394,8 @@ end
 -- @param #number spawnCount Number of groups in spawner to check.
 function Mission:KeepAliveSpawnGroupsIfParked(zone, spawn)
   
-  self:AssertType(zone, self.mooseZone)
-  self:AssertType(spawn, self.mooseSpawn)
+  self:AssertType(zone, self.moose.zone)
+  self:AssertType(spawn, self.moose.spawn)
   
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
@@ -416,9 +464,11 @@ function Mission:PlaySound(soundType, delay)
   for soundName, v in pairs(Sound) do
     if v == soundType then
       self:Trace(3, "Schedule sound: " .. soundName .. " (delay: " .. tostring(delay) .. ")")
-      local sound = self.mooseUserSound:New(soundName .. ".ogg")
-      self.mooseScheduler:New(nil, function() sound:ToAll() end, {}, delay)
-      found = true
+      local sound = self.moose.userSound:New(soundName .. ".ogg")
+      if sound then
+        self.moose.scheduler:New(nil, function() sound:ToAll() end, {}, delay)
+        found = true
+      end
     end
   end
   
@@ -431,32 +481,9 @@ end
 
 ---
 -- @param #Mission self
-function Mission:GameLoop()
-
-  self:Trace(3, "*** Game loop start ***")
-  
-  -- player list can change at any moment on an MP server, and is often 
-  -- out of sync with the group. this is used by the events system
-  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
-  
-  self.events:UpdateFromGroupList(self.groups)
-  self.events:UpdateFromSpawnerList(self.spawners)
-  self.events:UpdateFromUnitList(self.players)
-  self.events:CheckUnitList()
-  
-  self.state:CheckTriggers()
-  
-  if self.OnGameLoop then
-    self:OnGameLoop()
-  end
-  
-  self:Trace(3, "*** Game loop end ***")
-end
-
----
--- @param #Mission self
 -- @param Core.Spawn#SPAWN spawner
 function Mission:AddSpawner(spawner)
+  self:AssertType(spawner, self.moose.spawn)
   self.spawners[#self.spawners + 1] = spawner
   self:Trace(3, "Spawner added, total=" .. #self.spawners)
 end
@@ -465,8 +492,18 @@ end
 -- @param #Mission self
 -- @param Wrapper.Group#GROUP group
 function Mission:AddGroup(group)
+  self:AssertType(group, self.moose.group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, total=" .. #self.groups)
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+function Mission:AddUnit(unit)
+  self:AssertType(unit, self.moose.unit)
+  self.units[#self.units + 1] = unit
+  self:Trace(3, "Unit added, total=" .. #self.units)
 end
 
 ---
@@ -505,18 +542,18 @@ function Mission:FindUnitsByPrefix(prefix, max)
     local name = prefix .. string.format(" #%03d", i)
     self:Trace(4, "Finding unit in Moose: " .. name)
     
-    local unit = self.mooseUnit:FindByName(name)
+    local unit = self.moose.unit:FindByName(name)
     if unit then
       self:Trace(4, "Found unit in Moose: " .. unit:GetName())
     else
       self:Trace(4, "Did not find unit in Moose: " .. name)
       
       self:Trace(4, "Finding unit in DCS: " .. name)
-      local dcsUnit = self.dcsUnit.getByName(name)
+      local dcsUnit = self.dcs.unit.getByName(name)
       if dcsUnit then
         self:Trace(4, "Found unit in DCS, adding to Moose database: " .. name)
-        self.mooseDatabase:AddUnit(name)
-        unit = self.mooseUnit:FindByName(name)
+        self.moose.database:AddUnit(name)
+        unit = self.moose.unit:FindByName(name)
       else
         self:Trace(4, "Did not find unit in DCS: " .. name)
       end
@@ -590,6 +627,7 @@ end
 -- @param Wrapper.Airbase#AIRBASE airbase
 -- @param #number speed
 function Mission:LandTestPlayers(playerGroup, airbase, speed)
+  self:AssertType(playerGroup, self.moose.group)
   self:Trace(1, "Landing test players")
   local airbase = AIRBASE:FindByName(airbase)
   local land = airbase:GetCoordinate():WaypointAirLanding(speed, airbase)
@@ -601,6 +639,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
 function Mission:SelfDestructGroupsInSpawn(spawn, power, delay, separation)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(1, "Self-destructing groups in spawner")
 
   for i = 1, spawn.SpawnCount do
@@ -616,6 +655,7 @@ end
 -- @param #Mission self
 -- @param Wrapper.Group#GROUP group
 function Mission:SelfDestructGroup(group, power, delay, separation)
+  self:AssertType(group, self.moose.group)
   self:Trace(1, "Self-destructing group: " .. group:GetName())
   
   if not power then
@@ -642,6 +682,7 @@ end
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
 function Mission:GetAliveUnitsFromSpawn(spawn)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(3, "Checking spawn groups for alive count")
   
   local count = 0
@@ -671,6 +712,7 @@ end
 -- @param Core.Spawn#SPAWN spawn
 -- @param #number minLife
 function Mission:SelfDestructDamagedUnits(spawn, minLife)
+  self:AssertType(spawn, self.moose.spawn)
   self:Trace(3, "Checking spawn groups for damage, count=" .. spawn.SpawnCount)
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
@@ -711,7 +753,7 @@ end
 -- @param #MessageLength length
 -- @param #string message
 function Mission:MessageAll(length, message)
-  self:Trace(2, "Message: " .. message)
+  self:Trace(1, "Message: " .. message)
   
   local duration = nil
   if length == MessageLength.Short then
@@ -721,7 +763,7 @@ function Mission:MessageAll(length, message)
   end
   
   self:Assert(duration, "Unknown message length")
-  self.mooseMessage:New(message, duration):ToAll()
+  self.moose.message:New(message, duration):ToAll()
 end
 
 --- 
@@ -731,15 +773,14 @@ function Mission:SetFlag(flag, value)
   self:AssertType(value, "boolean")
   
   self:Trace(2, "Setting flag " .. flag .. " to " .. Boolean:ToString(value))
-  trigger.action.setUserFlag(flag, value)
-  
+  self.dcs.trigger.action.setUserFlag(flag, value)
 end
 
 ---
 -- @param #Mission self
 function Mission:LoadPlayer()
 
-  self.playerGroup = GROUP:FindByName(self._playerGroupName)
+  self.playerGroup = self.moose.group:FindByName(self._playerGroupName)
   
   -- if player didn't use slot on load, assume test mode 
   if self.playerGroup then
@@ -751,8 +792,13 @@ function Mission:LoadPlayer()
   
     self.playerGroupName = "Test Squadron"
     self.playerPrefix = "Test"
-    self.playerGroup = GROUP:FindByName(self.playerGroupName)
-    self.playerGroup:Activate()
+    self.playerGroup = self.moose.group:FindByName(self.playerGroupName)
+    
+    if self.playerGroup then
+      self.playerGroup:Activate()
+    else
+      self:Trace(1, "Test group not found")
+    end
     
   end
 end

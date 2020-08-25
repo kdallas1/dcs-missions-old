@@ -36,16 +36,9 @@ end
 -- @param #StateMachine self
 function StateMachine:StateMachine()
 
-  --- @field #table<#State, #boolean> onceStates
   self.onceStates = {}
-  
-  --- @field #table<#State, #function> triggers
   self.triggers = {}
-  
-  --- @field #table<#State, #State> depends
   self.depends = {}
-  
-  --- @field #table<#State, ?> finals
   self.finals = {}
   
 end
@@ -56,11 +49,13 @@ function StateMachine:TriggerOnce(state, trigger, action)
 
   self:Assert(state, "Arg `state` was nil")
   self:Assert(trigger, "Arg `trigger` was nil")
-  self:Assert(action, "Arg `action` was nil")
   
   self.onceStates[state] = false
   self.triggers[state] = trigger
-  self:HandleEvent(state, action)
+
+  if (action) then
+    self:HandleEvent(state, action)
+  end
   
 end
 
@@ -72,7 +67,6 @@ function StateMachine:TriggerOnceAfter(state, after, trigger, action)
   self:Assert(state, "Arg `state` was nil")
   self:Assert(after, "Arg `state` was nil")
   self:Assert(trigger, "Arg `state` was nil")
-  self:Assert(action, "Arg `action` was nil")
   
   self:TriggerOnce(state, trigger, action)
   self.depends[state] = after
@@ -105,7 +99,10 @@ function StateMachine:Change(state)
     
   if (self.onceStates[state] ~= nil) then
     if (self.onceStates[state] == false) then
+
+      self:Trace(3, "Current state changed to: " .. state)
       self.current = state
+      
       self:FireEvent(state)
       self.onceStates[state] = true
       
@@ -138,12 +135,21 @@ function StateMachine:CheckTriggers()
         canTrigger = (self.current == dependsOnState)
       end
       
-      if (canTrigger and trigger()) then
-        
-        local changed = self:Change(state)
-        if not changed then
-          self:Trace(3, "Change could not be triggered, state=" .. state)
+      if canTrigger then
+
+        local triggerResult = trigger()
+        self:Assert(triggerResult ~= nil, "Trigger return value must not be nil")
+        self:AssertType(triggerResult, "boolean")
+
+        if triggerResult then
+
+          local changed = self:Change(state)
+          if not changed then
+            self:Trace(3, "Change could not be triggered, state=" .. state)
+          end
+
         end
+
       end
       
     end

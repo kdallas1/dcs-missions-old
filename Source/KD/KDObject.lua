@@ -41,7 +41,7 @@ function createClass(...)
     local class = classList[i]
     
     if type(class) ~= "table" then
-      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      local fileName = Debug:GetInfo().fileName
       if not fileName then fileName = "Unknown file" end
       
       error(
@@ -64,15 +64,22 @@ function createClass(...)
   -- prepare `c' to be the metatable of its instances
   c.__index = c
   
-  if not c.classes then
-    c.classes = {}
+  local classes = {}
+
+  -- shallow copy from existing parent as not to change it's parent class list
+  if c.classes then
+    for i = 1, #c.classes do
+      classes[#classes + 1] = c.classes[i]
+    end
   end
+
+  c.classes = classes
   
   -- save parents
   for i = 1, classList.n do
     local class = classList[i]
     if not class.className then
-      local fileName = debug.getinfo(2, "S").short_src:match("^.+[\\\/](.+)\".+$")
+      local fileName = Debug:GetInfo().fileName
       if not fileName then fileName = "Unknown file" end
       env.info("Error: Debug " .. debug.traceback())
       error("Error: The `className` field cannot be nil. Called from: " .. fileName)
@@ -81,9 +88,9 @@ function createClass(...)
     -- search for the existing class, and replace if exists.
     -- we're using a list instead of a table to maintain the ctor call order.
     local replaced = false
-    for i = 1, #c.classes do
-      if c.classes[i].className == class.className then
-        c.classes[i] = class
+    for j = 1, #c.classes do
+      if c.classes[j].className == class.className then
+        c.classes[j] = class
         replaced = true
       end
     end
@@ -95,7 +102,15 @@ function createClass(...)
   end
 
   -- define a new function for returned class
-  function c:New()
+  function c:New(args)
+
+    if args then
+      -- it's easy to forget as it's not very intuitive (maybe we should switch to .../arg)
+      assert(type(args) == "table", "Constructor args must be a table, but was " .. type(args))
+    else
+      -- so we don't need to keep checking if args is nil
+      args = {}
+    end
   
     -- new object
     local o = {}
@@ -110,7 +125,7 @@ function createClass(...)
       local ctor = class[class.className]
       
       if ctor then
-        ctor(o)
+        ctor(o, args)
       end
     end
     
@@ -120,6 +135,14 @@ function createClass(...)
   
   -- class
   return c
+end
+
+---
+-- @param #KDObject self
+function KDObject:KDObject(args)
+  if args.trace then
+    self:CopyTrace(args.trace)
+  end
 end
 
 --- Turn on trace (logging)
@@ -182,16 +205,10 @@ function KDObject:Assert(case, message, stackPosition)
     return
   end
   
-  if (not stackPosition) then
-    stackPosition = 0
-  end
-  
-  local funcName = debug.getinfo(2 + stackPosition, "n").name
-  local lineNum = debug.getinfo(2 + stackPosition, "S").linedefined
-  local fileName = debug.getinfo(2 + stackPosition, "S").source:match("^.+[\\\/](.+)\"?.?$")
-  
-  if not fileName then fileName = "Unknown" end
-  if not funcName then funcName = "Unknown" end
+  local info = Debug:GetInfo(stackPosition)
+  local funcName = info.funcName
+  local lineNum = info.lineNum
+  local fileName = info.fileName
   
   if (not case) then
     env.info(_tracePrefix .. " Assert: " .. message .. " [" .. fileName .. ":" .. funcName .. "@" .. lineNum .. "]")
@@ -210,8 +227,8 @@ function KDObject:AssertType(object, _type)
     return
   end
   
-  self:Assert(object, "Cannot check type, object is nil", 1)
-  self:Assert(_type, "Cannot check type, _type is nil", 1)
+  self:Assert(object ~= nil, "Cannot check type, object is nil", 1)
+  self:Assert(_type ~= nil, "Cannot check type, _type is nil", 1)
   
   if (type(_type) == "string") then
     self:Assert(type(object) == _type,

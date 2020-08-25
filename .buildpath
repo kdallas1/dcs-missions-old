@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildpath>
+	<buildpathentry kind="src" path="Source"/>
+	<buildpathentry combineaccessrules="false" kind="prj" path="/Moose Framework"/>
+</buildpath>
