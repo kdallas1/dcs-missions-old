@@ -7,13 +7,7 @@ dofile(baseDir .. "KD/Events.lua")
 -- @type MissionEvents
 -- @extends KD.Events#Events
 MissionEvents = {
-  className = "MissionEvents",
-  
-  ---@field #list<Wrapper.Unit#UNIT> units
-  units = nil,
-  
-  ---@field #list<#function> eventHandlers
-  eventHandlers = nil,
+  className = "MissionEvents"
 }
 
 ---

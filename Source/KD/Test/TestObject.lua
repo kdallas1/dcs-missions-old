@@ -62,7 +62,7 @@ end
 local function Test_CreateClass_ArgTypeError()
 
   local TestClass = { className = "TestClass", foo = "test" }
-  ok, result = pcall(function() createClass(TestClass, "foo", TestClass) end)
+  local ok, _ = pcall(function() createClass(TestClass, "foo", TestClass) end)
   
   TestAssert(not ok, "Non-table args for createClass shouldn't work")
   
@@ -109,10 +109,6 @@ local function Test_CreateClass_CtorCallOrder()
   
   local callOrder = {}
   
-  function KDObject:KDObject()
-    callOrder[#callOrder + 1] = "Object"
-  end
-  
   function TestChild1:TestChild1()
     callOrder[#callOrder + 1] = "TestChild1"
   end
@@ -123,6 +119,15 @@ local function Test_CreateClass_CtorCallOrder()
   
   TestChild1 = createClass(KDObject, TestChild1)
   TestChild2 = createClass(TestChild1, TestChild2)
+  
+  -- replace KDObject base class instead of modifying it, otherwise
+  -- all other uses of KDObject will be affected
+  TestChild2.classes[1] = {
+    className = "KDObject",
+    KDObject = function()
+      callOrder[#callOrder + 1] = "Object"
+    end
+  }
   
   TestChild2:New()
   
@@ -142,9 +147,13 @@ local function Test_CreateClass_ClassDeclaredBeforeFunctions_ChildFunctionOverri
   
   local called = nil
   
-  function KDObject:Foo()
-    called = "Object"
-  end
+  -- replace KDObject base class instead of modifying it, otherwise
+  -- all other uses of KDObject will be affected
+  TestChild1.classes[1] = {
+    Foo = function()
+      called = "Object"
+    end
+  }
   
   function TestChild1:Foo()
     called = "TestChild1"
@@ -163,10 +172,6 @@ local function Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNot
   
   local called = nil
   
-  function KDObject:Foo()
-    called = "Object"
-  end
-  
   function TestChild1:Foo()
     called = "TestChild1"
   end
@@ -174,11 +179,87 @@ local function Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNot
   -- if createClass called after functions, child will not override
   TestChild1 = createClass(KDObject, TestChild1)
   
+  -- important: dangerous, as this modifies KDObject which is used everywhere
+  KDObject.Foo = function()
+    called = "Object"
+  end
+  
   local test = TestChild1:New()
   test:Foo()
   
   TestAssert(called == "Object", "Expected Object function to be called, but was " .. called)
   
+  -- remove test Foo function, as this affects KDObject everywhere
+  KDObject.Foo = nil
+end
+
+local function Test_New_ConstructorArgsPassed()
+
+  local gotArg1 = nil
+  local gotArg2 = nil
+
+  local TestChild1 = { className = "TestChild1" }
+  
+  function TestChild1:TestChild1(args)
+    gotArg1 = args[1]
+    gotArg2 = args[2]
+  end
+
+  TestChild1 = createClass(KDObject, TestChild1)
+
+  TestChild1:New({"foo", "bar"})
+
+  TestAssert(gotArg1 == "foo", "Expected ctor arg 1 to be 'foo', but was: " .. gotArg1)
+  TestAssert(gotArg2 == "bar", "Expected ctor arg 2 to be 'bar', but was: " .. gotArg2)
+
+end
+
+local function Test_CreateClass_ChildClassDeclaration_ChildCtorNotCalledOnParentNew()
+
+  local TestChild1 = { className = "TestChild1" }
+  function TestChild1:TestChild1() ctor1 = true end
+  TestChild1 = createClass(KDObject, TestChild1)
+
+  local TestChild2 = { className = "TestChild2" }
+  function TestChild2:TestChild2() ctor2 = true end
+  TestChild2 = createClass(TestChild1, TestChild2)
+
+  TestChild1:New()
+
+  TestAssert(ctor1, "Parent ctor should be called")
+  TestAssert(not ctor2, "Child ctor should not be called")
+end
+
+local function Test_New_ParentInstantiated_ChildBaseObjectCtorCalled()
+
+  local TestChild1 = { className = "TestChild1" }
+  TestChild1 = createClass(KDObject, TestChild1)
+
+  local TestChild2 = { className = "TestChild2" }
+  TestChild2 = createClass(TestChild1, TestChild2)
+
+  -- replace KDObject base class instead of modifying it, otherwise
+  -- all other uses of KDObject will be affected
+  TestChild1.classes[1] = {
+    className = "KDObject",
+    KDObject = function() testChild1BaseCtor = true end
+  }
+  TestChild2.classes[1] = {
+    className = "KDObject",
+    KDObject = function() testChild2BaseCtor = true end
+  }
+
+  TestChild1.classes[2].TestChild1 = function() testChild1Ctor = true end
+  TestChild2.classes[3].TestChild2 = function() testChild2Ctor = true end
+
+  TestChild1:New()
+  TestChild2:New()
+
+  TestAssert(testChild1BaseCtor, "TestChild1: Base object ctor (on child object) should be called")
+  TestAssert(testChild1Ctor, "TestChild1: Ctor should be called")
+
+  TestAssert(testChild2BaseCtor, "TestChild2: Base object ctor (on child object) should be called")
+  TestAssert(testChild2Ctor, "TestChild2: Ctor should be called")
 end
 
 function Test_Object()
@@ -192,6 +273,11 @@ function Test_Object()
     Test_CreateClass_CtorCallOrder,
     Test_CreateClass_ClassDeclaredBeforeFunctions_ChildFunctionOverrides,
     Test_CreateClass_ClassDeclaredAfterFunctions_ChildFunctionDoesNotOverride,
+    Test_CreateClass_ChildClassDeclaration_ChildCtorNotCalledOnParentNew,
     Test_New_ConstructorsCalled,
+    Test_New_ConstructorArgsPassed,
+    Test_New_ParentInstantiated_ChildBaseObjectCtorCalled
   }
 end
+
+--testOnly = Test_Object

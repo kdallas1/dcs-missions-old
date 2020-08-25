@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "lua",
+				"request": "launch",
+				"name": "Debug",
+				"luaVersion": "5.1",
+				"program": "${workspaceFolder}/TestMain.lua"
+			}
+		]
+	},
+	"settings": {
+		"Lua.diagnostics.disable": [
+			"undefined-global",
+			"emmy-lua",
+			"lowercase-global"
+		]
+	}
+}

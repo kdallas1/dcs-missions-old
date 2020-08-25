@@ -1,10 +1,23 @@
 testOnly = nil
 
 dofile(baseDir .. "KD/Test/TestObject.lua")
+dofile(baseDir .. "KD/Test/TestUtilities.lua")
 dofile(baseDir .. "KD/Test/TestSpawn.lua")
 dofile(baseDir .. "KD/Test/TestStateMachine.lua")
 dofile(baseDir .. "KD/Test/TestMissionEvents.lua")
 dofile(baseDir .. "KD/Test/TestMission.lua")
+dofile(baseDir .. "KD/Test/TestMocks.lua")
+
+local tests = {
+  "KD",
+  Test_Object,
+  Test_Utilities,
+  Test_Spawn,
+  Test_StateMachine,
+  Test_MissionEvents,
+  Test_Mission,
+  Test_Mocks
+}
 
 testTrace = {
   _traceOn = true,
@@ -17,20 +30,13 @@ local errorCount = 0
 local passCount = 0
 local failCount = 0
 
-function Test()
-  env.info("Test: Running, Lua " .. _VERSION)
+function Test(extraTests)
+  env.info("Test: Running, " .. _VERSION)
   
   if testOnly then
     RunSingleTest(testOnly, "*", 1)
   else
-    RunTests {
-      "*",
-      Test_Object,
-      Test_Spawn,
-      Test_StateMachine,
-      Test_MissionEvents,
-      Test_Mission,
-    }
+    RunTests(List:Concat(tests, extraTests))
   end
 
   env.info(string.format("Test: Finished (pass=%i fail=%i)", passCount, failCount))
@@ -83,9 +89,8 @@ function TestAssert(condition, errorString)
   
   if not condition then
     
-    local lineNum = debug.getinfo(2, "S").linedefined
-    local fileName = debug.getinfo(2, "S").source:match("^.+[\\\/](.+)\"?.?$")
-    if not fileName then fileName = "Unknown" end
+    local lineNum = Debug:GetInfo().lineNum
+    local fileName = Debug:GetInfo().fileName
 
     local error = "Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString
     
