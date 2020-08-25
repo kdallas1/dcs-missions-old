@@ -1,5 +1,5 @@
 skipMoose = true
-dofile(baseDir .. "Horus/Source/Mission06.lua")
+dofile(baseDir .. "Horus/Mission06.lua")
 skipMoose = false
 
 dofile(baseDir .. "KD/Test/MockMoose.lua")

@@ -6,7 +6,7 @@ dofile(baseDir .. "KD/Utilities.lua")
 
 --- 
 -- @type Spawn
--- @extends KD.KDObject#Object
+-- @extends KD.KDObject#KDObject
 Spawn = {
   className = "Spawn",
   
