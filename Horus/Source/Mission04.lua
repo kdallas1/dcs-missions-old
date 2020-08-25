@@ -33,7 +33,6 @@ Mission04.Flags = {
 -- @param #Mission04 self
 function Mission04:Mission04()
 
-  self.playerGroup = GROUP:FindByName("Dodge Squadron")
   self.friendlyHeloGroup = GROUP:FindByName("Friendly Helos")
   self.enemyHeloGroup = GROUP:FindByName("Enemy Helos")
   self.enemyGroundGroup = GROUP:FindByName("Enemy Ground")
@@ -42,7 +41,6 @@ function Mission04:Mission04()
   self.rendezvousZone = ZONE:New("Rendezvous")
   self.nalchikPark = ZONE:New("Nalchik Park")
   
-  self:Assert(self.playerGroup, "Player group not found")
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemyHeloGroup, "Enemy helo group not found")
   self:Assert(self.enemyGroundGroup, "Enemy ground group not found")
@@ -215,7 +213,7 @@ function Mission04:OnExtractionComplete()
   self:PlaySound(Sound.FirstObjectiveMet)
   self:MessageAll(MessageLength.Short, "Extraction complete, RTB to Nalchik")
   self:Trace(1, "Friendly helos out of extraction zone")
-  self:SetFlag(Mission04.Flags.TestPlayerRTB, true)
+  self:LandTestPlayers(self.playerGroup, AIRBASE.Caucasus.Nalchik, 400)
   
 end
 
