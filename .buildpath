@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildpath>
+	<buildpathentry kind="src" path="Horus/Source"/>
+	<buildpathentry kind="src" path="Horus/Missions"/>
+	<buildpathentry kind="src" path="KD"/>
+	<buildpathentry combineaccessrules="false" kind="prj" path="/Moose Framework"/>
+</buildpath>
