@@ -5,12 +5,18 @@ dofile(baseDir .. "KD/KDObject.lua")
 
 --- 
 -- @type DCS
+-- @extends KD.KDObject#Object
 DCS = {
   className = "DCS"
 }
 
 ---
--- @param self #DCS
+-- @function [parent=#DCS] New
+-- @param #DCS self
+-- @return #DCS
+
+---
+-- @param #DCS self
 function DCS:DCS()
   self.unit = Unit
   self.coalition = coalition

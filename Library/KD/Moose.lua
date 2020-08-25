@@ -9,12 +9,18 @@ end
 
 --- 
 -- @type Moose
+-- @extends KD.KDObject#KDObject
 Moose = {
   className = "Moose"
 }
 
 ---
--- @param self #Moose
+-- @function [parent=#Moose] New
+-- @param #Moose self
+-- @return #Moose
+
+---
+-- @param #Moose self
 function Moose:Moose()
   self.zone = ZONE
   self.spawn = SPAWN
