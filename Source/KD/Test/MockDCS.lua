@@ -21,6 +21,11 @@ function MockDCS:MockDCS()
       BLUE = 0
     }
   }
+  self.trigger = {
+    action = {
+      setUserFlag = function() end
+    }
+  }
 end
 
 MockDCS = createClass(Moose, MockDCS)

@@ -753,7 +753,7 @@ end
 -- @param #MessageLength length
 -- @param #string message
 function Mission:MessageAll(length, message)
-  self:Trace(2, "Message: " .. message)
+  self:Trace(1, "Message: " .. message)
   
   local duration = nil
   if length == MessageLength.Short then
@@ -773,8 +773,7 @@ function Mission:SetFlag(flag, value)
   self:AssertType(value, "boolean")
   
   self:Trace(2, "Setting flag " .. flag .. " to " .. Boolean:ToString(value))
-  trigger.action.setUserFlag(flag, value)
-  
+  self.dcs.trigger.action.setUserFlag(flag, value)
 end
 
 ---

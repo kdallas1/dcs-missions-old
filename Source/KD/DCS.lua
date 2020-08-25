@@ -20,6 +20,7 @@ DCS = {
 function DCS:DCS()
   self.unit = Unit
   self.coalition = coalition
+  self.trigger = trigger
 end
 
 DCS = createClass(KDObject, DCS)

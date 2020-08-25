@@ -10,8 +10,8 @@ local function NewMock(fields)
 
   mock.moose = MockMoose:New(fields)
 
-  mock.friendlyHelo1 = mock.moose:MockUnit({ name = "Friendly Helo #001", life = 10 })
-  mock.friendlyHelo2 = mock.moose:MockUnit({ name = "Friendly Helo #002", life = 10 })
+  mock.friendlyHelo1 = mock.moose:MockUnit({ name = "Friendly Helo #001", life = 20 })
+  mock.friendlyHelo2 = mock.moose:MockUnit({ name = "Friendly Helo #002", life = 20 })
   
   mock.friendlyHeloGroup = mock.moose:MockGroup(
     {
@@ -31,9 +31,13 @@ local function NewMock(fields)
   mock.c4[1] = mock.moose:MockStatic({ name = "C4 #001" })
   mock.c4[2] = mock.moose:MockStatic({ name = "C4 #002" })
 
-  mock.enemyAAA1 = mock.moose:MockGroup({ name = "Enemy AAA #001", aliveCount = 2 })
-  mock.enemyAAA2 = mock.moose:MockGroup({ name = "Enemy AAA #002", aliveCount = 2 })
-  mock.enemyAAA3 = mock.moose:MockGroup({ name = "Enemy AAA #003", aliveCount = 2 })
+  mock.enemyAaa = {}
+  mock.enemyAaa[1] = mock.moose:MockGroup({ name = "Enemy AAA #001", aliveCount = 2 })
+  mock.enemyAaa[2] = mock.moose:MockGroup({ name = "Enemy AAA #002", aliveCount = 2 })
+  mock.enemyAaa[3] = mock.moose:MockGroup({ name = "Enemy AAA #003", aliveCount = 2 })
+  mock.enemyAaa[4] = mock.moose:MockGroup({ name = "Enemy AAA #004", aliveCount = 2 })
+  mock.enemyAaa[5] = mock.moose:MockGroup({ name = "Enemy AAA #005", aliveCount = 2 })
+  mock.enemyAaa[6] = mock.moose:MockGroup({ name = "Enemy AAA #006", aliveCount = 2 })
 
   mock.dcs = MockDCS:New()
 
@@ -168,9 +172,12 @@ local function Test_EnemyBaseDestroyed_EnemyAaaActivates()
 
   mock.mission:Start()
 
-  mock.enemyAAA1.Activate = function() aaa1 = true end
-  mock.enemyAAA2.Activate = function() aaa2 = true end
-  mock.enemyAAA3.Activate = function() aaa3 = true end
+  mock.enemyAaa[1].Activate = function() aaa1 = true end
+  mock.enemyAaa[2].Activate = function() aaa2 = true end
+  mock.enemyAaa[3].Activate = function() aaa3 = true end
+  mock.enemyAaa[4].Activate = function() aaa4 = true end
+  mock.enemyAaa[5].Activate = function() aaa5 = true end
+  mock.enemyAaa[6].Activate = function() aaa6 = true end
 
   mock.mission.state:Change(Mission05.State.EnemyBaseDestroyed)
 
@@ -179,10 +186,13 @@ local function Test_EnemyBaseDestroyed_EnemyAaaActivates()
   TestAssert(aaa1, "AAA 1 should have activated")
   TestAssert(aaa2, "AAA 2 should have activated")
   TestAssert(aaa3, "AAA 3 should have activated")
+  TestAssert(aaa4, "AAA 4 should have activated")
+  TestAssert(aaa5, "AAA 5 should have activated")
+  TestAssert(aaa6, "AAA 6 should have activated")
 
 end
 
-local function Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed()
+local function Test_HalfEnemyAaaUnitsDead_StateChangedToEnemyAaaDestroyed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
@@ -201,9 +211,8 @@ local function Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed()
 
   mock.mission.state.current = Mission05.State.EnemyBaseDestroyed
 
-  mock.enemyAAA1.aliveCount = 0
-  mock.enemyAAA2.aliveCount = 1
-  mock.enemyAAA3.aliveCount = 2
+  mock.enemyAaa[1].aliveCount = 0
+  mock.enemyAaa[2].aliveCount = 0
 
   mock.mission:GameLoop()
 
@@ -216,6 +225,41 @@ local function Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed()
     "Flag should be: Friendly helos RTB")
 
   TestAssert(flagValue, "Flag should be true")
+
+end
+
+local function Test_OneEnemyAaaUnitsDead_StateNotChangedToEnemyAaaDestroyed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+
+  local flagSet = nil
+  local flagValue = nil
+  mock.mission.SetFlag = function(self, flag, value)
+    flagSet = flag
+    flagValue = value
+  end
+
+  mock.friendlyHeloGroup.IsNotInZone = function() return false end
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission05.State.EnemyBaseDestroyed
+
+  mock.enemyAaa[1].aliveCount = 0
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current ~= Mission05.State.EnemyAaaDestroyed, 
+    "State should not be: Enemy AAA destroyed")
+
+  TestAssert(
+    flagSet ~= Mission05.Flags.FriendlyHelosRTB,
+    "Flag should not be: Friendly helos RTB")
+
+  TestAssert(not flagValue, "Flag should not be true")
 
 end
 
@@ -268,7 +312,8 @@ function Test_Mission05()
     Test_OnSamsDestroyed_HelosProceedFlagSet,
     Test_FriendlyHelosLanded_C4ExplodesAndStateIsBaseDestroyed,
     Test_EnemyBaseDestroyed_EnemyAaaActivates,
-    Test_ZeroEnemyAaaUnitsAlive_StateChangedToEnemyAaaDestroyed,
+    Test_HalfEnemyAaaUnitsDead_StateChangedToEnemyAaaDestroyed,
+    Test_OneEnemyAaaUnitsDead_StateNotChangedToEnemyAaaDestroyed,
     Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState,
     Test_FriendlyHelosEscapedAndPlayersRTB_MissionAccomplished
   }

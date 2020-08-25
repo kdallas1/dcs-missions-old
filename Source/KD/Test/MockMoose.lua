@@ -161,6 +161,7 @@ function MockMoose:MockGroup(fields)
       CountAliveUnits = function(self) return self.aliveCount end,
 
       Activate = stubFunction,
+      SmokeRed = stubFunction
     },
     fields
   )
