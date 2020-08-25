@@ -228,6 +228,8 @@ function Mission05:ScheduleExplodeC4(delay)
   
 end
 
+---
+-- @param #Mission05 self
 function Mission05:OnEnemyBaseDestroyed()
 
   self:MessageAll(MessageLength.Short, "Enemy base destroyed.")
@@ -239,6 +241,8 @@ function Mission05:OnEnemyBaseDestroyed()
 
 end
 
+---
+-- @param #Mission05 self
 function Mission05:IsFriendlyHeloPathClear()
   local aaa1 = self.enemyAAAGroup1:CountAliveUnits()
   local aaa2 = self.enemyAAAGroup2:CountAliveUnits()
@@ -246,6 +250,8 @@ function Mission05:IsFriendlyHeloPathClear()
   return (aaa1 + aaa2 + aaa3) <= self.aaaEscapeCount
 end
 
+---
+-- @param #Mission05 self
 function Mission05:OnEnemyAaaDestroyed()
 
   self:MessageAll(MessageLength.Short, "Enemy AAA destroyed.")
@@ -254,6 +260,8 @@ function Mission05:OnEnemyAaaDestroyed()
 
 end
 
+---
+-- @param #Mission05 self
 function Mission05:OnFriendlyHelosEscaped()
 
   self:MessageAll(MessageLength.Short, "Friendly helos have escape and are RTB.")
