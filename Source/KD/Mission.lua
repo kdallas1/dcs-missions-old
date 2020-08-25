@@ -89,7 +89,7 @@ MissionState = {
 -- @param #Mission self
 function Mission:Mission(args)
   
-  if not args.moose then
+  if args.moose then
     self.moose = args.moose
   else
     self.moose = Moose:New()
