@@ -9,15 +9,19 @@ dofile(baseDir .. "KD/Mission.lua")
 Mission06 = {
   className = "Mission06",
 
-  traceLevel = 2,
-
   enemyFobMax = 4,
   enemyFobSpawnStart = 0,
   enemyFobSpawnGap = 60,
+  enemyFobMaxAlivePerSpawn = 3,
+  enemyTankMinLife = 10,
+  enemyHeloMinLife = 10,
 
   friendlyBaseMax = 2,
   friendlyBaseSpawnStart = 0,
   friendlyBaseSpawnGap = 60,
+  friendlyBaseMaxAlivePerSpawn = 3,
+  friendlyTankMinLife = 10,
+  friendlyHeloMinLife = 10,
 
   friendlyBaseNames = {
     [1] = "Nalchik",
@@ -35,6 +39,10 @@ Mission06.State = {
 ---
 -- @param #Mission06 self
 function Mission06:Mission06()
+
+  self:SetTraceLevel(3)
+  
+  self.playerTestOn = false
 
   self.enemyFob = {}
   for i = 1, self.enemyFobMax do
@@ -57,17 +65,40 @@ function Mission06:Mission06()
   self.state:TriggerOnceAfter(
     MissionState.MissionAccomplished,
     Mission06.State.EnemyFobsDead,
-    function()
-      local parked = self:UnitsAreParked(self.nalchikParkZone, self.players)
-      return parked
-     end
+    function() return self:UnitsAreParked(self.nalchikParkZone, self.players) end
   )
+  
+  self:SetupMenu()
 
+end
+
+---
+-- @param #Mission06 self
+function Mission06:SetupMenu()
+
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill players", menu,
+    function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
+  
+  for i = 1, self.friendlyBaseMax do
+    self.moose.menu.coalitionCommand:New(
+      self.dcs.coalition.side.BLUE, "Kill Base " .. i .. " Command", menu,
+      function() self:SelfDestructUnits({ self.friendlyBase[i].command }, 100, 1, 1) end)
+  end
+  
+  for i = 1, self.enemyFobMax do
+    self.moose.menu.coalitionCommand:New(
+      self.dcs.coalition.side.BLUE, "Kill FOB " .. i .. " Command", menu,
+      function() self:SelfDestructUnits({ self.enemyFob[i].command }, 100, 1, 1) end)
+  end
+  
 end
 
 function Mission06:NewEnemyFob(i)
 
-  local fobName = "Enemy FOB " .. i
+  local fobName = "FOB " .. i
   local fob = {}
 
   fob.name = fobName
@@ -89,8 +120,18 @@ function Mission06:NewEnemyFob(i)
   self:AddSpawner(fob.heloSpawn)
 
   self.moose.scheduler:New(nil, function()
-    fob.tankSpawn:Spawn()
-    fob.heloSpawn:Spawn()
+    if (fob.command:IsAlive()) then
+      
+      if (self:CountAliveUnitsFromSpawn(fob.tankSpawn) < self.enemyFobMaxAlivePerSpawn) then
+        self:AddGroup(fob.tankSpawn:Spawn())
+      end
+      
+      if (self:CountAliveUnitsFromSpawn(fob.heloSpawn) < self.enemyFobMaxAlivePerSpawn) then
+        self:AddGroup(fob.heloSpawn:Spawn())
+      end
+      
+      fob.command:SmokeRed()
+    end
   end, {}, self.enemyFobSpawnStart, self.enemyFobSpawnGap)
 
   return fob
@@ -121,8 +162,15 @@ function Mission06:NewFriendlyBase(i)
   self:AddSpawner(base.heloSpawn)
 
   self.moose.scheduler:New(nil, function()
-    base.tankSpawn:Spawn()
-    base.heloSpawn:Spawn()
+    if (base.command:IsAlive()) then
+      if (self:CountAliveUnitsFromSpawn(base.tankSpawn) < self.friendlyBaseMaxAlivePerSpawn) then
+        self:AddGroup(base.tankSpawn:Spawn())
+      end
+      
+      if (self:CountAliveUnitsFromSpawn(base.heloSpawn) < self.friendlyBaseMaxAlivePerSpawn) then
+        self:AddGroup(base.heloSpawn:Spawn())
+      end
+    end
   end, {}, self.friendlyBaseSpawnStart, self.friendlyBaseSpawnGap)
 
   return base
@@ -141,6 +189,19 @@ end
 ---
 -- @param #Mission06 self
 function Mission06:OnGameLoop()
+
+  for i = 1, #self.enemyFob do
+    local fob = self.enemyFob[i]
+    self:SelfDestructDamagedUnits(fob.tankSpawn, self.enemyTankMinLife)
+    self:SelfDestructDamagedUnits(fob.heloSpawn, self.enemyHeloMinLife)
+  end
+  
+  for i = 1, #self.friendlyBase do
+    local base = self.friendlyBase[i]
+    self:SelfDestructDamagedUnits(base.tankSpawn, self.friendlyTankMinLife)
+    self:SelfDestructDamagedUnits(base.heloSpawn, self.friendlyHeloMinLife)
+  end
+  
 end
 
 ---

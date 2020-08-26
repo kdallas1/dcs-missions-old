@@ -14,7 +14,7 @@ local function NewMock(fields)
   mock.moose:MockGroup({ name = "Dodge Squadron", units = { player } })
 
   for i = 1, 4 do
-    local fobName = "Enemy FOB " .. i
+    local fobName = "FOB " .. i
     mock.moose:MockGroup({ name = fobName .. " SAM" })
     mock.moose:MockUnit({ name = fobName .. " Command" })
     mock.moose:MockGroup({ name = fobName .. " Tanks" })

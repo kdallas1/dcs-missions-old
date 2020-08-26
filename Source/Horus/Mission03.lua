@@ -71,7 +71,7 @@ function Mission03:OnGameLoop()
   local transportsAreParked = (transportsExist and self:SpawnGroupsAreParked(self.nalchikParkZone, self.transportSpawn))
   local everyoneParked = (playersAreParked and transportsAreParked)
   
-  self:Trace(2, "Transports alive: " .. self:GetAliveUnitsFromSpawn(self.transportSpawn))
+  self:Trace(2, "Transports alive: " .. self:CountAliveUnitsFromSpawn(self.transportSpawn))
   self:Trace(2, (playersAreParked and "✔️ Players: All parked" or "❌ Players: Not all parked"), 1)
   self:Trace(2, (transportsAreParked and "✔️ Transports: All parked" or "❌ Transports: Not all parked"), 1)
   self:Trace(2, (everyoneParked and "✔️ Everyone: All parked" or "❌ Everyone: Not all parked"), 1)

@@ -289,27 +289,25 @@ local function Test_KeepAliveSpawnGroupsIfParked_GroupNotParked_NotRespawned()
 end
 
 local function Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce()
-  local explodeCallCount = 0
-  local mission = NewMockMission()
   
-  local units = {
-    {
-      GetName = function() return "Test" end,
-      GetLife = function() return 1 end,
-      IsAlive = function() return true end,
-      Explode = function() explodeCallCount = explodeCallCount + 1 end
-    }
+  local mock = NewMock(fields)
+  local mission = mock.mission
+  
+  local explodeCallCount = 0
+  local unit = mock.moose:MockUnit {
+    GetName = function() return "Test" end,
+    GetLife = function() return 1 end,
+    IsAlive = function() return true end,
+    Explode = function() explodeCallCount = explodeCallCount + 1 end
   }
   
-  local spawn = {
-    ClassName = mission.moose.spawn.ClassName,
+  local spawn = mock.moose:MockSpawn {
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
-      {
-        ClassName = mission.moose.group.ClassName,
+      mock.moose:MockGroup {
         GetName = function() return "Test" end,
-        GetUnits = function() return units end,
+        GetUnits = function() return { unit } end,
       }
     end,
   }
@@ -317,25 +315,25 @@ local function Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce()
   mission:SelfDestructDamagedUnits(spawn, 10)
   mission:SelfDestructDamagedUnits(spawn, 10)
   
-  TestAssert(explodeCallCount == 1, "Unit should self destruct when damaged")
+  TestAssert(explodeCallCount == 1, "Unit should self destruct 1 time when damaged, actual: " .. explodeCallCount)
 end
 
 local function Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct()
-  local selfDestructCalled = false
-  local mission = NewMockMission()
   
-  local spawn = {
-    ClassName = mission.moose.spawn.ClassName,
+  local mock = NewMock(fields)
+  local mission = mock.mission
+  
+  local selfDestructCalled = false
+  local spawn = mock.moose:MockSpawn {
     SpawnCount = 1,
     GetGroupFromIndex = function()
       return
-      {
-        ClassName = mission.moose.group.ClassName,
+      mock.moose:MockGroup {
         GetName = function() return "Test" end,
         GetUnits = function()
           return
           {
-            {
+            mock.moose:MockUnit {
               GetName = function() return "Test" end,
               GetLife = function() return 11 end,
               IsAlive = function() return true end,
@@ -352,7 +350,7 @@ local function Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct()
   TestAssert(not selfDestructCalled, "Unit should not self destruct when undamaged")
 end
 
-local function Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
+local function Test_CountAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
   
   local mission = NewMockMission()
   local spawn = {
@@ -383,7 +381,7 @@ local function Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
       }
     end,
   }
-  local result = mission:GetAliveUnitsFromSpawn(spawn)
+  local result = mission:CountAliveUnitsFromSpawn(spawn)
   
   TestAssert(result == 2, "Alive unit count should be 2, but was " .. result)
 end
@@ -518,7 +516,7 @@ function Test_Mission()
     Test_KeepAliveSpawnGroupsIfParked_GroupNotParked_NotRespawned,
     Test_SelfDestructDamagedUnits_DamagedUnits_SelfDestructOnce,
     Test_SelfDestructDamagedUnits_UndamagedUnits_DoNotSelfDestruct,
-    Test_GetAliveUnitsFromSpawn_AliveUnits_CountIsCorrect,
+    Test_CountAliveUnitsFromSpawn_AliveUnits_CountIsCorrect,
     Test_FindUnitsByPrefix_InMoose_NotAddedToMooseDatabase,
     Test_FindUnitsByPrefix_NotInMooseButInDcs_AddedToMooseDatabase,
     Test_Start_OnStartCalled,
