@@ -25,6 +25,7 @@ Mission = {
   playerPrefix = nil,
   playerCountMax = 0,
   playerMax = 4,
+  playerTestOn = true,
   
   gameLoopInterval = 1,
   messageTimeShort = 20,
@@ -166,9 +167,11 @@ function Mission:GameLoop()
 
   self:Trace(3, "*** Game loop start ***")
   
-  -- player list can change at any moment on an MP server, and is often 
-  -- out of sync with the group. this is used by the events system
-  self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  if self.playerPrefix then
+    -- player list can change at any moment on an MP server, and is often 
+    -- out of sync with the group. this is used by the events system
+    self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  end
   
   self.events:UpdateFromGroupList(self.groups)
   self.events:UpdateFromSpawnerList(self.spawners)
@@ -197,7 +200,7 @@ function Mission:_OnUnitSpawn(unit)
     self:OnUnitSpawn(unit)
   end
   
-  if (string.match(unit:GetName(), self.playerPrefix)) then
+  if (self.playerPrefix and string.match(unit:GetName(), self.playerPrefix)) then
     self:_OnPlayerSpawn(unit)
   end
   
@@ -238,7 +241,7 @@ function Mission:_OnUnitDead(unit)
   self:AssertType(unit, self.moose.unit)
   self:Trace(2, "Unit dead: " .. unit:GetName())
   
-  if (string.match(unit:GetName(), self.playerPrefix)) then
+  if (self.playerPrefix and string.match(unit:GetName(), self.playerPrefix)) then
     self:_OnPlayerDead(unit)
   end
   
@@ -658,6 +661,15 @@ function Mission:SelfDestructGroup(group, power, delay, separation)
   self:AssertType(group, self.moose.group)
   self:Trace(1, "Self-destructing group: " .. group:GetName())
   
+  self:SelfDestructUnits(group:GetUnits(), power, delay, separation)
+end
+
+---
+-- @param #Mission self
+-- @param #list<Wrapper.Unit#UNIT> units
+function Mission:SelfDestructUnits(units, power, delay, separation)
+  self:AssertType(units, "table")
+  
   if not power then
     power = 100
   end
@@ -670,10 +682,11 @@ function Mission:SelfDestructGroup(group, power, delay, separation)
     separation = 0
   end
   
-  local units = group:GetUnits()
-  for j = 1, #units do
-    local unit = units[j]
-    unit:Explode(power, delay + ((j - 1) * separation))
+  for i = 1, #units do
+    local unit = units[i]
+    self:AssertType(unit, self.moose.unit)
+    self:Trace(1, "Self-destructing unit: " .. unit:GetName())
+    unit:Explode(power, delay + ((i - 1) * separation))
     unit.selfDestructDone = true
   end
 end
@@ -681,7 +694,7 @@ end
 ---
 -- @param #Mission self
 -- @param Core.Spawn#SPAWN spawn
-function Mission:GetAliveUnitsFromSpawn(spawn)
+function Mission:CountAliveUnitsFromSpawn(spawn)
   self:AssertType(spawn, self.moose.spawn)
   self:Trace(3, "Checking spawn groups for alive count")
   
@@ -718,7 +731,12 @@ function Mission:SelfDestructDamagedUnits(spawn, minLife)
     local group = spawn:GetGroupFromIndex(i)
     if group then
       self:Trace(3, "Checking group for damage: " .. group:GetName())
-      self:SelfDestructDamagedUnitsInList(group:GetUnits(), minLife)
+      
+      -- sometimes moose can return nil spawner units (not sure why)
+      local units = group:GetUnits()
+      if units then
+        self:SelfDestructDamagedUnitsInList(group:GetUnits(), minLife)
+      end
     end
   end
 end
@@ -728,9 +746,18 @@ end
 -- @param #list<Wrapper.Unit#UNIT> list
 -- @param #number minLife
 function Mission:SelfDestructDamagedUnitsInList(units, minLife)
+
+  self:Assert(minLife ~= nil, "Param: minLife cannot be nil")
+  self:Assert(units ~= nil, "Param: units cannot be nil")
+  
+  self:AssertType(units, "table")
+  self:AssertType(minLife, "number")
+  
   if units then
     for i = 1, #units do
       local unit = units[i]
+      self:AssertType(unit, self.moose.unit)
+      
       local life = unit:GetLife()
       
       self:Trace(3, "Checking unit for damage: " .. unit:GetName() .. ", health " .. tostring(life))
@@ -788,7 +815,7 @@ function Mission:LoadPlayer()
     self.playerGroupName = self._playerGroupName
     self.playerPrefix = self._playerPrefix
     
-  else
+  elseif self.playerTestOn then
   
     self.playerGroupName = "Test Squadron"
     self.playerPrefix = "Test"

@@ -111,7 +111,7 @@ function MockMoose:MockSpawn(fields)
   local spawn = self:MockObject(
     self.spawn.ClassName,
     {
-      Spawn = stubFunction,
+      Spawn = function() return self:MockGroup() end,
       SpawnCount = 0
     },
     fields
@@ -136,6 +136,7 @@ function MockMoose:MockUnit(fields)
       GetGroup = function(self) return self.group end,
 
       GetVec3 = stubFunction,
+      SmokeRed = stubFunction,
 
       MockKill = function (self)
         self.life = 1
