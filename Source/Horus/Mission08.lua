@@ -32,7 +32,7 @@ Mission08.State = {
 -- @param #Mission08 self
 function Mission08:Mission08()
 
-  self.playerTestOn = false
+--  self.playerTestOn = false
   self:SetTraceLevel(3)
 
   self.nalchikParkZone = self.moose.zone:New("Nalchik Park")
@@ -40,6 +40,7 @@ function Mission08:Mission08()
   
   self.enemyCommand = self.moose.group:FindByName("Enemy Command")
   self:Assert(self.enemyCommand, "Enemy Command not found")
+  self.enemyCommand.enemyCommand = true
   self:AddGroup(self.enemyCommand)
   
   self.enemySams = self.moose.group:FindByName("Enemy SAMs")
@@ -74,6 +75,7 @@ function Mission08:Mission08()
     function() return (self.enemyCommand:CountAliveUnits() == 0) end,
     function()
       self:MessageAll(MessageLength.Long, "Second objective met, RTB (Nalchik WP0)")
+      self:LandTestPlayers(self.playerGroup, self.moose.airbase.Caucasus.Nalchik, 400)
       self:PlaySound(Sound.SecondObjectiveMet)
     end
   )
@@ -103,9 +105,21 @@ function Mission08:SetupMenu()
     self.dcs.coalition.side.BLUE, "Kill players", menu,
     function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
   
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy SAMs", menu,
+    function() self:SelfDestructGroup(self.enemySams, 100, 1, 1) end)
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy Command", menu,
+    function() self:SelfDestructGroup(self.enemyCommand, 100, 1, 1) end)
+  
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy MiGs", menu,
+    function() self:SelfDestructGroupsInSpawn(self.enemyJetSpawn, 100, 1, 1) end)
+  
   for i = 1, #self.launcherSiteList do
     self.moose.menu.coalitionCommand:New(
-      self.dcs.coalition.side.BLUE, "Kill Site " .. i .. " Launchers", menu,
+      self.dcs.coalition.side.BLUE, "Kill site " .. i .. " launchers", menu,
       function() self:SelfDestructGroup(self.launcherSiteList[i].launchers, 100, 1, 1) end)
   end
   
@@ -147,30 +161,39 @@ function Mission08:OnStart()
   end, {}, 10, 10)
   
   self.moose.scheduler:New(nil, function()
-
-    if (self.enemyJetAliveCount < (#self.players * self.enemyJetPerPlayer)) then
-    
-      self:Trace(1, "Spawning enemy MiG at Mineralnye Vody")
-      self:MessageAll(MessageLength.Short, "Enemy MiG detected at Mineralnye Vody.")
-  
-      local group = self.enemyJetSpawn:SpawnAtAirbase(
-        self.moose.airbase:FindByName(
-          self.moose.airbase.Caucasus.Mineralnye_Vody
-        )
-      )
-      
-      self:AddGroup(group)
-      
-      self.enemyJetAliveCount = self.enemyJetAliveCount + 1
-      
-      self:PlaySound(Sound.EnemyApproching)
-      
-      self:Trace(1, "Enemy MiG spawned at Mineralnye Vody, alive: " .. self.enemyJetAliveCount)
-      
-    end
-  
+    self:SpawnEnemyJet()
   end, {}, self.enemyJetSpawnStart, self.enemyJetSpawnInterval)
 
+end
+
+function Mission08:SpawnEnemyJet()
+
+  if self.enemyCommand:CountAliveUnits() <= 0 then
+    self:Trace(2, "Skipping spawn enemy jet, command is dead")
+    return
+  end
+
+  local maxEnemyJets = (#self.players * self.enemyJetPerPlayer)
+  if (self.enemyJetAliveCount < maxEnemyJets) then
+    
+    self:Trace(1, "Spawning enemy MiG at Mineralnye Vody")
+    self:MessageAll(MessageLength.Short, "Enemy MiG detected at Mineralnye Vody.")
+    self:PlaySound(Sound.EnemyApproching)
+
+    local group = self.enemyJetSpawn:SpawnAtAirbase(
+      self.moose.airbase:FindByName(
+        self.moose.airbase.Caucasus.Mineralnye_Vody
+      )
+    )
+    
+    self:AddGroup(group)
+    
+    self.enemyJetAliveCount = self.enemyJetAliveCount + 1
+    
+    self:Trace(1, "Enemy MiG spawned at Mineralnye Vody, alive: " .. self.enemyJetAliveCount)
+    
+  end
+  
 end
 
 ---
@@ -249,6 +272,11 @@ function Mission08:OnUnitDead(unit)
       self:PlaySound(Sound.TargetDestoyed)
       self:EngageNextSam()
     
+    end
+    
+    if group.enemyCommand then
+      self:MessageAll(MessageLength.Short, "Enemy Command destroyed! Remaining: " .. self.enemyCommand:CountAliveUnits())
+      self:PlaySound(Sound.StructureDestoyed)
     end
     
   end
