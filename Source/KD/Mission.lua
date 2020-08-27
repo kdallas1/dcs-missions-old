@@ -37,6 +37,12 @@ Mission = {
   
   --- @field [parent=#Mission] KD.DCS#DCS dcs
   dcs = nil,
+  
+  --- @field [parent=#Mission] #list<Wrapper.Unit#UNIT> groups
+  groups = nil,
+  
+  --- @field [parent=#Mission] KD.MissionEvents#MissionEvents
+  events = nil,
 }
 
 ---
@@ -68,7 +74,9 @@ Sound = {
   UnitLost                      = nextSoundId(),
   BattleControlTerminated       = nextSoundId(),
   ReinforcementsHaveArrived     = nextSoundId(),
-  StructureDestoyed             = nextSoundId()
+  StructureDestoyed             = nextSoundId(),
+  AlliedForcesHaveFallen        = nextSoundId(),
+  SelectTarget                  = nextSoundId()
 }
 
 ---
@@ -488,7 +496,7 @@ end
 function Mission:AddSpawner(spawner)
   self:AssertType(spawner, self.moose.spawn)
   self.spawners[#self.spawners + 1] = spawner
-  self:Trace(3, "Spawner added, total=" .. #self.spawners)
+  self:Trace(3, "Spawner added, alias: " .. spawner.SpawnAliasPrefix)
 end
 
 ---
@@ -497,7 +505,14 @@ end
 function Mission:AddGroup(group)
   self:AssertType(group, self.moose.group)
   self.groups[#self.groups + 1] = group
-  self:Trace(3, "Group added, total=" .. #self.groups)
+  self:Trace(3, "Group added, name: " .. group:GetName())
+  
+  -- Moose deletes units when they die, so maintain a permanent list
+  group.permanentUnits = {}
+  local units = group:GetUnits()
+  for i = 1, #units do
+    group.permanentUnits[i] = units[i]
+  end
 end
 
 ---
@@ -506,7 +521,7 @@ end
 function Mission:AddUnit(unit)
   self:AssertType(unit, self.moose.unit)
   self.units[#self.units + 1] = unit
-  self:Trace(3, "Unit added, total=" .. #self.units)
+  self:Trace(3, "Unit added, name: " .. unit:GetName())
 end
 
 ---
@@ -828,6 +843,53 @@ function Mission:LoadPlayer()
     end
     
   end
+end
+
+--- Moose randomly returns either a new group or nil from functions like 
+-- UNIT:GetGroup(), so this is a handy lookup function for retrieving our
+-- original Moose group instance (for when we modify the original instance 
+-- in any way, for example: a new field). In order to access the original, 
+-- it must first be stored using self:AddGroup(...).
+-- 
+-- @param #Mission self
+-- @param Wrapper.Unit#UNIT unit
+-- @return Wrapper.Group#GROUP
+function Mission:FindGroupForUnit(unit)
+  
+  self:AssertType(unit, self.moose.unit)
+  
+  for i = 1, #self.groups do
+  
+    local group = self.groups[i]
+    self:AssertType(group, self.moose.group)
+  
+    local units = group.permanentUnits
+    for j = 1, #units do
+      
+      local test = units[j]
+      if test:GetName() == unit:GetName() then
+        return group
+      end
+      
+    end
+    
+  end
+  
+  return nil
+  
+end
+
+--- Moose calls DCS setTask which randomly ignores requests, so this function
+-- forces you to set a delay of at least 1 second (which apparently makes the
+-- DCS function call more reliable).
+-- 
+-- @param #Mission self
+-- @param Wrapper.Group#GROUP group
+function Mission:SetGroupTask(group, task, delay)
+
+  self:Assert(delay >= 1, "Delay must be at least 1 for setTask to be reliable.")
+  group:SetTask(task, delay)
+  
 end
 
 Mission = createClass(KDObject, Mission)

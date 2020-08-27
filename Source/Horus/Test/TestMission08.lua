@@ -22,15 +22,22 @@ local function NewMock(fields)
 
     local launcherGroup = mock.moose:MockGroup({ 
       name = launcherSite .. " Launchers",
-      units = { launcher }
+      units = { launcher, launcher }
     })
 
     launcher.group = launcherGroup
 
+    mock.moose:MockGroup({ name = launcherSite .. " Ammo" })
     mock.moose:MockGroup({ name = launcherSite .. " Tanks" })
   end
 
   mock.moose:MockGroup({name = "Enemy Tanks" })
+  mock.moose:MockGroup({name = "Enemy Command" })
+  
+  mock.moose:MockGroup({
+    name = "Enemy SAMs",
+    units = { mock.moose:MockUnit({ name = "Enemy SAM 1" }) }
+  })
 
   mock.moose:MockZone({ name = "Nalchik Park" })
 
@@ -45,6 +52,8 @@ local function NewMock(fields)
   Table:Concat(args, fields)
 
   mock.mission = Mission08:New(args)
+  
+  mock.mission.ScheduleLauncherInfo = function() end
 
   return mock
 end
@@ -75,7 +84,7 @@ local function Test_AllLaunchersDead_StateIsMissionFailed()
 
 end
 
-local function Test_AllEnemyTanksDead_StateIsEnemyBaseDestroyed()
+local function Test_AllEnemySamsDead_StateIsEnemySamsDestroyed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 2 },
@@ -83,17 +92,36 @@ local function Test_AllEnemyTanksDead_StateIsEnemyBaseDestroyed()
 
   mock.mission:Start()
 
-  mock.mission.enemyTanks.aliveCount = 0
+  mock.mission.enemySams.aliveCount = 0
 
   mock.mission:GameLoop()
 
   TestAssert(
-    mock.mission.state.current == Mission08.State.EnemyBaseDestroyed,
-    "Expected state to be: Enemy base destroyed")
+    mock.mission.state.current == Mission08.State.EnemySamsDestroyed,
+    "Expected state to be: Enemy SAMs destroyed")
 
 end
 
-local function Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished()
+local function Test_AllEnemyCommandDead_StateIsEnemyCommandDestroyed()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission08.State.EnemySamsDestroyed
+  mock.mission.enemyCommand.aliveCount = 0
+
+  mock.mission:GameLoop()
+
+  TestAssert(
+    mock.mission.state.current == Mission08.State.EnemyCommandDestroyed,
+    "Expected state to be: Enemy Command destroyed")
+
+end
+
+local function Test_EnemySamsDestroyedAndPlayersLanded_MissionAccomplished()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 4 },
@@ -101,7 +129,7 @@ local function Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished()
 
   mock.mission:Start()
 
-  mock.mission.state.current = Mission08.State.EnemyBaseDestroyed
+  mock.mission.state.current = Mission08.State.EnemyCommandDestroyed
   mock.mission.UnitsAreParked = function() return true end
 
   mock.mission:GameLoop()
@@ -112,12 +140,78 @@ local function Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished()
 
 end
 
+local function Test_SingleFriendlyLauncherDead_SoundPlays()
+  
+  local mock = NewMock({
+--    trace = { _traceOn = true, _traceLevel = 4 },
+  })
+  
+  local playSound = nil
+  mock.mission.PlaySound = function(self, sound) playSound = sound end
+
+  mock.mission:Start()
+  
+  mock.mission.launcherSiteList[1].launchers.aliveCount = 1
+  mock.mission.launcherSiteList[1].launchers.units[1]:MockKill()
+  
+  mock.mission:GameLoop()
+
+  TestAssert(playSound, "Expected sound to be played on single launcher dead")
+  TestAssert(playSound == Sound.UnitLost, "Expected sound to be UnitLost")
+end
+
+local function Test_WholeFriendlyLauncherGroupDead_MessageShows()
+  
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+  
+  local messageAll = nil
+  mock.mission.MessageAll = function(self, length, text) messageAll = text end
+
+  mock.mission:Start()
+
+  mock.mission.launcherSiteList[1].launchers.aliveCount = 0
+  mock.mission.launcherSiteList[1].launchers.units[1]:MockKill()
+  mock.mission.launcherSiteList[1].launchers.units[2]:MockKill()
+
+  mock.mission:GameLoop()
+
+  TestAssert(messageAll, "Expected message to be shown when whole launcher group dead")
+  TestAssert(
+    messageAll == "Launcher Site 1 has been defeated! Remaining sites: 3",
+    "When whole launcher group dead, didn't expect: " .. messageAll)
+  
+end
+
+local function Test_EngageNextSam_SAMsAliveToAttack_SetTaskCalled()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 4 },
+  })
+  
+  local sams = mock.mission.enemySams:GetUnits()
+  mock.mission.enemySams.GetFirstUnitAlive = function() return sams[1] end
+  
+  local setTaskCalled = false
+  mock.mission.launcherSiteList[1].launchers.SetTask = function() setTaskCalled = true end
+
+  mock.mission:EngageNextSam()
+
+  TestAssert(setTaskCalled, "Expected SetTask to be called.")
+  
+end
+
 function Test_Mission08()
   return RunTests {
     "Mission08",
     Test_AllLaunchersDead_StateIsMissionFailed,
-    Test_AllEnemyTanksDead_StateIsEnemyBaseDestroyed,
-    Test_EnemyBaseDestroyedAndPlayersLanded_MissionAccomplished
+    Test_AllEnemySamsDead_StateIsEnemySamsDestroyed,
+    Test_AllEnemyCommandDead_StateIsEnemyCommandDestroyed,
+    Test_EnemySamsDestroyedAndPlayersLanded_MissionAccomplished,
+    Test_SingleFriendlyLauncherDead_SoundPlays,
+    Test_WholeFriendlyLauncherGroupDead_MessageShows,
+    Test_EngageNextSam_SAMsAliveToAttack_SetTaskCalled
   }
 end
 

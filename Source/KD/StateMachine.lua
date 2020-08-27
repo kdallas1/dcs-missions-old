@@ -167,4 +167,12 @@ function StateMachine:SetFinal(state)
   
 end
 
+--- 
+-- @param #StateMachine self
+function StateMachine:IsFinalState()
+
+  return self.finalState ~= nil
+  
+end
+
 StateMachine = createClass(Events, StateMachine)
