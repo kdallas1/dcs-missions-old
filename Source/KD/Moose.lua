@@ -27,9 +27,11 @@ function Moose:Moose()
   self.group = GROUP
   self.unit = UNIT
   self.static = STATIC
+  self.arty = ARTY
   self.scheduler = SCHEDULER
   self.userSound = USERSOUND
   self.message = MESSAGE
+  self.airbase = AIRBASE
   self.menu = {
     className = "Menu",
     coalition = MENU_COALITION,

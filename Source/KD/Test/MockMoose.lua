@@ -25,7 +25,8 @@ function MockMoose:MockMoose()
     groups = {},
     units = {},
     zones = {},
-    statics = {}
+    statics = {},
+    arty = {}
   }
 
   self.scheduler = self:MockScheduler({ trace = self._traceOn })
@@ -34,11 +35,17 @@ function MockMoose:MockMoose()
   self.unit = self:MockObject("MockUnit", { data = self.data })
   self.zone = self:MockObject("MockZone", { data = self.data })
   self.static = self:MockObject("MockStatic", { data = self.data })
+  self.arty = self:MockObject("MockArty", { WeaponType = { } } )
   self.userSound = self:MockObject("MockUserSound")
   self.message = self:MockObject("MockMessage")
   self.menu = self:MockObject("MockMenu", {
     coalition = self:MockObject("MockMenuCoalition"),
     coalitionCommand = self:MockObject("MockMenuCoalitionCommand")
+  })
+  
+  self.airbase = self:MockObject("MockAirbase", {
+    FindByName = stubFunction,
+    Caucasus = {}
   })
 
   self.group.FindByName = function(self, name) return self.data.groups[name] end
@@ -46,6 +53,7 @@ function MockMoose:MockMoose()
   self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
   self.spawn.New = function(self, name) return moose:MockSpawn({ group = moose.data.groups[name] }) end
+  self.arty.New = function(self) return moose:MockArty() end
 
   self.message.New = function(self)
     return {
@@ -111,8 +119,11 @@ function MockMoose:MockSpawn(fields)
   local spawn = self:MockObject(
     self.spawn.ClassName,
     {
+      SpawnCount = 0,
+      SpawnAliasPrefix = "Mock Group",
+      
       Spawn = function() return self:MockGroup() end,
-      SpawnCount = 0
+      SpawnAtAirbase = function() return self:MockGroup() end,
     },
     fields
   )
@@ -133,10 +144,26 @@ function MockMoose:MockUnit(fields)
       GetLife = function(self) return self.life end,
       GetVelocityKNOTS = function(self) return self.velocity end,
       IsAlive = function(self) return self.isAlive end,
-      GetGroup = function(self) return self.group end,
+      
+      -- Moose often returns nil for the ID, so always assume worst case.
+      GetID = function(self) return nil end,
+      
+      -- Moose either returns a new group instance rather than remembering a single group instance,
+      -- or returns nil. Also, nil seems to be randomly returned, so let's assume the worst case.
+      GetGroup = function(self_) return nil end,
+      
+      GetCoordinate = function(self)
+        return {
+          GetVec2 = stubFunction
+        }
+      end,
 
       GetVec3 = stubFunction,
+      SmokeGreen = stubFunction,
       SmokeRed = stubFunction,
+      SmokeWhite = stubFunction,
+      SmokeOrange = stubFunction,
+      SmokeBlue = stubFunction,
 
       MockKill = function (self)
         self.life = 1
@@ -156,13 +183,27 @@ function MockMoose:MockGroup(fields)
       name = "Mock Group",
       units = {},
       aliveCount = 1,
-
+      aliveUnit = nil,
+      ammunition = 0,
+      
       GetName = function(self) return self.name end,
       GetUnits = function(self) return self.units end,
       CountAliveUnits = function(self) return self.aliveCount end,
+      GetFirstUnitAlive = function(self) return self.aliveUnit end,
+      GetAmmunition = function(self) return self.ammunition end,
 
-      Activate = stubFunction,
-      SmokeRed = stubFunction
+      -- Moose often returns nil for the ID, so always assume worst case.
+      GetID = function(self) return nil end,
+
+      Activate = stubFunction,      
+      TaskFireAtPoint = stubFunction,
+      SetTask = stubFunction,
+      
+      SmokeGreen = stubFunction,
+      SmokeRed = stubFunction,
+      SmokeWhite = stubFunction,
+      SmokeOrange = stubFunction,
+      SmokeBlue = stubFunction,
     },
     fields
   )
@@ -198,6 +239,22 @@ function MockMoose:MockStatic(fields)
     fields
   )
   self.data.statics[static.name] = static
+  return static
+end
+
+function MockMoose:MockArty(fields)
+  local static = self:MockObject(
+    self.static.ClassName,
+    {
+      name = "Mock Arty",
+
+      Start = stubFunction,
+      SetRearmingGroup = stubFunction,
+      SetMaxFiringRange = stubFunction
+    },
+    fields
+  )
+  self.data.arty[static.name] = static
   return static
 end
 
