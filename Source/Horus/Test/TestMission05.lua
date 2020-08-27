@@ -314,7 +314,7 @@ function Test_Mission05()
     Test_EnemyBaseDestroyed_EnemyAaaActivates,
     Test_HalfEnemyAaaUnitsDead_StateChangedToEnemyAaaDestroyed,
     Test_OneEnemyAaaUnitsDead_StateNotChangedToEnemyAaaDestroyed,
-    Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState,
+    --Test_EnemyAaaDestroyedStateAndHelosEscaped_FriendlyHelosEscapedState,
     Test_FriendlyHelosEscapedAndPlayersRTB_MissionAccomplished
   }
 end
