@@ -647,7 +647,7 @@ end
 function Mission:LandTestPlayers(playerGroup, airbase, speed)
   self:AssertType(playerGroup, self.moose.group)
   self:Trace(1, "Landing test players")
-  local airbase = AIRBASE:FindByName(airbase)
+  local airbase = self.moose.airbase:FindByName(airbase)
   local land = airbase:GetCoordinate():WaypointAirLanding(speed, airbase)
   local route = { land }
   playerGroup:Route(route)

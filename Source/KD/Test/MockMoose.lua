@@ -26,7 +26,8 @@ function MockMoose:MockMoose()
     units = {},
     zones = {},
     statics = {},
-    arty = {}
+    arty = {},
+    airbase = {}
   }
 
   self.scheduler = self:MockScheduler({ trace = self._traceOn })
@@ -54,6 +55,7 @@ function MockMoose:MockMoose()
   self.static.FindByName = function(self, name) return self.data.statics[name] end
   self.spawn.New = function(self, name) return moose:MockSpawn({ group = moose.data.groups[name] }) end
   self.arty.New = function(self) return moose:MockArty() end
+  self.airbase.FindByName = function(self) return moose:MockAirbase() end
 
   self.message.New = function(self)
     return {
@@ -198,6 +200,7 @@ function MockMoose:MockGroup(fields)
       Activate = stubFunction,      
       TaskFireAtPoint = stubFunction,
       SetTask = stubFunction,
+      Route = stubFunction,
       
       SmokeGreen = stubFunction,
       SmokeRed = stubFunction,
@@ -243,7 +246,7 @@ function MockMoose:MockStatic(fields)
 end
 
 function MockMoose:MockArty(fields)
-  local static = self:MockObject(
+  local arty = self:MockObject(
     self.static.ClassName,
     {
       name = "Mock Arty",
@@ -254,8 +257,26 @@ function MockMoose:MockArty(fields)
     },
     fields
   )
-  self.data.arty[static.name] = static
-  return static
+  self.data.arty[arty.name] = arty
+  return arty
+end
+
+function MockMoose:MockAirbase(fields)
+  local airbase = self:MockObject(
+    self.static.ClassName,
+    {
+      name = "Mock Airbase",
+
+      GetCoordinate = function()
+        return {
+          WaypointAirLanding = stubFunction
+        }
+      end,
+    },
+    fields
+  )
+  self.data.airbase[airbase.name] = airbase
+  return airbase
 end
 
 MockMoose = createClass(Moose, MockMoose)
