@@ -80,6 +80,7 @@ Sound = {
   SelectTarget                  = nextSoundId(),
   CommandCentreUnderAttack      = nextSoundId(),
   OurBaseIsUnderAttack          = nextSoundId(),
+  MissionTimerInitialised       = nextSoundId()  
 }
 
 ---
@@ -550,9 +551,16 @@ function Mission:FireEvent(event, arg)
 end
 
 ---
+-- @param #Mission self
 -- @param #list unitList
 function Mission:UpdateUnitList(unitList)
   self.events:UpdateUnitList(unitList)
+end
+
+---
+-- @param #Mission self
+function Mission:GetDcsNumber(i)
+  return string.format("#%03d", i)
 end
 
 --- Get a list of all units with a certain prefix.
@@ -567,7 +575,7 @@ function Mission:FindUnitsByPrefix(prefix, max)
   
   local list = {}
   for i = 1, max do
-    local name = prefix .. string.format(" #%03d", i)
+    local name = prefix .. " " .. self:GetDcsNumber(i)
     self:Trace(4, "Finding unit in Moose: " .. name)
     
     local unit = self.moose.unit:FindByName(name)
@@ -814,6 +822,12 @@ end
 -- @param #MessageLength length
 -- @param #string message
 function Mission:MessageAll(length, message)
+
+  self:Assert(length ~= nil, "Arg: `length` was nil.")
+  self:Assert(message ~= nil, "Arg: `message` was nil.")
+
+  self:AssertType(length, "number")
+  self:AssertType(message, "string")
   
   local logType = nil
   local duration = nil
