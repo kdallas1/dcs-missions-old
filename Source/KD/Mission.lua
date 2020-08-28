@@ -28,6 +28,7 @@ Mission = {
   playerTestOn = true,
   
   gameLoopInterval = 1,
+  messageTimeVeryShort = 5,
   messageTimeShort = 20,
   messageTimeLong = 200,
   soundCounter = 1,
@@ -76,20 +77,25 @@ Sound = {
   ReinforcementsHaveArrived     = nextSoundId(),
   StructureDestoyed             = nextSoundId(),
   AlliedForcesHaveFallen        = nextSoundId(),
-  SelectTarget                  = nextSoundId()
+  SelectTarget                  = nextSoundId(),
+  CommandCentreUnderAttack      = nextSoundId(),
+  OurBaseIsUnderAttack          = nextSoundId(),
 }
 
 ---
 -- @type MessageLength
 MessageLength = {
-  Short = 0,
-  Long  = 1
+  VeryShort     = 0,
+  Short         = 1,
+  Long          = 2,
 }
 
 ---
 -- @type MissionState
 -- @extends KD.State#State
 MissionState = {
+  MissionLoading            = State:NextState(),
+  MissionStarted            = State:NextState(),
   MissionAccomplished       = State:NextState(),
   MissionFailed             = State:NextState()
 }
@@ -128,6 +134,7 @@ function Mission:Mission(args)
   self.players = {}
   
   self.state = StateMachine:New()
+  self.state.current = MissionState.MissionLoading
   
   self.events = MissionEvents:New()
   self.events:CopyTrace(self)
@@ -165,6 +172,7 @@ function Mission:Start()
   
   self.moose.scheduler:New(nil, function() self:GameLoop() end, {}, 0, self.gameLoopInterval)
   self:PlaySound(Sound.MissionLoaded)
+  self.state.current = MissionState.MissionStarted
   self:Trace(1, "Mission started")
   
 end
@@ -263,10 +271,12 @@ end
 -- @param Wrapper.Unit#UNIT unit
 function Mission:_OnPlayerDead(unit)
 
+  local name = unit:GetPlayerName() or unit:GetName()
+
   self:AssertType(unit, self.moose.unit)
-  self:Trace(1, "Player is dead: " .. unit:GetName())
+  self:Trace(1, "Player is dead: " .. name)
   
-  self:MessageAll(MessageLength.Long, "Player is dead!")
+  self:MessageAll(MessageLength.Long, name .. " died!")
   self:PlaySound(Sound.UnitLost)
   
   if self.OnPlayerDead then
@@ -496,7 +506,7 @@ end
 function Mission:AddSpawner(spawner)
   self:AssertType(spawner, self.moose.spawn)
   self.spawners[#self.spawners + 1] = spawner
-  self:Trace(3, "Spawner added, alias: " .. spawner.SpawnAliasPrefix)
+  self:Trace(3, "Spawner added, alias: " .. spawner.SpawnTemplatePrefix)
 end
 
 ---
@@ -645,12 +655,19 @@ end
 -- @param Wrapper.Airbase#AIRBASE airbase
 -- @param #number speed
 function Mission:LandTestPlayers(playerGroup, airbase, speed)
+  
+  self:Assert(playerGroup ~= nil, "Arg `playerGroup` was nil")
+  self:Assert(airbase ~= nil, "Arg `airbase` was nil")
+  self:Assert(speed ~= nil, "Arg `speed` was nil")
+  
   self:AssertType(playerGroup, self.moose.group)
+  
   self:Trace(1, "Landing test players")
   local airbase = self.moose.airbase:FindByName(airbase)
   local land = airbase:GetCoordinate():WaypointAirLanding(speed, airbase)
   local route = { land }
   playerGroup:Route(route)
+  
 end
 
 ---
@@ -711,8 +728,9 @@ end
 -- @param Core.Spawn#SPAWN spawn
 function Mission:CountAliveUnitsFromSpawn(spawn)
   self:AssertType(spawn, self.moose.spawn)
-  self:Trace(3, "Checking spawn groups for alive count")
-  
+  self:Trace(3, "Checking spawn for alive groups count: Prefix='" 
+    .. spawn.SpawnTemplatePrefix .. "' Count=" .. spawn.SpawnCount)
+    
   local count = 0
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
@@ -732,6 +750,7 @@ function Mission:CountAliveUnitsFromSpawn(spawn)
       end
     end
   end
+  self:Trace(3, "Found units alive in spawn group: " .. count)
   return count
 end
 
@@ -795,15 +814,21 @@ end
 -- @param #MessageLength length
 -- @param #string message
 function Mission:MessageAll(length, message)
-  self:Trace(1, "Message: " .. message)
   
+  local logType = nil
   local duration = nil
-  if length == MessageLength.Short then
+  if length == MessageLength.VeryShort then
+    duration = self.messageTimeVeryShort
+    logType = "VS"
+  elseif length == MessageLength.Short then
     duration = self.messageTimeShort
+    logType = "S"
   elseif length == MessageLength.Long then
     duration = self.messageTimeLong
+    logType = "L"
   end
   
+  self:Trace(1, logType .. " Message: " .. message)
   self:Assert(duration, "Unknown message length")
   self.moose.message:New(message, duration):ToAll()
 end
@@ -889,6 +914,97 @@ function Mission:SetGroupTask(group, task, delay)
 
   self:Assert(delay >= 1, "Delay must be at least 1 for setTask to be reliable.")
   group:SetTask(task, delay)
+  
+end
+
+---
+-- @param #Mission self
+-- @return Core.Spawn#SPAWN
+function Mission:NewMooseSpawn(name, limit)
+
+  local spawn = self.moose.spawn:New(name)
+  self:Assert(spawn, "Spawn with name '" .. name .. "' could not be created")
+  if limit ~= nil then
+    spawn:InitLimit(limit, 0)
+  end
+  self:AddSpawner(spawn)
+  return spawn
+  
+end
+
+---
+-- @param #Mission self
+-- @return Core.Zone#ZONE
+function Mission:NewMooseZone(name)
+
+  local unit = self.moose.zone:New(name)
+  self:Assert(unit, "Zone with name '" .. name .. "' could not be found")
+  return unit
+  
+end
+
+---
+-- @param #Mission self
+-- @return Wrapper.Group#GROUP
+function Mission:GetMooseGroup(name)
+
+  local group = self.moose.group:FindByName(name)
+  self:Assert(group, "Group with name '" .. name .. "' was not found")
+  self:AddGroup(group)
+  return group
+  
+end
+
+---
+-- @param #Mission self
+-- @return Wrapper.Unit#UNIT
+function Mission:GetMooseUnit(name)
+
+  local unit = self.moose.unit:FindByName(name)
+  self:Assert(unit, "Unit with name '" .. name .. "' was not found")
+  self:AddUnit(unit)
+  return unit
+  
+end
+
+---
+-- @param #Mission self
+function Mission:CreateDebugMenu(killObjects)
+
+  local power = 100
+  local delay = 1
+  local separation = 1
+
+  self:Assert(killObjects, "table")
+
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
+  
+  for i = 1, #killObjects do
+  
+    local killObject = killObjects[i]
+    if killObject then
+    
+      if killObject.ClassName == self.moose.unit.ClassName then
+        self.moose.menu.coalitionCommand:New(
+          self.dcs.coalition.side.BLUE, "Kill unit: " .. killObject:GetName(), menu,
+          function() self:SelfDestructUnits({ killObject }, power, delay, separation) end)
+      end
+      
+      if killObject.ClassName == self.moose.group.ClassName then
+        self.moose.menu.coalitionCommand:New(
+          self.dcs.coalition.side.BLUE, "Kill group: " .. killObject:GetName(), menu,
+          function() self:SelfDestructGroup(killObject, power, delay, separation) end)
+      end
+      
+      if killObject.ClassName == self.moose.spawn.ClassName then
+        self.moose.menu.coalitionCommand:New(
+          self.dcs.coalition.side.BLUE, "Kill spawner groups: " .. killObject.SpawnTemplatePrefix, menu,
+          function() self:SelfDestructGroupsInSpawn(killObject, power, delay, separation) end)
+      end
+    
+    end
+    
+  end
   
 end
 

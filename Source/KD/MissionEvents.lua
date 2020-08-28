@@ -135,13 +135,14 @@ function MissionEvents:UpdateFromSpawnerList(spawners)
   
   for i = 1, #spawners do
     local spawner = spawners[i]
-    self:Trace(3, "Checking spawner: " .. tostring(i))
+    self:Trace(3, "Checking spawner, prefix='" .. spawner.SpawnTemplatePrefix .. "' count=" .. spawner.SpawnCount)
     
     local groups = {}
     for i = 1, spawner.SpawnCount do
     
       local group = spawner:GetGroupFromIndex(i)
       if group then
+        self:Trace(3, "Adding group from spawner: " .. group:GetName())
         groups[#groups + 1] = group
       end
     end

@@ -352,14 +352,11 @@ end
 
 local function Test_CountAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
   
-  local mission = NewMockMission()
-  local spawn = {
-    ClassName = mission.moose.spawn.ClassName,
+  local mock = NewMock()
+  local spawn = mock.moose:MockSpawn {
     SpawnCount = 1,
     GetGroupFromIndex = function()
-      return
-      {
-        ClassName = mission.moose.group.ClassName,
+      return mock.moose:MockGroup {
         GetName = function() return "Test" end,
         GetUnits = function()
           return
@@ -381,7 +378,7 @@ local function Test_CountAliveUnitsFromSpawn_AliveUnits_CountIsCorrect()
       }
     end,
   }
-  local result = mission:CountAliveUnitsFromSpawn(spawn)
+  local result = mock.mission:CountAliveUnitsFromSpawn(spawn)
   
   TestAssert(result == 2, "Alive unit count should be 2, but was " .. result)
 end
