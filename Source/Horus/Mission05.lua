@@ -218,7 +218,7 @@ function Mission05:ScheduleExplodeC4(delay)
     end, {}, delay)
 
   for i = 1, self.c4MaxCount do
-    local name = string.format("C4 #%03d", i)
+    local name = "C4 " .. self:GetDcsNumber(i)
     local c4 = self.moose.static:FindByName(name)
     if c4 then
       self.moose.scheduler:New(
