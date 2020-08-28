@@ -57,6 +57,7 @@ local function Test_UpdateFromSpawnerList_SpawnEventFires()
   local spawners =
   {
     {
+      SpawnTemplatePrefix = "Stub",
       SpawnCount = 1,
       GetGroupFromIndex = function()
         return

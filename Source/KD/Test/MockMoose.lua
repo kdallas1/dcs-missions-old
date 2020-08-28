@@ -22,6 +22,7 @@ function MockMoose:MockMoose()
   local moose = self
 
   self.data = {
+    spawn = {},
     groups = {},
     units = {},
     zones = {},
@@ -31,12 +32,12 @@ function MockMoose:MockMoose()
   }
 
   self.scheduler = self:MockScheduler({ trace = self._traceOn })
-  self.spawn = self:MockObject("MockSpawn", { moose = moose })
+  self.spawn = self:MockObject("MockSpawn", { data = self.data })
   self.group = self:MockObject("MockGroup", { data = self.data })
   self.unit = self:MockObject("MockUnit", { data = self.data })
   self.zone = self:MockObject("MockZone", { data = self.data })
   self.static = self:MockObject("MockStatic", { data = self.data })
-  self.arty = self:MockObject("MockArty", { WeaponType = { } } )
+  self.arty = self:MockObject("MockArty", { data = self.data, WeaponType = {} })
   self.userSound = self:MockObject("MockUserSound")
   self.message = self:MockObject("MockMessage")
   self.menu = self:MockObject("MockMenu", {
@@ -45,17 +46,35 @@ function MockMoose:MockMoose()
   })
   
   self.airbase = self:MockObject("MockAirbase", {
-    FindByName = stubFunction,
-    Caucasus = {}
+    data = self.data,
+    
+    Caucasus = {
+      Nalchik = "Stub",
+      Mineralnye_Vody = "Stub"
+    }
   })
 
   self.group.FindByName = function(self, name) return self.data.groups[name] end
   self.unit.FindByName = function(self, name) return self.data.units[name] end
   self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
-  self.spawn.New = function(self, name) return moose:MockSpawn({ group = moose.data.groups[name] }) end
-  self.arty.New = function(self) return moose:MockArty() end
-  self.airbase.FindByName = function(self) return moose:MockAirbase() end
+  self.arty.New = function(self, name) return self.data.arty[name] end
+  
+  self.airbase.FindByName = function(self, name)
+    if self.data.airbase[name] then
+      return self.data.airbase[name] 
+    else
+      return moose:MockAirbase({ name = name })
+    end
+  end
+  
+  self.spawn.New = function(self, name) 
+    if moose.data.spawn[name] then
+      return moose.data.spawn[name]
+    else
+      return moose:MockSpawn({ group = moose.data.groups[name] })
+    end
+  end
 
   self.message.New = function(self)
     return {
@@ -122,13 +141,21 @@ function MockMoose:MockSpawn(fields)
     self.spawn.ClassName,
     {
       SpawnCount = 0,
-      SpawnAliasPrefix = "Mock Group",
+      SpawnTemplatePrefix = "Mock Spawn",
+      SpawnAliasPrefix = nil,
       
+      InitLimit = function() return self end,
       Spawn = function() return self:MockGroup() end,
+      SpawnScheduled = function(self) return self end,
       SpawnAtAirbase = function() return self:MockGroup() end,
+      SpawnScheduleStop = function(self) return self end,
+      SpawnScheduleStart = function(self) return self end,
+      
+      GetGroupFromIndex = stubFunction
     },
     fields
   )
+  self.data.spawn[spawn.SpawnTemplatePrefix] = spawn
   return spawn
 end
 
@@ -142,6 +169,7 @@ function MockMoose:MockUnit(fields)
       velocity = 0,
       group = nil,
 
+      GetPlayerName = function(self) return self.name end,
       GetName = function(self) return self.name end,
       GetLife = function(self) return self.life end,
       GetVelocityKNOTS = function(self) return self.velocity end,
@@ -193,6 +221,7 @@ function MockMoose:MockGroup(fields)
       CountAliveUnits = function(self) return self.aliveCount end,
       GetFirstUnitAlive = function(self) return self.aliveUnit end,
       GetAmmunition = function(self) return self.ammunition end,
+      IsAlive = function(self) return self.aliveCount > 0 end,
 
       -- Moose often returns nil for the ID, so always assume worst case.
       GetID = function(self) return nil end,
@@ -207,6 +236,14 @@ function MockMoose:MockGroup(fields)
       SmokeWhite = stubFunction,
       SmokeOrange = stubFunction,
       SmokeBlue = stubFunction,
+
+      MockKill = function (self)
+        self.aliveCount = 0
+        self.aliveUnit = nil
+        for i = 1, #self.units do
+          self.units[i]:MockKill()
+        end
+      end
     },
     fields
   )
