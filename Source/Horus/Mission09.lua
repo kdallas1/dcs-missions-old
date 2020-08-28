@@ -40,7 +40,7 @@ Mission09.State = {
 function Mission09:Mission09()
 
   self:SetTraceLevel(3)
-  self.playerTestOn = false
+  --self.playerTestOn = false
 
   self.mineralnyeVodyPark = self:NewMooseZone("Mineralnye Vody Park")
   

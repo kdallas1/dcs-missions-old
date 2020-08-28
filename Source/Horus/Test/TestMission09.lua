@@ -110,7 +110,7 @@ end
 local function Test_BothFriendlyCommandsAreDead_SpawnSchedulesStopped()
 
   local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 3 },
+    --trace = { _traceOn = true, _traceLevel = 3 },
   })
   
   local stopCalled = false
