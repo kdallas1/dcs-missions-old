@@ -155,7 +155,8 @@ function MockMoose:MockSpawn(fields)
       SpawnScheduleStop = function(self) return self end,
       SpawnScheduleStart = function(self) return self end,
       
-      GetGroupFromIndex = stubFunction
+      GetGroupFromIndex = stubFunction,
+      InitUnControlled = stubFunction
     },
     fields
   )
@@ -234,6 +235,13 @@ function MockMoose:MockGroup(fields)
       TaskFireAtPoint = stubFunction,
       SetTask = stubFunction,
       Route = stubFunction,
+      IsCompletelyInZone = stubFunction,
+      RespawnAtCurrentAirbase = stubFunction,
+      GetVelocityKNOTS = stubFunction,
+      IsAnyInZone = stubFunction,
+      GetTypeName = stubFunction,
+      GetUnit = stubFunction,
+      TaskAttackGroup = stubFunction,
       
       SmokeGreen = stubFunction,
       SmokeRed = stubFunction,
