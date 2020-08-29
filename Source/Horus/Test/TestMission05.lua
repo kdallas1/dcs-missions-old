@@ -109,13 +109,9 @@ local function Test_OnSamsDestroyed_HelosProceedFlagSet()
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 2 },
   })
-
-  local flagSet = nil
-  local flagValue = nil
-  mock.mission.SetFlag = function(self, flag, value)
-    flagSet = flag
-    flagValue = value
-  end
+  
+  local respawnCalled = false
+  mock.friendlyHeloGroup.Respawn = function() respawnCalled = true end
 
   mock.mission:Start()
 
@@ -123,11 +119,7 @@ local function Test_OnSamsDestroyed_HelosProceedFlagSet()
 
   mock.mission:GameLoop()
 
-  TestAssert(
-    flagSet == Mission05.Flags.FriendlyHelosAdvance,
-    "Expected helo advance flag to be called")
-
-  TestAssert(flagValue, "Expected helo advance flag to be set to true")
+  TestAssert(respawnCalled, "Expected helos to be respawned")
 
 end
 

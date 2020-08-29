@@ -227,6 +227,7 @@ function MockMoose:MockGroup(fields)
       GetFirstUnitAlive = function(self) return self.aliveUnit end,
       GetAmmunition = function(self) return self.ammunition end,
       IsAlive = function(self) return self.aliveCount > 0 end,
+      GetTemplate = function() return {} end,
 
       -- Moose often returns nil for the ID, so always assume worst case.
       GetID = function(self) return nil end,
@@ -242,6 +243,7 @@ function MockMoose:MockGroup(fields)
       GetTypeName = stubFunction,
       GetUnit = stubFunction,
       TaskAttackGroup = stubFunction,
+      Respawn = stubFunction,
       
       SmokeGreen = stubFunction,
       SmokeRed = stubFunction,
