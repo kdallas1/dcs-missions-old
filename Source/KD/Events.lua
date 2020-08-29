@@ -14,6 +14,15 @@ Events = {
 -- @type Event
 Event = { }
 
+-- Keep track of event IDs
+local _eventCount = 0
+
+function Event:NextEvent()
+  local event = _eventCount 
+  _eventCount = _eventCount +1
+  return event
+end
+
 ---
 -- @function [parent=#Events] New
 -- @param #Events self

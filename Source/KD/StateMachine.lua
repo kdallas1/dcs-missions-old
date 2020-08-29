@@ -37,7 +37,7 @@ end
 function StateMachine:StateMachine()
 
   self.onceStates = {}
-  self.triggers = {}
+  self.onceTriggers = {}
   self.depends = {}
   self.finals = {}
   
@@ -51,7 +51,7 @@ function StateMachine:TriggerOnce(state, trigger, action)
   self:Assert(trigger, "Arg `trigger` was nil")
   
   self.onceStates[state] = false
-  self.triggers[state] = trigger
+  self.onceTriggers[state] = trigger
 
   if (action) then
     self:HandleEvent(state, action)
@@ -124,7 +124,7 @@ end
 -- @param #StateMachine self
 function StateMachine:CheckTriggers()
 
-  for state, trigger in pairs(self.triggers) do
+  for state, trigger in pairs(self.onceTriggers) do
     
     -- check trigger only up until we need to change to the state 
     if ((self.onceStates[state] ~= nil) and (self.onceStates[state] == false)) then

@@ -19,9 +19,9 @@ MissionEvents = {
 -- @type MissionEvent
 -- @extends KD.Event#Event
 MissionEvent = {
-  Spawn     = 0,
-  Damaged   = 1,
-  Dead      = 2,
+  Spawn     = Event:NextEvent(),
+  Damaged   = Event:NextEvent(),
+  Dead      = Event:NextEvent(),
 }
 
 ---
