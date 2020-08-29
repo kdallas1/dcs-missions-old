@@ -33,7 +33,6 @@ Mission05.State = {
 ---
 -- @type Mission05.Flags
 Mission05.Flags = {
-  FriendlyHelosAdvance      = 10,
   FriendlyHelosRTB          = 11,
 }
 
@@ -190,7 +189,12 @@ function Mission05:OnEnemySamsDestroyed()
   self:MessageAll(MessageLength.Short, "Friendly helos advancing Beslan")
   
   self:PlaySound(Sound.FirstObjectiveMet, 3)
-  self:SetFlag(Mission05.Flags.FriendlyHelosAdvance, true)
+  
+  -- respawn helos as controlled to activate them (they start as uncontrolled).
+  -- we could have used late activation here, but this looks cooler.
+  local template = self.friendlyHeloGroup:GetTemplate()
+  template.uncontrolled = false
+  self.friendlyHeloGroup:Respawn(template)
   
 end
 
@@ -246,8 +250,8 @@ function Mission05:OnEnemyBaseDestroyed()
   self.enemyAaaGroups[1]:SmokeRed()
   self.enemyAaaGroups[2]:SmokeRed()
   
-  self:MessageAll(MessageLength.Long,
-    "The enemy has deployeded AAAs. Destroy the AAAs marked with red smoke so our helos can escape.")
+  self:MessageAll(MessageLength.Long, "The enemy has deployed AAAs, and our helos are surrounded.")
+  self:MessageAll(MessageLength.Long, "Destroy the AAAs marked with red smoke so our helos can escape.")
 
 end
 
@@ -265,7 +269,7 @@ end
 -- @param #Mission05 self
 function Mission05:OnEnemyAaaDestroyed()
 
-  self:MessageAll(MessageLength.Short, "Enemy AAA destroyed.")
+  self:MessageAll(MessageLength.Short, "Objective met: Enemy AAAs have been destroyed.")
   self:MessageAll(MessageLength.Short, "Friendly helos are leaving the extraction zone.")
   self:PlaySound(Sound.SecondObjectiveMet)
   self:SetFlag(Mission05.Flags.FriendlyHelosRTB, true)
@@ -276,7 +280,7 @@ end
 -- @param #Mission05 self
 function Mission05:OnFriendlyHelosEscaped()
 
-  self:MessageAll(MessageLength.Short, "Friendly helos have escape and are RTB.")
+  self:MessageAll(MessageLength.Short, "Friendly helos have escaped. RTB to Nalchik.")
 
 end
 
