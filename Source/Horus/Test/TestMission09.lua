@@ -171,7 +171,7 @@ function Test_Mission09()
   return RunTests {
     "Mission09",
     Test_OnlyOneEnemyCommandIsDead_StateIsNotEnemyCommandDead,
-    --Test_BothEnemyCommandsAreDead_StateIsEnemyCommandDead,
+    Test_BothEnemyCommandsAreDead_StateIsEnemyCommandDead,
     Test_BothEnemyCommandsAreDead_SpawnSchedulesStopped,
     Test_BothFriendlyCommandsAreDead_SpawnSchedulesStopped,
     Test_EnemyCommandDeadAndEnemySoldiersAreDead_StateIsEnemySoldiersDead,
