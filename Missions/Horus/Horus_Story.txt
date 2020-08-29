@@ -26,28 +26,54 @@ Get airborne and head north to waypoint 1, then make sure Georgian 4L-TGG lands 
 
 **Mission 3**
 
-Protect inbound transports to Nalchik from enemy air units incoming from all directions.
+*Protect inbound transports to Nalchik from enemy air units incoming from all directions.*
+
+No brief.
 
 **Mission 4**
 
-Assist rescue of downed recon pilots near Beslan and protect against incoming enemy units.
+*Assist rescue of downed recon pilots near Beslan and protect against incoming enemy units.*
+
+Protect the two extraction helos heading into Fahrn (south of the river at Beslan). Ensure that our helps get out alive.
+
+Our helos are already enroute, so rendezvous with them at waypoint 1, then proceed to the extraction site at waypoint 2.
+
+Beware of enemy Tunguska SAMs at Beslan.
+
+Attack inbound targets: 
+A: 2 x Enemy helos,
+B: 2 x Enemy light ground units
 
 **Mission 5**
 
-Sneak-attack on Beslan; protect choppers carrying commandos who will plant explosives.
+*Sneak-attack on Beslan; protect choppers carrying commandos who will plant explosives.*
+
+Take out the two Tunguskas at Beslan (WP1). Once the SAMs are down, our commandos will advance to plant C4 at Beslan. 
+
+Once the commandos are in, sit back and watch the show. The enemy base will light up like the 4th of July.
+
+There are reports of AAA in the area around Beslan, so be vigilant. The AAA appears to be idle, for now...
 
 **Mission 6**
 
-Disrupt enemy attack on Nalchik and Beslan by destroying four enemy FOBs.
+*Disrupt enemy attack on Nalchik and Beslan by destroying four enemy FOBs.*
+
+No brief.
 
 **Mission 7**
 
-Capture Mozdok; destroy enemy aircraft before they can take off, then protect reinforcements.
+*Capture Mozdok; destroy enemy aircraft before they can take off, then protect reinforcements.*
+
+No brief.
 
 **Mission 8**
 
-Assist missile launcher assault on Mineralnye Vody, taking out SAMs.
+*Assist missile launcher assault on Mineralnye Vody, taking out SAMs.*
+
+No brief.
 
 **Mission 9**
 
-Final assault on the ALF, capture Mineralnye Vody.
+*Final assault on the ALF, capture Mineralnye Vody.*
+
+No brief.
