@@ -686,6 +686,8 @@ function Mission:SelfDestructGroupsInSpawn(spawn, power, delay, separation)
     
     if group then
       self:SelfDestructGroup(group, power, delay)
+    else
+      self:Trace(1, "Moose spawner has no group at index: " .. i)
     end
   end
 end
@@ -697,13 +699,21 @@ function Mission:SelfDestructGroup(group, power, delay, separation)
   self:AssertType(group, self.moose.group)
   self:Trace(1, "Self-destructing group: " .. group:GetName())
   
-  self:SelfDestructUnits(group:GetUnits(), power, delay, separation)
+  local units = group:GetUnits()
+  if not units then
+    self:Trace(1, "Moose spawner has no units (this happens sometimes)")
+    return
+  end
+  
+  self:SelfDestructUnits(units, power, delay, separation)
 end
 
 ---
 -- @param #Mission self
 -- @param #list<Wrapper.Unit#UNIT> units
 function Mission:SelfDestructUnits(units, power, delay, separation)
+  
+  self:Assert(units ~= nil, "Arg: `units` was nil.")
   self:AssertType(units, "table")
   
   if not power then
