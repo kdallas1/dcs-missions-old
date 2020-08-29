@@ -40,7 +40,7 @@ Mission09.State = {
 function Mission09:Mission09()
 
   self:SetTraceLevel(3)
-  --self.playerTestOn = false
+  self.playerTestOn = false
 
   self.mineralnyeVodyPark = self:NewMooseZone("Mineralnye Vody Park")
   
@@ -123,8 +123,8 @@ end
 function Mission09:OnGameLoop()
 
   self:SelfDestructDamagedUnits(self.enemyJets, 5)
-  self:SelfDestructDamagedUnits(self.enemyHelos, 5)
-  self:SelfDestructDamagedUnits(self.friendlyHelos, 5)
+  self:SelfDestructDamagedUnits(self.enemyHelos, 10)
+  self:SelfDestructDamagedUnits(self.friendlyHelos, 10)
   
 end
 
