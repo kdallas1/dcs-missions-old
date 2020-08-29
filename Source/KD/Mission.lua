@@ -165,7 +165,7 @@ function Mission:Start()
   
   self:Trace(1, "Starting mission, " .. _VERSION)
 
-  self:LoadPlayer()
+  self:LoadPlayers()
   
   if self.OnStart then
     self:OnStart()
@@ -184,11 +184,7 @@ function Mission:GameLoop()
 
   self:Trace(3, "*** Game loop start ***")
   
-  if self.playerPrefix then
-    -- player list can change at any moment on an MP server, and is often 
-    -- out of sync with the group. this is used by the events system
-    self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
-  end
+  self:UpdatePlayers()
   
   self.events:UpdateFromGroupList(self.groups)
   self.events:UpdateFromSpawnerList(self.spawners)
@@ -859,7 +855,7 @@ end
 
 ---
 -- @param #Mission self
-function Mission:LoadPlayer()
+function Mission:LoadPlayers()
 
   self.playerGroup = self.moose.group:FindByName(self._playerGroupName)
   
@@ -882,6 +878,9 @@ function Mission:LoadPlayer()
     end
     
   end
+
+  self:UpdatePlayers()
+
 end
 
 --- Moose randomly returns either a new group or nil from functions like 
@@ -1020,6 +1019,18 @@ function Mission:CreateDebugMenu(killObjects)
     
   end
   
+end
+
+---
+-- @param #Mission self
+function Mission:UpdatePlayers()
+  
+  if self.playerPrefix then
+    -- player list can change at any moment on an MP server, and is often 
+    -- out of sync with the group. this is used by the events system
+    self.players = self:FindUnitsByPrefix(self.playerPrefix, self.playerMax)
+  end
+
 end
 
 Mission = createClass(KDObject, Mission)

@@ -32,7 +32,6 @@ function MockMoose:MockMoose()
   }
 
   self.scheduler = self:MockScheduler({ trace = self._traceOn })
-  self.spawn = self:MockObject("MockSpawn", { data = self.data })
   self.group = self:MockObject("MockGroup", { data = self.data })
   self.unit = self:MockObject("MockUnit", { data = self.data })
   self.zone = self:MockObject("MockZone", { data = self.data })
@@ -43,6 +42,11 @@ function MockMoose:MockMoose()
   self.menu = self:MockObject("MockMenu", {
     coalition = self:MockObject("MockMenuCoalition"),
     coalitionCommand = self:MockObject("MockMenuCoalitionCommand")
+  })
+
+  self.spawn = self:MockObject("MockSpawn", {
+    data = self.data,
+    Takeoff = { }
   })
   
   self.airbase = self:MockObject("MockAirbase", {

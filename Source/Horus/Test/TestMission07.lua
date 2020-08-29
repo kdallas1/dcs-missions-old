@@ -13,12 +13,10 @@ local function NewMock(fields)
   local player = mock.moose:MockUnit({ name = "Dodge #001" })
   mock.moose:MockGroup({ name = "Dodge Squadron", units = { player } })
 
-  mock.moose:MockZone({ name = "Nalchik Park" })
+  mock.moose:MockZone({ name = "Mozdok Park" })
 
-  mock.moose:MockGroup({ name = "Enemy Jet #001" })
-  mock.moose:MockSpawn({ SpawnTemplatePrefix = "Enemy Jet #001" })
-  mock.moose:MockGroup({ name = "Enemy Jet #002" })
-  mock.moose:MockSpawn({ SpawnTemplatePrefix = "Enemy Jet #002" })
+  mock.moose:MockGroup({ name = "Enemy Jets" })
+  mock.enemyJets = mock.moose:MockSpawn({ SpawnTemplatePrefix = "Enemy Jets" })
 
   mock.dcs = MockDCS:New()
 
@@ -37,7 +35,7 @@ local function NewMock(fields)
   return mock
 end
 
-local function Test_AllEnemyJetsDead_StateIsMissionAccomplished()
+local function Test_AllEnemyJetsDead_StateIsEnemyJetsDestroyed()
 
   local mock = NewMock({
     --trace = { _traceOn = true, _traceLevel = 2 },
@@ -50,16 +48,71 @@ local function Test_AllEnemyJetsDead_StateIsMissionAccomplished()
   mock.mission:GameLoop()
 
   TestAssert(
+    mock.mission.state.current == Mission07.State.EnemyJetsDestroyed,
+    "Expected state to be: Enemy jets destroyed"
+  )
+
+end
+
+local function Test_StateIsEnemyJetsDestroyedAndPlayersLanded_StateIsMissionAccomplished()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  mock.mission:Start()
+
+  mock.mission.state.current = Mission07.State.EnemyJetsDestroyed
+  mock.mission.UnitsAreParked = function() return true end
+
+  mock.mission:GameLoop()
+
+  TestAssert(
     mock.mission.state.current == MissionState.MissionAccomplished,
     "Expected state to be: Mission accomplished"
   )
 
 end
 
+local function Test_SpawnEnemyJets_MaxSpawnOne_OnlyOneSpawned()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  local spawnCount = 0
+  mock.enemyJets.SpawnAtAirbase = function() spawnCount = spawnCount + 1 end
+
+  mock.mission:SpawnEnemyJets(1)
+
+  TestAssert(spawnCount == 1, "Expected 1 spawn, but got: " .. spawnCount)
+
+end
+
+local function Test_Start_SpawnToFillMissingUnits()
+
+  local mock = NewMock({
+    --trace = { _traceOn = true, _traceLevel = 2 },
+  })
+
+  local spawnCount = 0
+  mock.enemyJets.SpawnAtAirbase = function() spawnCount = spawnCount + 1 end
+
+  mock.mission:Start()
+
+  TestAssert(spawnCount == 2, "Expected 2 spawns, but got: " .. spawnCount)
+
+end
+
+testOnly = Test_SpawnEnemyJets_NoMaxSpawn_SpawnToFillMissingUnits
+
 function Test_Mission07()
   return RunTests {
     "Mission07",
-    Test_AllEnemyJetsDead_StateIsMissionAccomplished
+    Test_AllEnemyJetsDead_StateIsEnemyJetsDestroyed,
+    Test_StateIsEnemyJetsDestroyedAndPlayersLanded_StateIsMissionAccomplished,
+    Test_SpawnEnemyJets_MaxSpawnOne_OnlyOneSpawned,
+    Test_Start_SpawnToFillMissingUnits,
   }
 end
 
