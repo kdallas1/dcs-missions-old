@@ -58,22 +58,32 @@ There are reports of AAA in the area around Beslan, so be vigilant. The AAA appe
 
 *Disrupt enemy attack on Nalchik and Beslan by destroying four enemy FOBs.*
 
-No brief.
+The enemy has established four FOBs outside our newly occupied bases, Nalchik and Beslan. Both FOBs are situated to the north. The enemy has a substantial armory of tanks and choppers, but they have one weakness: if we take out their command centers (Fig 1) at each FOB, they won't be able to coordinate reinforcements and our forces will overwhelm them.
+
+However, our base also has the same weakness. If our command center is destroyed, then we'll risk losing the base and our reinforcements. Attack the four enemy command centers at each FOB, and ensure that our Nalchik and Beslan command centers are not destroyed by the enemy.
 
 **Mission 7**
 
 *Capture Mozdok; destroy enemy aircraft before they can take off, then protect reinforcements.*
 
-No brief.
+We have discovered a large number of enemy Mirage 2000-5 jets at Mozdok. However, their EWR is offline, so if we attack now, they won't see us coming. Head to Mozdok (WP1) and take out the enemy jets while they're on the ground. Make sure they don't take off, or you'll have a lot of angry ALF fighters to deal with.
 
 **Mission 8**
 
 *Assist missile launcher assault on Mineralnye Vody, taking out SAMs.*
 
-No brief.
+Mineralnye Vody is the ALF's last stronghold, but it is protected by a large number of deadly Buk SAMs (20nm lethal range), too high risk for our current A2G munitions. To take out the enemy SAMs, friendly forces have positioned MLRS M270 rocket launchers at 4 points south east of the enemy base.
+
+Enemy jets have been scrambled to destroy our rocket launchers, so head to WP1 and protect our launchers against enemy jets before they take them out. The 1st launcher is at WP1, and the 4th launcher site is at WP2.
+
+Once the SAMs are down, return to Nalchik and get ready for the final assault on Mineralnye Vody.
 
 **Mission 9**
 
 *Final assault on the ALF, capture Mineralnye Vody.*
 
-No brief.
+Mineralnye Vody is weakened, and a fortified base command (Fig 1) stands between the ALF and total annihilation. We have established a FOB outside of Mineralnye Vody airbase and have begun our assault. However, enemy forces are much stronger than we have anticipated and are threatening to take down our FOB.
+
+Take out the 8 enemy command buildings at Mineralnye Vody airbase to prevent them from calling in more reinforcements. You should engage other targets of opportunity to protect our FOB and RTB to rearm and refuel if required, but don't let the ALF overwhelm our FOB.
+
+Also, be prepared for enemy jets taking off from Mineralnye Vody.
