@@ -1,10 +1,10 @@
 **Horus Campaign**
 
-**Goal:** Capture the northern Azmenistan Liberation Front-occupied territory.
+**Goal:** Capture the northern ALF (Azmenistan Liberation Front) occupied territory.
 
 **Mission 1**
 
-*Take out the early warning radar (EWR) systems in the mountains so we can proceed.*
+*Take out the early warning radar (EWR) systems in the mountains.*
 
 The enemy has taken over the North-East territory. Intelligence reports that those dirty bastards have installed an EWRS somewhere in the mountains between Sukhumi and Nalchik, North-East of our position. Well, actually, due North for the guy who can't fly an F-18, if he even shows up. The exact location of the target is not yet known because our Intelligence unit is being super lazy, and they haven't come back from lunch yet.
 
@@ -12,7 +12,7 @@ Your mission is to take out the EWRS by any means necessary. You're loaded up wi
 
 **Mission 2**
 
-*Assist with the rescue of hostages from a terrorist-captured civilian aircraft in enemy territory.*
+*Assist with a hostage rescue in enemy territory.*
 
 Your mission is to rendezvous with Georgian 4L-TGG (Fig 1) at waypoint 1, and escort it to the disused airbase at Nalchik (waypoint 2). Georgian 4L-TGG is travelling at 300 knots, 10000 feet above sea level. Navy SEALs are inbound in a C-17A (Colt 1-1) to rescue the civilians and transport them to safety.
 
@@ -28,7 +28,9 @@ Get airborne and head north to waypoint 1, then make sure Georgian 4L-TGG lands 
 
 *Protect inbound transports to Nalchik from enemy air units incoming from all directions.*
 
-No brief.
+After a recent hostage rescue mission, we discovered that Nalchik was disused. Capturing this airbase and establishing a command outpost will give us a tactical advantage toward defeating ALF (Azmenistan Liberation Front) forces in the north region.
+
+Our transports are inbound from the south to provide equipment for the base, but the ALF don't want this to happen. Protect the incoming transports and ensure that they land safely at Nalchik.
 
 **Mission 4**
 
