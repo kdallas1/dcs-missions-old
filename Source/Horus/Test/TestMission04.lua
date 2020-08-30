@@ -48,7 +48,7 @@ end
 local function Test_Start()
 
   local mock = NewMock({
-    trace = { _traceOn = true, _traceLevel = 3 },
+    --trace = { _traceOn = true, _traceLevel = 3 },
   })
 
   mock.mission:Start()

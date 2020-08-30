@@ -43,6 +43,7 @@ function Mission09:Mission09()
   --self.playerTestOn = false
   
   self.state:AddStates(Mission09.State)
+  self.state:CopyTrace(self)
 
   self.mineralnyeVodyPark = self:NewMooseZone("Mineralnye Vody Park")
   
