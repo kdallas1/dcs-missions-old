@@ -29,7 +29,7 @@ local allErrors = {}
 local errorCount = 0
 local passCount = 0
 local failCount = 0
-local suite = nil
+local suite = "?"
 
 function Test(extraTests)
   env.info("Test: Running, " .. _VERSION)
