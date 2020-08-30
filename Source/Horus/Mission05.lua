@@ -41,6 +41,9 @@ Mission05.Flags = {
 function Mission05:Mission05()
 
   --self:SetTraceLevel(3)
+  --self.playerTestOn = false
+
+  self.state:AddStates(Mission05.State)
   
   self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
   self.enemySamGroup = self.moose.group:FindByName("Enemy SAMs")
