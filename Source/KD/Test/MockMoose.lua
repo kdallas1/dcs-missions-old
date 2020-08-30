@@ -205,6 +205,8 @@ function MockMoose:MockUnit(fields)
       end,
 
       GetVec3 = stubFunction,
+      Explode = stubFunction,
+      
       SmokeGreen = stubFunction,
       SmokeRed = stubFunction,
       SmokeWhite = stubFunction,
