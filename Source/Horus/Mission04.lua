@@ -8,8 +8,6 @@ dofile(baseDir .. "KD/Mission.lua")
 -- @extends KD.Mission#Mission
 Mission04 = {
   className = "Mission04",
-
-  traceLevel = 2
 }
 
 ---
@@ -33,13 +31,19 @@ Mission04.Flags = {
 -- @param #Mission04 self
 function Mission04:Mission04()
 
-  self.friendlyHeloGroup = GROUP:FindByName("Friendly Helos")
-  self.enemyHeloGroup = GROUP:FindByName("Enemy Helos")
-  self.enemyGroundGroup = GROUP:FindByName("Enemy Ground")
-  self.extractionLandZone = ZONE:New("Extraction Land")
-  self.extractionZone = ZONE:New("Extraction")
-  self.rendezvousZone = ZONE:New("Rendezvous")
-  self.nalchikPark = ZONE:New("Nalchik Park")
+  --self:SetTraceLevel(3)
+  --self.playerTestOn = false
+
+  self.state:AddStates(Mission04.State)
+  self.state:CopyTrace(self)
+
+  self.friendlyHeloGroup = self.moose.group:FindByName("Friendly Helos")
+  self.enemyHeloGroup = self.moose.group:FindByName("Enemy Helos")
+  self.enemyGroundGroup = self.moose.group:FindByName("Enemy Ground")
+  self.extractionLandZone = self.moose.zone:New("Extraction Land")
+  self.extractionZone = self.moose.zone:New("Extraction")
+  self.rendezvousZone = self.moose.zone:New("Rendezvous")
+  self.nalchikPark = self.moose.zone:New("Nalchik Park")
   
   self:Assert(self.friendlyHeloGroup, "Friendly helo group not found")
   self:Assert(self.enemyHeloGroup, "Enemy helo group not found")
@@ -94,22 +98,22 @@ end
 -- @param #Mission04 self
 function Mission04:SetupMenu()
 
-  local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
   
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill players", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill players", menu,
     function() self:SelfDestructGroup(self.playerGroup, 100, 1, 1) end)
     
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill friendly helos", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill friendly helos", menu,
     function() self:SelfDestructGroup(self.friendlyHeloGroup, 100, 1, 1) end)
     
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill enemy helos", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy helos", menu,
     function() self:SelfDestructGroup(self.enemyHeloGroup, 100, 1, 1) end)
     
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill enemy ground", menu,
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill enemy ground", menu,
     function() self:SelfDestructGroup(self.enemyGroundGroup, 100, 1, 1) end)
     
 end
@@ -213,7 +217,7 @@ function Mission04:OnExtractionComplete()
   self:PlaySound(Sound.FirstObjectiveMet)
   self:MessageAll(MessageLength.Short, "Extraction complete, RTB to Nalchik")
   self:Trace(1, "Friendly helos out of extraction zone")
-  self:LandTestPlayers(self.playerGroup, AIRBASE.Caucasus.Nalchik, 400)
+  self:LandTestPlayers(self.playerGroup, self.moose.airbase.Caucasus.Nalchik, 400)
   
 end
 
