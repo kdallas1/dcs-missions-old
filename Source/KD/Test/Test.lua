@@ -29,6 +29,7 @@ local allErrors = {}
 local errorCount = 0
 local passCount = 0
 local failCount = 0
+local suite = nil
 
 function Test(extraTests)
   env.info("Test: Running, " .. _VERSION)
@@ -70,7 +71,7 @@ function RunSingleTest(test, suite, position)
 end
 
 function RunTests(tests)
-  local suite = "?"
+  suite = "?"
   
   for i, test in pairs(tests) do
     local position = "#" .. (i - 1) .. " of " .. (#tests - 1)
@@ -89,10 +90,10 @@ function TestAssert(condition, errorString)
   
   if not condition then
     
-    local lineNum = Debug:GetInfo().lineNum
-    local fileName = Debug:GetInfo().fileName
+    local lineNum = Debug:GetInfo(1).lineNum
+    local fileName = Debug:GetInfo(1).fileName
 
-    local error = "Test: [" .. fileName .. "@" .. lineNum .. "] Error: " .. errorString
+    local error = "Test: [" ..suite .. "] {" .. fileName .. "@" .. lineNum .. "} Error: " .. errorString
     
     env.info(error)
     env.info("Test: Debug " .. debug.traceback())
