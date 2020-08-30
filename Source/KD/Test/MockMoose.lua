@@ -60,9 +60,11 @@ function MockMoose:MockMoose()
 
   self.group.FindByName = function(self, name) return self.data.groups[name] end
   self.unit.FindByName = function(self, name) return self.data.units[name] end
-  self.zone.New = function(self, name) return self.data.zones[name] end
   self.static.FindByName = function(self, name) return self.data.statics[name] end
   self.arty.New = function(self, name) return self.data.arty[name] end
+  
+  self.zone.FindByName = function(self, name) return self.data.zones[name] end
+  self.zone.New = self.zone.FindByName
   
   self.airbase.FindByName = function(self, name)
     if self.data.airbase[name] then
@@ -95,21 +97,30 @@ function MockMoose:MockMoose()
 end
 
 function MockMoose:MockObject(className, fields1, fields2)
+  
+  self:AssertType(className, "string")
+  
   local mock = {
     ClassName =  className,
     New = stubFunction
   }
+  
   if fields1 then
+    self:AssertType(fields1, "table")
     for k, v in pairs(fields1) do
       mock[k] = v
     end
   end
+  
   if fields2 then
+    self:AssertType(fields2, "table")
     for k, v in pairs(fields2) do
       mock[k] = v
     end
   end
+  
   return mock
+  
 end
 
 function MockMoose:MockScheduler(fields)
