@@ -136,6 +136,7 @@ function Mission:Mission(args)
   
   self.state = StateMachine:New()
   self.state.current = MissionState.MissionLoading
+  self.state:AddStates(MissionState)
   
   self.events = MissionEvents:New()
   self.events:CopyTrace(self)

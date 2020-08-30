@@ -40,6 +40,36 @@ function StateMachine:StateMachine()
   self.onceTriggers = {}
   self.depends = {}
   self.finals = {}
+  self.validStates = {}
+  
+end
+
+---
+-- @param #StateMachine self
+function StateMachine:AddStates(states)
+
+  if states == nil then
+    self:Trace(3, "Valid state table is empty")
+    return
+  end
+  
+  for k, v in pairs(states) do
+    self.validStates[k] = v
+  end
+  
+end
+
+---
+-- @param #StateMachine self
+function StateMachine:GetStateName(state)
+
+  for k, v in pairs(self.validStates) do
+    if state == v then
+      return k
+    end 
+  end
+  
+  return "Unknown state (" .. state .. ")"
   
 end
 
@@ -138,7 +168,7 @@ function StateMachine:CheckTriggers()
       if canTrigger then
 
         local triggerResult = trigger()
-        self:Assert(triggerResult ~= nil, "Trigger return value must not be nil")
+        self:Assert(triggerResult ~= nil, "Trigger return value must not be nil. State: " .. self:GetStateName(state))
         self:AssertType(triggerResult, "boolean")
 
         if triggerResult then
