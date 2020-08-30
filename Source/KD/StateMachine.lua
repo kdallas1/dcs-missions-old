@@ -65,7 +65,7 @@ function StateMachine:GetStateName(state)
 
   for k, v in pairs(self.validStates) do
     if state == v then
-      return k
+      return k .. " (" .. state .. ")"
     end 
   end
   
@@ -123,14 +123,14 @@ function StateMachine:Change(state)
   self:Assert(state, "Arg `state` was nil")
   
   if (self.finalState) then
-    self:Trace(3, "Already at final state: " .. self.finalState)
+    self:Trace(3, "Already at final state: " .. self:GetStateName(self.finalState))
     return
   end
     
   if (self.onceStates[state] ~= nil) then
     if (self.onceStates[state] == false) then
 
-      self:Trace(3, "Current state changed to: " .. state)
+      self:Trace(3, "Current state changed to: " .. self:GetStateName(state))
       self.current = state
       
       self:FireEvent(state)
@@ -142,7 +142,7 @@ function StateMachine:Change(state)
       
       return true
     else
-      self:Trace(3, "Once state already called, state=" .. state)
+      self:Trace(3, "Once state already called: " .. self:GetStateName(state))
     end
   end
   
