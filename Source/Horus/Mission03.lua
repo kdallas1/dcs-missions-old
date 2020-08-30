@@ -8,8 +8,6 @@ dofile(baseDir .. "KD/Mission.lua")
 -- @extends KD.Mission#Mission
 Mission03 = {
   className = "Mission03",
-
-  traceLevel = 1,
   
   transportMaxCount = 3, -- easy to run out of fuel with >3
   transportSeparation = 300,
@@ -30,9 +28,17 @@ Mission03 = {
 ---
 -- @param #Mission03 self
 function Mission03:Mission03()
+
+  --self:SetTraceLevel(3)
+  --self.playerTestOn = false
   
-  self.nalchikParkZone = ZONE:FindByName("Nalchik Park")
-  self.transportSpawn = SPAWN:New("Transport")
+  self.state:AddStates(Mission03.State)
+  
+  self.nalchikParkZone = self.moose.zone:FindByName("Nalchik Park")
+  self.transportSpawn = self.moose.spawn:New("Transport")
+
+  self:AssertType(self.nalchikParkZone, self.moose.zone)
+  self:AssertType(self.transportSpawn, self.moose.spawn)
   
 end
 
@@ -42,17 +48,14 @@ function Mission03:OnStart()
   
   self:SetupMenu(self.transportSpawn)
   
-  MESSAGE:New("Mission 3: Protect inbound transports to Nalchik", self.messageTimeShort):ToAll()
-  MESSAGE:New("Read the mission brief before takeoff", self.messageTimeShort):ToAll()
+  self.moose.message:New("Mission 3: Protect inbound transports to Nalchik", self.messageTimeShort):ToAll()
+  self.moose.message:New("Read the mission brief before takeoff", self.messageTimeShort):ToAll()
   
 end
 
 ---
 -- @param #Mission03 self
 function Mission03:OnGameLoop()
-
-  self:AssertType(self.nalchikParkZone, ZONE)
-  self:AssertType(self.transportSpawn, SPAWN)
   
   local playersExist = (#self.players > 0)
   self:Trace(2, "Player count: " .. #self.players)
@@ -113,14 +116,14 @@ end
 
 ---
 -- @param #Mission03 self
--- @param Wrapper.Unit#UNIT unit
+-- @param Wrapper.Unit#self.moose.unit unit
 function Mission03:OnUnitSpawn(unit)
   
   if (string.match(unit:GetName(), "Transport")) then
     self.transportSpawnCount = self.transportSpawnCount + 1
     self:Trace(1, "New transport spawned, alive: " .. tostring(self.transportSpawnCount))
     
-    MESSAGE:New(
+    self.moose.message:New(
       "Transport #".. tostring(self.transportSpawnCount) .." of " .. 
       tostring(self.transportMaxCount) .. " arrived, inbound to Nalchik", self.messageTimeShort
     ):ToAll()
@@ -131,14 +134,14 @@ function Mission03:OnUnitSpawn(unit)
   if (string.match(unit:GetName(), "MiG")) then
     self.migsSpawnDoneCount = self.migsSpawnDoneCount + 1
     self:Trace(1, "New enemy spawned, alive: " .. tostring(self.migsSpawnDoneCount))
-    MESSAGE:New("Enemy MiG #" .. tostring(self.migsSpawnDoneCount) .. " incoming, inbound to Nalchik", self.messageTimeShort):ToAll()
+    self.moose.message:New("Enemy MiG #" .. tostring(self.migsSpawnDoneCount) .. " incoming, inbound to Nalchik", self.messageTimeShort):ToAll()
     self:PlaySound(Sound.EnemyApproching)
   end
 end
 
 ---
 -- @param #Mission03 self
--- @param Wrapper.Unit#UNIT unit
+-- @param Wrapper.Unit#self.moose.unit unit
 function Mission03:OnPlayerSpawn(unit)
   if not self.transportSpawnStarted then
     self:StartSpawnTransport()
@@ -155,17 +158,17 @@ end
 
 ---
 -- @param #Mission03 self
--- @param Core.Spawn#SPAWN transportSpawn
+-- @param Core.Spawn#self.moose.spawn transportSpawn
 function Mission03:SetupMenu(transportSpawn)
-  local menu = MENU_COALITION:New(coalition.side.BLUE, "Debug")
-  MENU_COALITION_COMMAND:New(
-    coalition.side.BLUE, "Kill transport", menu,
+  local menu = self.moose.menu.coalition:New(self.dcs.coalition.side.BLUE, "Debug")
+  self.moose.menu.coalitionCommand:New(
+    self.dcs.coalition.side.BLUE, "Kill transport", menu,
     function() self:SelfDestructGroupsInSpawn(transportSpawn, 100, 1) end)
 end
 
 ---
 -- @param #Mission03 self
--- @param Wrapper.Unit#UNIT unit
+-- @param Wrapper.Unit#self.moose.unit unit
 function Mission03:OnUnitDead(unit)
   if (string.match(unit:GetName(), "Transport")) then
     self:OnTransportDead(unit)
@@ -177,11 +180,11 @@ end
 
 ---
 -- @param #Mission03 self
--- @param Wrapper.Unit#UNIT unit
+-- @param Wrapper.Unit#self.moose.unit unit
 function Mission03:OnTransportDead(unit)
-  self:AssertType(unit, UNIT)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(1, "Transport destroyed: " .. unit:GetName())
-  MESSAGE:New("Transport destroyed!", self.messageTimeLong):ToAll()
+  self.moose.message:New("Transport destroyed!", self.messageTimeLong):ToAll()
   self:PlaySound(Sound.UnitLost)
   
   self.state:Change(MissionState.MissionFailed)
@@ -189,9 +192,9 @@ end
 
 ---
 -- @param #Mission03 self
--- @param Wrapper.Unit#UNIT unit
+-- @param Wrapper.Unit#self.moose.unit unit
 function Mission03:OnEnemyDead(unit)
-  self:AssertType(unit, UNIT)
+  self:AssertType(unit, self.moose.unit)
   self:Trace(1, "Enemy MiG is dead: " .. unit:GetName())
   
   self:PlayEnemyDeadSound()
@@ -205,13 +208,12 @@ function Mission03:OnEnemyDead(unit)
   
   if (remain > 0) then
     self:Trace(1, "MiGs remain: " .. remain)
-    MESSAGE:New("Enemy MiG is dead! Remaining: " .. remain, self.messageTimeShort):ToAll()
+    self.moose.message:New("Enemy MiG is dead! Remaining: " .. remain, self.messageTimeShort):ToAll()
   else
     self:Trace(1, "All MiGs are dead")
     self:PlaySound(Sound.FirstObjectiveMet, 2)
-    MESSAGE:New("All enemy MiGs are dead!", self.messageTimeLong):ToAll()
-    MESSAGE:New("Land at Nalchik and park for tasty Nal-chicken dinner! On nom nom", self.messageTimeLong):ToAll()    
-    self:LandTestPlayers(self.playerGroup, AIRBASE.Caucasus.Nalchik, 300)
+    self.moose.message:New("All enemy MiGs are dead! RTB to Nalchik", self.messageTimeLong):ToAll()    
+    self:LandTestPlayers(self.playerGroup, self.moose.airbase.Caucasus.Nalchik, 300)
   end
 end
 
