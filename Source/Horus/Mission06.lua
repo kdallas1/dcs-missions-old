@@ -40,9 +40,10 @@ Mission06.State = {
 -- @param #Mission06 self
 function Mission06:Mission06()
 
-  self:SetTraceLevel(3)
-  
-  self.playerTestOn = false
+  --self:SetTraceLevel(3)
+  --self.playerTestOn = false
+
+  self.state:AddStates(Mission06.State)
 
   self.enemyFob = {}
   for i = 1, self.enemyFobMax do
