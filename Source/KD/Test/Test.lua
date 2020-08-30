@@ -71,6 +71,8 @@ function RunSingleTest(test, suite, position)
 end
 
 function RunTests(tests)
+
+  local lastSuite = suite
   suite = "?"
   
   for i, test in pairs(tests) do
@@ -84,14 +86,48 @@ function RunTests(tests)
       env.error("Test: [" ..suite .. "] Invalid test " .. position, true)
     end
   end
+  
+  suite = lastSuite
+  
 end
 
-function TestAssert(condition, errorString)
+function TestAssertEqual(actual, expected, description, toString)
+  
+  local expectedString = expected
+  local actualString = actual
+  
+  if toString then
+  
+    assert(type(toString) == "function", "Arg: `toString` must be a function.")
+    expectedString = toString(expected)
+    actualString = toString(actual)
+    
+  else
+  
+    if (type(expectedString) == "boolean") then
+      expectedString = Boolean:ToString(expected)
+    end
+    
+    if (type(actualString) == "boolean") then
+      actualString = Boolean:ToString(actual)
+    end
+    
+  end
+  
+  local errorString = "Expected " .. description .. " to be [" .. expectedString .. "] but was [" .. actualString .. "]"
+  TestAssert(expected == actual, errorString, 2)
+  
+end
+
+function TestAssert(condition, errorString, debugStackPosition)
+  
+  if debugStackPosition == nil then debugStackPosition = 1 end
   
   if not condition then
     
-    local lineNum = Debug:GetInfo(1).lineNum
-    local fileName = Debug:GetInfo(1).fileName
+    local debugInfo = Debug:GetInfo(debugStackPosition)
+    local lineNum = debugInfo.lineNum
+    local fileName = debugInfo.fileName
 
     local error = "Test: [" ..suite .. "] {" .. fileName .. "@" .. lineNum .. "} Error: " .. errorString
     
