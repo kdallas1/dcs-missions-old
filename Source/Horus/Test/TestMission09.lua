@@ -78,12 +78,15 @@ local function Test_BothEnemyCommandsAreDead_StateIsEnemyCommandDead()
   
   mock.enemyCommand1:MockKill()
   mock.enemyCommand2:MockKill()
+  mock.mission.CountAliveUnitsFromSpawn = function() return 1 end
   
   mock.mission:GameLoop()
   
-  TestAssert(
-    mock.mission.state.current == Mission09.State.EnemyCommandDead, 
-    "Expected state to be: Enemy command dead")
+  TestAssertEqual(
+    mock.mission.state.current,
+    Mission09.State.EnemyCommandDead,
+    "mission state",
+    function(v) return mock.mission.state:GetStateName(v) end)
 
 end
 
@@ -104,7 +107,7 @@ local function Test_BothEnemyCommandsAreDead_SpawnSchedulesStopped()
   mock.mission:GameLoop()
 
   TestAssert(stopCalled, "Expected stop scheduler to be called on enemy soldier spawner.")
-    
+  
 end
 
 local function Test_BothFriendlyCommandsAreDead_SpawnSchedulesStopped()
@@ -171,7 +174,7 @@ function Test_Mission09()
   return RunTests {
     "Mission09",
     Test_OnlyOneEnemyCommandIsDead_StateIsNotEnemyCommandDead,
-    --Test_BothEnemyCommandsAreDead_StateIsEnemyCommandDead, -- TODO: fix random failure
+    Test_BothEnemyCommandsAreDead_StateIsEnemyCommandDead,
     Test_BothEnemyCommandsAreDead_SpawnSchedulesStopped,
     Test_BothFriendlyCommandsAreDead_SpawnSchedulesStopped,
     Test_EnemyCommandDeadAndEnemySoldiersAreDead_StateIsEnemySoldiersDead,
