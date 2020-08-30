@@ -167,6 +167,7 @@ function StateMachine:CheckTriggers()
       
       if canTrigger then
 
+        self:Trace(3, "Checking trigger for state: " .. self:GetStateName(state))
         local triggerResult = trigger()
         self:Assert(triggerResult ~= nil, "Trigger return value must not be nil. State: " .. self:GetStateName(state))
         self:AssertType(triggerResult, "boolean")
@@ -175,7 +176,7 @@ function StateMachine:CheckTriggers()
 
           local changed = self:Change(state)
           if not changed then
-            self:Trace(3, "Change could not be triggered, state=" .. state)
+            self:Trace(3, "Change could not be triggered. State: " .. self:GetStateName(state))
           end
 
         end
