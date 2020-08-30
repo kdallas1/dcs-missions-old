@@ -32,9 +32,11 @@ Mission08.State = {
 -- @param #Mission08 self
 function Mission08:Mission08()
 
---  self.playerTestOn = false
-  self:SetTraceLevel(3)
+  --self:SetTraceLevel(3)
+  --self.playerTestOn = false
 
+  self.state:AddStates(Mission08.State)
+  
   self.nalchikParkZone = self.moose.zone:New("Nalchik Park")
   self:Assert(self.nalchikParkZone, "Nalchik park zone not found")
   

@@ -43,7 +43,10 @@ Mission07.EnemyJetStates = {
 -- @param #Mission07 self
 function Mission07:Mission07()
 
-  self:SetTraceLevel(3)
+  --self:SetTraceLevel(3)
+  --self.playerTestOn = false
+
+  self.state:AddStates(Mission07.State)
 
   self.mozdokParkZone = self:NewMooseZone("Mozdok Park")
   self.mozdokActivateZone = self:NewMooseZone("Mozdok Activate")
