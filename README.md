@@ -1,4 +1,4 @@
-# DCS Missions by Korben Dallas
+# Major Dallas' DCS Missions
 
 Based on the [MOOSE library for DCS](https://github.com/FlightControl-Master/MOOSE).
 
