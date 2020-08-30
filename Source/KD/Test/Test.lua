@@ -47,8 +47,8 @@ function Test(extraTests)
     for i = 1, #allErrors do
       env.info(allErrors[i])
     end
-    env.error("Unit tests failed: " .. failCount, true)
-    return false
+    env.error("Unit tests failed: " .. failCount)
+    return false, failCount
   end
   
   return true
@@ -83,7 +83,7 @@ function RunTests(tests)
     elseif (type(test) == "function") then
       RunSingleTest(test, suite, position)
     else
-      env.error("Test: [" ..suite .. "] Invalid test " .. position, true)
+      env.error("Test: [" ..suite .. "] Invalid test " .. position)
     end
   end
   
