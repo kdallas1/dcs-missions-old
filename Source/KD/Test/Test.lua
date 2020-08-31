@@ -91,28 +91,36 @@ function RunTests(tests)
   
 end
 
-function TestAssertEqual(actual, expected, description, toString)
-  
-  local expectedString = expected
-  local actualString = actual
-  
-  if toString then
-  
-    assert(type(toString) == "function", "Arg: `toString` must be a function.")
-    expectedString = toString(expected)
-    actualString = toString(actual)
-    
+local function testToString(value, toString)
+
+  local string = nil
+
+  if value == nil then
+    string = "[nil]"
   else
   
-    if (type(expectedString) == "boolean") then
-      expectedString = Boolean:ToString(expected)
-    end
+    if toString then
     
-    if (type(actualString) == "boolean") then
-      actualString = Boolean:ToString(actual)
-    end
+      assert(type(toString) == "function", "Arg: `toString` must be a function.")  
+      string = toString(value)
+      
+    elseif (type(value) == "boolean") then
     
+      string = Boolean:ToString(value)
+      
+    end
+  
   end
+  
+  assert(string ~= nil, "String cannot be nil.")
+  return string
+  
+end
+
+function TestAssertEqual(expected, actual, description, toString)
+  
+  local expectedString = testToString(expected, toString)
+  local actualString = testToString(actual, toString)
   
   local errorString = "Expected " .. description .. " to be [" .. expectedString .. "] but was [" .. actualString .. "]"
   TestAssert(expected == actual, errorString, 2)
