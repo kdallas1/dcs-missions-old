@@ -54,7 +54,8 @@ function MockMoose:MockMoose()
     
     Caucasus = {
       Nalchik = "Stub",
-      Mineralnye_Vody = "Stub"
+      Mineralnye_Vody = "Stub",
+      Mozdok = "Stub"
     }
   })
 
