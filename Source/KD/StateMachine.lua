@@ -22,8 +22,8 @@ State = { }
 local _stateCount = 0
 
 function State:NextState()
-  local state = _stateCount 
-  _stateCount = _stateCount +1
+  local state = _stateCount
+  _stateCount = _stateCount + 1
   return state
 end
 
@@ -63,10 +63,14 @@ end
 -- @param #StateMachine self
 function StateMachine:GetStateName(state)
 
+  if state == nil then
+    return "Unknown state"
+  end
+
   for k, v in pairs(self.validStates) do
     if state == v then
       return k .. " (" .. state .. ")"
-    end 
+    end
   end
   
   return "Unknown state (" .. state .. ")"
