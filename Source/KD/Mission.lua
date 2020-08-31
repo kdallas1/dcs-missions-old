@@ -69,6 +69,7 @@ Sound = {
   KissItByeBye                  = nextSoundId(),
   ShakeItBaby                   = nextSoundId(),
   ForKingAndCountry             = nextSoundId(),
+  ObjectiveMet                  = nextSoundId(),
   FirstObjectiveMet             = nextSoundId(),
   SecondObjectiveMet            = nextSoundId(),
   ThirdObjectiveMet             = nextSoundId(),
@@ -295,12 +296,13 @@ function Mission:GroupIsParked(zone, group)
   self:AssertType(zone, self.moose.zone)
   self:AssertType(group, self.moose.group)
   
-  self:Trace(4, "group: " .. group:GetName())
+  self:Trace(4, "Checking if group parked: " .. group:GetName())
   
+  -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
   local units = group:GetUnits()
   if not units then
-    self:Trace(4, "no units in group: " .. group:GetName())
-    return nil
+    self:Trace(4, "No units in group: " .. group:GetName())
+    return false
   end
   
   -- don't return function (for better trace info)
@@ -336,23 +338,26 @@ end
 function Mission:UnitsAreParked(zone, units)
   
   self:AssertType(zone, self.moose.zone)
-  self:Assert(#units > 0, "No units to check if parked")
+  
+  if #units == 0 then
+    return false
+  end
 
-  self:Trace(3, "zone: " .. zone:GetName())
+  self:Trace(3, "Checking if units parked in zone: " .. zone:GetName())
   
   local stoppedCount = 0
   for i = 1, #units do
     local unit = units[i]
-    self:Trace(3, "unit name: " .. unit:GetName())
-    self:Trace(3, "unit velocity: " .. unit:GetVelocityKNOTS())
+    self:Trace(3, "Checking unit name: " .. unit:GetName())
+    self:Trace(3, "Checking unit velocity: " .. unit:GetVelocityKNOTS())
     
     if (unit:GetVelocityKNOTS() < 1) then
       stoppedCount = stoppedCount + 1
     end
   end
   
-  self:Trace(3, "#units: " .. #units)
-  self:Trace(3, "stoppedCount: " .. stoppedCount)
+  self:Trace(3, "Unit count: " .. #units)
+  self:Trace(3, "Stop count: " .. stoppedCount)
   
   local stopped = stoppedCount == #units
   local inParkZone = self:UnitsAreInZone(zone, units)
@@ -370,7 +375,7 @@ function Mission:SpawnGroupsAreParked(zone, spawn)
   self:AssertType(zone, self.moose.zone)
   self:AssertType(spawn, self.moose.spawn)
   
-  self:Trace(3, "zone: " .. zone:GetName())
+  self:Trace(3, "Checking spawn groups in zone: " .. zone:GetName())
   
   local parkCount = 0
   for i = 1, spawn.SpawnCount do
@@ -380,7 +385,7 @@ function Mission:SpawnGroupsAreParked(zone, spawn)
     end
   end
   
-  self:Trace(3, "parkCount: " .. parkCount)
+  self:Trace(3, "Parked count: " .. parkCount)
   
   return parkCount == spawn.SpawnCount
 end
@@ -398,7 +403,7 @@ function Mission:KeepAliveGroupIfParked(zone, group)
   if (parked and not group.keepAliveDone) then
     
     -- Respawn uncontrolled (3rd arg) seems to stop DCS from cleaning groups up!
-    self:Trace(3, "respawning at airbase: " .. group:GetName())
+    self:Trace(3, "Respawning at airbase: " .. group:GetName())
     group:RespawnAtCurrentAirbase(nil, nil, true)
     group.keepAliveDone = true
     
@@ -431,8 +436,9 @@ end
 -- @return true If player is in the group. 
 function Mission:GroupHasPlayer(group)
 
-  self:Trace(3, "looking for player in group: " .. group:GetName())
+  self:Trace(3, "Looking for player in group: " .. group:GetName())
   
+  -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
   local units = group:GetUnits()
   if not units then
     return false
@@ -449,22 +455,22 @@ end
 -- @return true If player is in the list.
 function Mission:ListHasPlayer(units)
 
-  self:Trace(3, "looking for player in list")
+  self:Trace(3, "Looking for player in list")
       
   for i = 1, #units do
     local unit = units[i]
     
     if unit:GetGroup() then
       if unit:IsPlayer() then
-        self:Trace(3, "found player in list")
+        self:Trace(3, "Found player in list")
         return true
       end 
     else
-      self:Trace(3, "can't check if unit is player, no group")
+      self:Trace(3, "Can't check if unit is player, no group")
     end
   end
   
-  self:Trace(3, "no players in list")
+  self:Trace(3, "No players in list")
   return false
   
 end
@@ -515,11 +521,13 @@ function Mission:AddGroup(group)
   self.groups[#self.groups + 1] = group
   self:Trace(3, "Group added, name: " .. group:GetName())
   
-  -- Moose deletes units when they die, so maintain a permanent list
+  -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
   group.permanentUnits = {}
   local units = group:GetUnits()
-  for i = 1, #units do
-    group.permanentUnits[i] = units[i]
+  if units then
+    for i = 1, #units do
+      group.permanentUnits[i] = units[i]
+    end
   end
 end
 
@@ -700,6 +708,7 @@ function Mission:SelfDestructGroup(group, power, delay, separation)
   self:AssertType(group, self.moose.group)
   self:Trace(1, "Self-destructing group: " .. group:GetName())
   
+  -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
   local units = group:GetUnits()
   if not units then
     self:Trace(1, "Moose spawner has no units (this happens sometimes)")
@@ -752,6 +761,7 @@ function Mission:CountAliveUnitsFromSpawn(spawn)
     if group then
       self:Trace(3, "Checking group for alive count: " .. group:GetName())
       
+      -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
       local units = group:GetUnits()
       if units then
         for j = 1, #units do
@@ -774,20 +784,43 @@ end
 -- @param Core.Spawn#SPAWN spawn
 -- @param #number minLife
 function Mission:SelfDestructDamagedUnits(spawn, minLife)
+  
+  self:Assert(spawn ~= nil, "Param: spawn cannot be nil")
   self:AssertType(spawn, self.moose.spawn)
+  
   self:Trace(3, "Checking spawn groups for damage, count=" .. spawn.SpawnCount)
+  
   for i = 1, spawn.SpawnCount do
     local group = spawn:GetGroupFromIndex(i)
     if group then
       self:Trace(3, "Checking group for damage: " .. group:GetName())
       
-      -- sometimes moose can return nil spawner units (not sure why)
+      -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
       local units = group:GetUnits()
       if units then
-        self:SelfDestructDamagedUnitsInList(group:GetUnits(), minLife)
+        self:SelfDestructDamagedUnitsInList(units, minLife)
       end
     end
   end
+end
+
+---
+-- @param #Mission self
+-- @param Wrapper.Group#GROUP group
+-- @param #number minLife
+function Mission:SelfDestructDamagedUnitsInGroup(group, minLife)
+
+  self:Assert(group ~= nil, "Param: group cannot be nil")
+  self:AssertType(group, self.moose.group)
+  
+  self:Trace(3, "Checking unit list for damage")
+  
+  -- Note: Moose randomly returns either nil or 0 from GROUP:GetUnits()
+  local units = group:GetUnits()
+  if units then
+    self:SelfDestructDamagedUnitsInList(units)
+  end
+  
 end
 
 ---
@@ -801,6 +834,8 @@ function Mission:SelfDestructDamagedUnitsInList(units, minLife)
   
   self:AssertType(units, "table")
   self:AssertType(minLife, "number")
+  
+  self:Trace(3, "Checking unit list for damage, count: " .. #units)
   
   if units then
     for i = 1, #units do
@@ -1043,5 +1078,6 @@ function Mission:UpdatePlayers()
   end
 
 end
+
 
 Mission = createClass(KDObject, Mission)
