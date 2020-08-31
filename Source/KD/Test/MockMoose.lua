@@ -212,6 +212,7 @@ function MockMoose:MockUnit(fields)
       SmokeWhite = stubFunction,
       SmokeOrange = stubFunction,
       SmokeBlue = stubFunction,
+      IsAboveRunway = stubFunction,
 
       MockKill = function (self)
         self.life = 1
