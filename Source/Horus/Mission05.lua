@@ -15,7 +15,10 @@ Mission05 = {
 
   enemyAaaEscapeCount = 6,
   enemyAaaGroupMax = 6,
-  enemyAaaGroups = nil
+  enemyAaaGroups = nil,
+  
+  friendlyHeloMaxCount = 2,
+  friendlyHeloDeadCount = 0
 }
 
 ---
@@ -73,6 +76,7 @@ function Mission05:Mission05()
     function() self:OnEnemySamsDestroyed() end
   )
   
+  -- TODO: this sometimes fails on MP (probably because group:GetUnits() returns an empty list)
   self.state:TriggerOnce(
     Mission05.State.FriendlyHelosLanded,
     function() return self:GroupIsParked(self.landingZone, self.friendlyHeloGroup) end,
@@ -107,7 +111,7 @@ function Mission05:Mission05()
   
   self.state:TriggerOnce(
     MissionState.MissionFailed,
-    function() return (self.friendlyHeloGroup:CountAliveUnits() == 0) end,
+    function() return self.friendlyHeloDeadCount >= self.friendlyHeloMaxCount end,
     function() self:AnnounceLose(2) end
   )
   
@@ -168,6 +172,7 @@ function Mission05:OnUnitDead(unit)
     
   if (string.match(unit:GetName(), "Friendly Helo")) then
     
+    self.friendlyHeloDeadCount = self.friendlyHeloDeadCount + 1
     self:Trace(1, "Friendly helo destroyed: " .. unit:GetName())
     self:MessageAll(MessageLength.Long, "Friendly helo destroyed!")
     self:PlaySound(Sound.UnitLost)
@@ -189,15 +194,10 @@ end
 function Mission05:OnEnemySamsDestroyed()
   
   self:MessageAll(MessageLength.Short, "All SAMs have been destroyed")
-  self:MessageAll(MessageLength.Short, "Friendly helos advancing Beslan")
-  
   self:PlaySound(Sound.FirstObjectiveMet, 3)
   
-  -- respawn helos as controlled to activate them (they start as uncontrolled).
-  -- we could have used late activation here, but this looks cooler.
-  local template = self.friendlyHeloGroup:GetTemplate()
-  template.uncontrolled = false
-  self.friendlyHeloGroup:Respawn(template)
+  self:MessageAll(MessageLength.Short, "Friendly helos advancing Beslan")
+  self.friendlyHeloGroup:Activate()
   
 end
 

@@ -94,7 +94,7 @@ local function Test_AllFriendlyHelosDead_MissionFailed()
 
   mock.mission:Start()
 
-  mock.friendlyHeloGroup.aliveCount = 0
+  mock.friendlyHeloGroup:MockKill()
   
   mock.mission:GameLoop()
 
@@ -110,8 +110,8 @@ local function Test_OnSamsDestroyed_HelosProceedFlagSet()
     --trace = { _traceOn = true, _traceLevel = 2 },
   })
   
-  local respawnCalled = false
-  mock.friendlyHeloGroup.Respawn = function() respawnCalled = true end
+  local activateCalled = false
+  mock.friendlyHeloGroup.Activate = function() activateCalled = true end
 
   mock.mission:Start()
 
@@ -119,7 +119,7 @@ local function Test_OnSamsDestroyed_HelosProceedFlagSet()
 
   mock.mission:GameLoop()
 
-  TestAssert(respawnCalled, "Expected helos to be respawned")
+  TestAssert(activateCalled, "Expected helos to be activated")
 
 end
 
