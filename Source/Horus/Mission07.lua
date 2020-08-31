@@ -12,11 +12,11 @@ Mission07 = {
   --- @field [parent=#Mission07] #list<Wrapper.Group#GROUP> enemyJetList
   enemyJetList = nil,
   
-  enemyJetSpawnMaxPerPlayer = 3,
-  enemyJetSpawnDelay = 300,
+  enemyJetSpawnMaxPerPlayer = 5,
+  enemyJetSpawnDelay = 120,
   enemyJetSpawnCount = 0,
   enemyJetDeadCount = 0,
-  enemyJetSpawnSeparation = 120,
+  enemyJetSpawnSeparation = 60,
   enemyJetSpawnRandom = .5,
   enemyJetType = "Mirage 2000-5"
 }
