@@ -12,7 +12,7 @@ Mission06 = {
   enemyFobMax = 4,
   enemyFobSpawnStart = 0,
   enemyFobSpawnGap = 60,
-  enemyFobMaxAlivePerSpawn = 3,
+  enemyFobMaxAlivePerSpawn = 2,
   enemyTankMinLife = 10,
   enemyHeloMinLife = 10,
 
@@ -103,19 +103,16 @@ function Mission06:NewEnemyFob(i)
   local fob = {}
 
   fob.name = fobName
-  fob.sam = self.moose.group:FindByName(fobName .. " SAM")
   fob.command = self.moose.unit:FindByName(fobName .. " Command")
   fob.tankSpawn = self.moose.spawn:New(fobName .. " Tanks")
   fob.heloSpawn = self.moose.spawn:New(fobName .. " Helos")
 
-  self:Assert(fob.sam, fobName .. " SAM not found")
   self:Assert(fob.command, fobName .. " Command not found")
   self:Assert(fob.tankSpawn, fobName .. " Tanks not found")
   self:Assert(fob.heloSpawn, fobName .. " Helos not found")
 
   fob.command.enemyFob = fob
 
-  self:AddGroup(fob.sam)
   self:AddUnit(fob.command)
   self:AddSpawner(fob.tankSpawn)
   self:AddSpawner(fob.heloSpawn)
