@@ -124,7 +124,7 @@ local function Test_Start_SpawnToFillMissingUnits()
 
   mock.mission:Start()
 
-  TestAssert(spawnCount == 3, "Expected 3 spawns, but got: " .. spawnCount)
+  TestAssert(spawnCount == 5, "Expected 5 spawns, but got: " .. spawnCount)
 
 end
 
@@ -146,7 +146,7 @@ local function Test_GameLoop_EnemyJetDestroyed_EnemyJetsRemainIsValid()
   })
   mock.mission:OnUnitDead(unit)
   
-  TestAssert(message == "Enemy Jet destroyed. Remaining: 5", "Did not expect message: " .. message)
+  TestAssert(message == "Enemy Jet destroyed. Remaining: 9", "Did not expect message: " .. message)
 
 end
 
