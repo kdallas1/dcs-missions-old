@@ -11,17 +11,17 @@ Mission09 = {
   
   enableDebugMenu = true,
   
-  enemySoldiersMax = 20,
-  enemyTanksMax = 20,
-  enemyHelosMax = 10,
+  enemySoldiersMax = 5,
+  enemyTanksMax = 5,
+  enemyHelosMax = 5,
   enemyJetsMaxPerPlayer = 1,
   enemySpawnInterval = 30,
-  enemyJetsSpawnInterval = 10,
+  enemyJetsSpawnInterval = 300,
   enemyJetsAliveCount = 0,
   
-  friendlySoldiersMax = 20,
-  friendlyTanksMax = 5,
-  friendlyHelosMax = 5,
+  friendlySoldiersMax = 5,
+  friendlyTanksMax = 3,
+  friendlyHelosMax = 3,
   friendlySpawnInterval = 30,
   
   spawnVariation = .5,
@@ -111,13 +111,15 @@ function Mission09:OnStart()
   self:MessageAll(MessageLength.Long, "Mission 9: Final assault on the ALF, capture Mineralnye Vody.")
   self:MessageAll(MessageLength.Long, "Read the mission brief before takeoff")
   
-  self.enemySoldiers:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
-  self.enemyTanks:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
-  self.enemyHelos:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
-  
-  self.friendlySoldiers:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
-  self.friendlyTanks:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
-  self.friendlyHelos:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
+  self.moose.scheduler:New(nil, function()
+    self.enemySoldiers:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
+    self.enemyTanks:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
+    self.enemyHelos:SpawnScheduled(self.enemySpawnInterval, self.spawnVariation)
+    
+    self.friendlySoldiers:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
+    self.friendlyTanks:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
+    self.friendlyHelos:SpawnScheduled(self.friendlySpawnInterval, self.spawnVariation)
+  end, {}, 300)
 
 end
 
